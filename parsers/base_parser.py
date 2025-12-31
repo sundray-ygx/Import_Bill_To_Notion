@@ -26,9 +26,31 @@ class BaseBillParser(ABC):
     def normalize_date(self, date_str, format_str):
         """Normalize date string to ISO format"""
         try:
+            # 尝试使用指定的格式解析
             dt = datetime.strptime(date_str, format_str)
             return dt.isoformat()
         except ValueError:
+            # 尝试其他常见的日期格式
+            try_formats = [
+                '%Y/%m/%d %H:%M',
+                '%Y/%m/%d %H:%M:%S',
+                '%Y-%m-%d %H:%M',
+                '%Y-%m-%d %H:%M:%S',
+                '%m/%d/%Y %H:%M',
+                '%m/%d/%Y %H:%M:%S',
+                '%Y/%m/%d',
+                '%Y-%m-%d',
+                '%m/%d/%Y'
+            ]
+            
+            for fmt in try_formats:
+                try:
+                    dt = datetime.strptime(date_str, fmt)
+                    return dt.isoformat()
+                except ValueError:
+                    continue
+            
+            # 如果所有格式都失败，返回原始字符串
             return date_str
     
     def get_parsed_data(self):

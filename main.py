@@ -7,7 +7,7 @@ import os
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, Config.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -31,7 +31,7 @@ class BeijingFormatter(logging.Formatter):
 
 # 重新配置日志，使用北京时间
 for handler in logging.getLogger().handlers:
-    handler.setFormatter(BeijingFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    handler.setFormatter(BeijingFormatter('%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 
 logger = logging.getLogger(__name__)
 

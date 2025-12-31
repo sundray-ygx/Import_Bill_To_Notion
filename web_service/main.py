@@ -32,7 +32,7 @@ class BeijingFormatter(logging.Formatter):
 # 配置日志，使用北京时间
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
         logging.StreamHandler(),
@@ -42,7 +42,7 @@ logging.basicConfig(
 
 # 重新配置日志处理器，使用北京时间
 for handler in logging.getLogger().handlers:
-    handler.setFormatter(BeijingFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    handler.setFormatter(BeijingFormatter('%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger = logging.getLogger(__name__)
 
 # 创建FastAPI应用

@@ -26,14 +26,72 @@ class NotionClient:
     def create_page(self, properties):
         """Create a new page in the Notion database"""
         try:
+            # 清理properties中的无效值，确保符合Notion API要求
+            cleaned_properties = {}
+            
+            for prop_name, prop_value in properties.items():
+                if prop_value is None:
+                    continue
+                
+                # 跳过空对象
+                if isinstance(prop_value, dict) and not prop_value:
+                    continue
+                
+                cleaned_prop = {}
+                
+                # 处理不同类型的属性
+                if 'select' in prop_value:
+                    # 确保select属性只包含name，且name是有效的字符串
+                    select_value = prop_value['select']
+                    if select_value:
+                        name_value = str(select_value.get('name', '')).strip()
+                        if name_value:
+                            cleaned_prop['select'] = {'name': name_value}
+                        else:
+                            # 如果name无效，跳过该属性
+                            continue
+                    else:
+                        # 如果select_value无效，跳过该属性
+                        continue
+                elif 'title' in prop_value:
+                    # 确保title属性有效
+                    title_value = prop_value['title']
+                    if title_value and isinstance(title_value, list) and len(title_value) > 0:
+                        cleaned_prop['title'] = title_value
+                elif 'rich_text' in prop_value:
+                    # 确保rich_text属性有效
+                    cleaned_prop['rich_text'] = prop_value['rich_text']
+                elif 'number' in prop_value:
+                    # 确保number属性有效
+                    number_value = prop_value['number']
+                    if number_value is not None:
+                        try:
+                            cleaned_prop['number'] = float(number_value)
+                        except (ValueError, TypeError):
+                            # 如果无法转换为浮点数，跳过该属性
+                            continue
+                elif 'date' in prop_value:
+                    # 确保date属性有效
+                    date_value = prop_value['date']
+                    if date_value and isinstance(date_value, dict) and 'start' in date_value:
+                        cleaned_prop['date'] = date_value
+                
+                if cleaned_prop:
+                    cleaned_properties[prop_name] = cleaned_prop
+            
+            # 确保至少有一个属性，否则添加Name属性
+            if not cleaned_properties:
+                cleaned_properties['Name'] = {'title': [{'text': {'content': 'Unknown Record'}}]}
+            
             response = self.client.pages.create(
                 parent={"database_id": self.database_id},
-                properties=properties
+                properties=cleaned_properties
             )
             logger.info(f"Created page: {response['id']}")
             return response
         except Exception as e:
             logger.error(f"Failed to create page: {e}")
+            logger.error(f"Properties: {properties}")
             raise
     
     def batch_import(self, records, batch_size=10):

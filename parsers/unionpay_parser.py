@@ -30,8 +30,23 @@ class UnionPayParser(BaseBillParser):
         }
         
         # Keep only the columns we need
-        df = df.rename(columns=column_mapping)
-        df = df[column_mapping.values()]
+        # 确保每个标准列只被映射一次，避免重复
+        unique_mapped_columns = {}
+        for original_col, standard_col in column_mapping.items():
+            if standard_col not in unique_mapped_columns.values():
+                unique_mapped_columns[original_col] = standard_col
+        
+        df = df.rename(columns=unique_mapped_columns)
+        
+        # 只保留存在的标准列，确保每个列名只出现一次
+        existing_standard_columns = []
+        seen_columns = set()
+        for col in unique_mapped_columns.values():
+            if col not in seen_columns:
+                existing_standard_columns.append(col)
+                seen_columns.add(col)
+        
+        df = df[existing_standard_columns]
         
         # Combine date and time columns
         df['transaction_time'] = df.apply(lambda x: f"{x['transaction_time']} {x['transaction_hour']}", axis=1)
@@ -90,6 +105,12 @@ class UnionPayParser(BaseBillParser):
                         'content': record['remark'] if pd.notna(record['remark']) else ''
                     }
                 }]
+            },
+            # 收/支 (Income Expense)
+            'Income Expense': {
+                'select': {
+                    'name': str(record.get('income_expense', '')).strip() if 'income_expense' in record and record['income_expense'] else ''
+                }
             },
             # 支付平台 (Payment Platform)
             'Payment Platform': {

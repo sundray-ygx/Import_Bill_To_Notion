@@ -189,15 +189,26 @@ class WeChatParser(BaseBillParser):
         
         # 应用列名映射
         if mapped_columns:
-            df = df.rename(columns=mapped_columns)
+            # 确保每个标准列只被映射一次，避免重复
+            unique_mapped_columns = {}
+            for original_col, standard_col in mapped_columns.items():
+                if standard_col not in unique_mapped_columns.values():
+                    unique_mapped_columns[original_col] = standard_col
+            
+            df = df.rename(columns=unique_mapped_columns)
             logger.info(f"映射后列名: {df.columns.tolist()}")
         
         # 定义需要保留的标准列
         standard_columns = ['transaction_time', 'transaction_type', 'counterparty', 'item_name', 'amount', 
                            'income_expense', 'payment_method', 'status', 'transaction_id', 'merchant_id', 'remark']
         
-        # 只保留存在的标准列
-        existing_standard_columns = [col for col in standard_columns if col in df.columns]
+        # 只保留存在的标准列，确保每个列名只出现一次
+        existing_standard_columns = []
+        seen_columns = set()
+        for col in df.columns:
+            if col in standard_columns and col not in seen_columns:
+                existing_standard_columns.append(col)
+                seen_columns.add(col)
         if existing_standard_columns:
             df = df[existing_standard_columns]
             logger.info(f"保留标准列: {existing_standard_columns}")
@@ -275,6 +286,12 @@ class WeChatParser(BaseBillParser):
                         'content': str(record.get('remark', ''))
                     }
                 }]
+            },
+            # 收/支 (Income Expense)
+            'Income Expense': {
+                'select': {
+                    'name': str(record.get('income_expense', '')).strip() if record.get('income_expense') else ''
+                }
             },
             # 交易订单号 (Transaction Number)
             'Transaction Number': {

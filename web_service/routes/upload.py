@@ -84,12 +84,50 @@ async def get_file_content(file_name: str):
         if not file_name.endswith('.csv'):
             return JSONResponse(status_code=400, content={"message": "只支持查看CSV文件"})
         
-        # 读取CSV文件内容，只显示前20行
-        df = pd.read_csv(file_path, encoding='gbk', nrows=20)
+        # 读取CSV文件内容，只显示前20行，尝试多种编码
+        encodings = ['gbk', 'utf-8', 'gb2312', 'latin-1']
+        df = None
+        
+        for encoding in encodings:
+            try:
+                df = pd.read_csv(file_path, encoding=encoding, nrows=20)
+                break
+            except Exception as e:
+                continue
+        
+        if df is None:
+            return JSONResponse(status_code=500, content={"message": "无法读取文件内容，尝试多种编码均失败"})
+        
+        # 处理超出JSON范围的浮点数值
+        df = df.replace([float('inf'), -float('inf')], float('nan'))  # 将无穷大转换为NaN
+        # 使用fillna的正确方式，避免版本兼容性问题
+        for col in df.columns:
+            if df[col].dtype in ['float64', 'int64']:
+                df[col] = df[col].fillna(0)  # 数值列使用0填充
+            else:
+                df[col] = df[col].fillna('')  # 其他列使用空字符串填充
+        
+        # 转换为字典，确保所有数值都在JSON范围内
+        records = []
+        for _, row in df.iterrows():
+            record = {}
+            for col in df.columns:
+                value = row[col]
+                # 确保数值在JSON范围内
+                if isinstance(value, (int, float)):
+                    # 检查是否为有限数值
+                    if isinstance(value, float) and not (float('-inf') < value < float('inf')):
+                        record[col] = None
+                    else:
+                        record[col] = value
+                else:
+                    record[col] = value
+            records.append(record)
+        
         return JSONResponse(status_code=200, content={
             "file_name": file_name,
             "columns": df.columns.tolist(),
-            "data": df.to_dict('records')
+            "data": records
         })
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"读取文件失败: {str(e)}"})
