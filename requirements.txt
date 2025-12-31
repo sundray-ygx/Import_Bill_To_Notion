@@ -1,0 +1,5 @@
+notion-client
+pandas
+python-dotenv
+APScheduler
+pillow

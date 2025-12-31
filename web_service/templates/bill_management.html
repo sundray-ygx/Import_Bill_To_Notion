@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账单管理 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Notion账单导入服务</h1>
+            <nav>
+                <a href="/" class="nav-link">首页</a>
+                <a href="/bill-management" class="nav-link active">账单管理</a>
+                <a href="/service-management" class="nav-link">服务管理</a>
+                <a href="/log-management" class="nav-link">日志管理</a>
+            </nav>
+        </header>
+        
+        <main>
+            <!-- 顶部：上传账单表单 -->
+            <div class="upload-form-container">
+                <h2>上传账单</h2>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label for="file">选择账单文件</label>
+                            <input type="file" id="file" name="file" accept=".csv,.txt,.xls,.xlsx" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="platform">账单平台（可选）</label>
+                            <select id="platform" name="platform">
+                                <option value="">自动检测</option>
+                                <option value="alipay">支付宝</option>
+                                <option value="wechat">微信支付</option>
+                                <option value="unionpay">银联</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sync_type">同步类型</label>
+                            <select id="sync_type" name="sync_type">
+                                <option value="immediate">立即执行</option>
+                                <option value="scheduled">定时执行</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn btn-primary" id="upload-btn">
+                                <span class="btn-text">上传并导入</span>
+                                <span class="btn-loading" style="display: none;">上传中...</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="result" class="result" style="display: none;"></div>
+                    <div id="progress" class="progress" style="display: none;">
+                        <div class="progress-bar" style="width: 0%;"></div>
+                        <div class="progress-text">0%</div>
+                    </div>
+                </div>
+                
+                <!-- 底部：文件列表和预览 -->
+                <div class="file-list-container">
+                    <h2>已上传账单</h2>
+                    <div id="file-list" class="file-list">
+                        <!-- 文件列表将通过JavaScript动态生成 -->
+                        <div class="file-list-loading">加载中...</div>
+                    </div>
+                    
+                    <!-- 文件内容预览区域 -->
+                    <div id="file-preview" class="file-preview" style="display: none;">
+                        <h3 id="preview-title">账单详情: <span></span></h3>
+                        <div class="preview-controls">
+                            <button type="button" class="btn btn-secondary" id="close-preview">关闭预览</button>
+                        </div>
+                        <div id="preview-content" class="preview-content"></div>
+                    </div>
+                </div>
+        </main>
+        
+        <footer>
+            <p>© 2025 Notion账单导入服务</p>
+        </footer>
+    </div>
+    
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=Notion Bill Import Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/mnt/hgfs/code/share/python/Import_Bill_To_Notion
+ExecStart=/usr/bin/python3 -m web_service.main
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target

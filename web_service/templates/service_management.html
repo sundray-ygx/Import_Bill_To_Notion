@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务管理 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Notion账单导入服务</h1>
+            <nav>
+                <a href="/" class="nav-link">首页</a>
+                <a href="/bill-management" class="nav-link">账单管理</a>
+                <a href="/service-management" class="nav-link active">服务管理</a>
+                <a href="/log-management" class="nav-link">日志管理</a>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>服务管理</h2>
+            
+            <div class="status-section">
+                <h3>服务状态</h3>
+                <div class="status-card">
+                    <span class="status-indicator online"></span>
+                    <span class="status-text">服务运行正常</span>
+                </div>
+            </div>
+            
+            <div class="service-info">
+                <h3>服务信息</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <strong>服务地址:</strong> http://0.0.0.0:8000
+                    </div>
+                    <div class="info-item">
+                        <strong>当前版本:</strong> 1.0.0
+                    </div>
+                    <div class="info-item">
+                        <strong>运行环境:</strong> Python 3.8
+                    </div>
+                    <div class="info-item">
+                        <strong>启动时间:</strong> 2025-12-31 09:21:19
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-stats">
+                <h3>服务统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>总上传文件数</h4>
+                        <div class="stat-value" id="total-files">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>成功导入数</h4>
+                        <div class="stat-value" id="success-imports">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>失败导入数</h4>
+                        <div class="stat-value" id="failed-imports">0</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>© 2025 Notion账单导入服务</p>
+        </footer>
+    </div>
+    
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
