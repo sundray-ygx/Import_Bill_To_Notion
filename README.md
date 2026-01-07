@@ -11,6 +11,11 @@
   - 银联账单
 - ✅ 自动检测账单格式，无需手动选择平台
 - ✅ 支持立即导入和定时自动导入两种模式
+- ✅ **根据收/支分类自动导入到不同数据库**
+  - 收入记录导入到收入数据库
+  - 支出记录导入到支出数据库
+  - 支持自定义数据库ID配置
+- ✅ **智能过滤"不计收支"记录**，只同步有效交易
 - ✅ Web服务界面，方便管理和操作
 - ✅ 实时日志记录和查看
 - ✅ 支持文件管理，可查看和删除已上传的账单文件
@@ -20,7 +25,7 @@
 - 📁 账单管理
   - 上传账单文件
   - 查看已上传文件列表
-  - 查看账单文件内容
+  - **智能显示表头行之后的内容**，无需查看无关信息
   - 删除账单文件
   - 选择导入方式（立即执行/定时执行）
   - 自动检测或手动选择账单平台
@@ -73,7 +78,8 @@ vi .env
 
 配置项说明：
 - `NOTION_API_KEY` - Notion API密钥
-- `NOTION_DATABASE_ID` - 目标Notion数据库ID
+- `NOTION_INCOME_DATABASE_ID` - 收入账单目标Notion数据库ID
+- `NOTION_EXPENSE_DATABASE_ID` - 支出账单目标Notion数据库ID
 - `UPLOAD_DIR` - 上传文件存储目录
 - `LOG_LEVEL` - 日志级别（DEBUG, INFO, WARNING, ERROR）
 
@@ -149,10 +155,13 @@ python3 main.py --schedule
 │   └── unionpay_parser.py     # 银联账单解析器
 ├── scheduler.py               # 定时任务调度器
 ├── web_service/               # Web服务目录
+│   ├── __init__.py            # Web服务包
 │   ├── main.py                # Web服务主入口
 │   ├── routes/                # API路由
+│   │   ├── __init__.py        # 路由入口
 │   │   └── upload.py          # 文件上传路由
 │   ├── services/              # 业务服务
+│   │   ├── __init__.py        # 服务入口
 │   │   ├── file_service.py    # 文件服务
 │   │   └── import_service.py  # 导入服务
 │   ├── static/                # 静态资源
@@ -178,41 +187,61 @@ python3 main.py --schedule
 | 配置项 | 说明 | 示例值 |
 |--------|------|--------|
 | NOTION_API_KEY | Notion API密钥，用于访问Notion API | secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx |
-| NOTION_DATABASE_ID | 目标Notion数据库ID，账单将导入到此数据库 | 1234567890abcdef1234567890abcdef |
-| UPLOAD_DIR | 上传文件存储目录 | ./uploads |
+| NOTION_INCOME_DATABASE_ID | 收入账单目标Notion数据库ID | 1234567890abcdef1234567890abcdef |
+| NOTION_EXPENSE_DATABASE_ID | 支出账单目标Notion数据库ID | 1234567890abcdef1234567890abcdef |
+| DEFAULT_BILL_DIR | 定时任务默认账单目录 | ./bills |
 | LOG_LEVEL | 日志级别，可选值：DEBUG, INFO, WARNING, ERROR | INFO |
+| SCHEDULER_ENABLED | 是否启用定时任务 | true |
+| SCHEDULER_CRON | 定时任务执行频率（cron表达式） | 0 0 1 * * |
 
 ### Notion数据库配置
 
-需要在Notion中创建一个数据库，包含以下属性：
+需要在Notion中创建两个数据库：
+
+#### 收入数据库
+包含以下属性：
 - **Name** (标题) - 账单记录名称
-- **Amount** (数字) - 金额
+- **Price** (数字) - 金额
 - **Date** (日期) - 交易日期
-- **Platform** (选择) - 支付平台（支付宝/微信支付/银联）
-- **Type** (选择) - 交易类型（收入/支出）
-- **Description** (富文本) - 交易描述
-- **Transaction ID** (文本) - 交易ID
+- **Category** (选择) - 交易分类
+- **Counterparty** (富文本) - 交易对方
+- **Remarks** (富文本) - 备注
+- **Income Expense** (选择) - 收支类型
+- **Merchant Tracking Number** (富文本) - 商家订单号
+- **Transaction Number** (富文本) - 交易订单号
+- **Payment Method** (选择) - 支付方式
+- **From** (选择) - 支付平台（支付宝/微信支付/银联）
+
+#### 支出数据库
+与收入数据库属性相同，用于存储支出记录
 
 ## 注意事项
 
 1. **账单格式要求**
    - 确保上传的账单文件符合各平台的标准格式
    - 目前只支持CSV格式的账单文件
+   - 账单文件必须包含"收/支"列，用于区分收入和支出
 
 2. **Notion API权限**
    - 确保Notion API密钥具有足够的权限访问目标数据库
    - 建议创建专门的集成，并仅授予所需的数据库访问权限
 
 3. **定时任务配置**
-   - 定时任务默认每天执行一次，可在`scheduler.py`中修改执行频率
+   - 定时任务默认每月1日0点执行，可在`.env`文件中修改执行频率
+   - 定时任务会自动读取`DEFAULT_BILL_DIR`目录下的最新账单文件
 
 4. **日志管理**
    - 日志文件默认存储在`bill_import.log`
    - 可在配置文件中修改日志级别和存储位置
 
 5. **文件上传限制**
-   - 单个文件大小限制为100MB
+   - 单个文件大小限制为50MB
    - 支持的文件格式：CSV, TXT, XLS, XLSX
+
+6. **数据同步规则**
+   - "不计收支"的记录会被自动过滤，不会同步到Notion
+   - 收入记录自动导入到收入数据库
+   - 支出记录自动导入到支出数据库
 
 ## 开发说明
 
@@ -240,6 +269,13 @@ MIT License
 欢迎提交Issue和Pull Request！
 
 ## 更新日志
+
+- v1.1.0 (2026-01-07)
+  - **新增**：根据收/支分类自动导入到不同数据库
+  - **新增**：智能过滤"不计收支"记录
+  - **优化**：Web页面只显示表头行之后的内容
+  - **优化**：支持自定义收入和支出数据库ID配置
+  - **优化**：配置文件支持更多自定义选项
 
 - v1.0.0 (2025-12-31)
   - 初始版本
