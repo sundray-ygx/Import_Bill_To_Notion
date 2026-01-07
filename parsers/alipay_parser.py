@@ -35,7 +35,7 @@ class AlipayParser(BaseBillParser):
                 header_line = None
                 for i, line in enumerate(lines):
                     # 更宽松的检测逻辑，只要包含交易时间关键词即可
-                    if any(keyword in line for keyword in ['交易时间', '交易日期', '时间']):
+                    if any(keyword in line for keyword in ['交易时间', '交易分类']):
                         header_line = i
                         logger.info(f"找到表头行，位于第 {i+1} 行，内容：{line.strip()}")
                         break
