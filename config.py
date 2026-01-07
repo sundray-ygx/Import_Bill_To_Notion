@@ -10,6 +10,8 @@ class Config:
     # Notion Configuration
     NOTION_API_KEY = os.getenv("NOTION_API_KEY", "")
     NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID", "")
+    NOTION_INCOME_DATABASE_ID = os.getenv("NOTION_INCOME_DATABASE_ID", "")
+    NOTION_EXPENSE_DATABASE_ID = os.getenv("NOTION_EXPENSE_DATABASE_ID", "")
     
     # Bill File Configuration
     DEFAULT_BILL_DIR = os.getenv("DEFAULT_BILL_DIR", "./bills")
@@ -27,7 +29,8 @@ class Config:
         """Validate required configuration"""
         required_fields = [
             ("NOTION_API_KEY", cls.NOTION_API_KEY),
-            ("NOTION_DATABASE_ID", cls.NOTION_DATABASE_ID)
+            ("NOTION_INCOME_DATABASE_ID", cls.NOTION_INCOME_DATABASE_ID),
+            ("NOTION_EXPENSE_DATABASE_ID", cls.NOTION_EXPENSE_DATABASE_ID)
         ]
         
         missing_fields = [field[0] for field in required_fields if not field[1]]

@@ -84,16 +84,44 @@ async def get_file_content(file_name: str):
         if not file_name.endswith('.csv'):
             return JSONResponse(status_code=400, content={"message": "只支持查看CSV文件"})
         
-        # 读取CSV文件内容，只显示前20行，尝试多种编码
+        # 读取CSV文件内容，只显示表头行之后的内容，尝试多种编码
         encodings = ['gbk', 'utf-8', 'gb2312', 'latin-1']
         df = None
+        header_line = None
         
         for encoding in encodings:
             try:
-                df = pd.read_csv(file_path, encoding=encoding, nrows=20)
-                break
+                # 先读取文件内容，找到表头行
+                with open(file_path, 'r', encoding=encoding) as f:
+                    lines = f.readlines()
+                
+                # 查找表头行（包含交易时间、收/支等关键词的行）
+                for i, line in enumerate(lines):
+                    if any(keyword in line for keyword in ['交易时间', '交易分类']):
+                        header_line = i
+                        break
+                
+                if header_line is not None:
+                    # 从表头行开始读取，只显示前20行数据
+                    df = pd.read_csv(
+                        file_path, 
+                        encoding=encoding, 
+                        skiprows=header_line, 
+                        header=0, 
+                        nrows=20
+                    )
+                    break
             except Exception as e:
                 continue
+        
+        if df is None:
+            # 如果找不到表头行，尝试默认方式读取
+            for encoding in encodings:
+                try:
+                    df = pd.read_csv(file_path, encoding=encoding, nrows=20)
+                    break
+                except Exception as e:
+                    continue
         
         if df is None:
             return JSONResponse(status_code=500, content={"message": "无法读取文件内容，尝试多种编码均失败"})

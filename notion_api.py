@@ -9,18 +9,23 @@ class NotionClient:
     
     def __init__(self):
         """Initialize Notion client"""
+
         logger.info(f"初始化Notion客户端，API密钥: {'***' if Config.NOTION_API_KEY else '未配置'}")
-        logger.info(f"数据库ID: {'***' if Config.NOTION_DATABASE_ID else '未配置'}")
+        logger.info(f"收入数据库ID: {'***' if Config.NOTION_INCOME_DATABASE_ID else '未配置'}")
+        logger.info(f"支出数据库ID: {'***' if Config.NOTION_EXPENSE_DATABASE_ID else '未配置'}")
         
         # 检查API密钥和数据库ID是否配置
         if not Config.NOTION_API_KEY:
             logger.error("Notion API密钥未配置")
-        if not Config.NOTION_DATABASE_ID:
-            logger.error("Notion数据库ID未配置")
+        if not Config.NOTION_INCOME_DATABASE_ID:
+            logger.error("Notion收入数据库ID未配置")
+        if not Config.NOTION_EXPENSE_DATABASE_ID:
+            logger.error("Notion支出数据库ID未配置")
         
         # 初始化Notion客户端
         self.client = NotionApiClient(auth=Config.NOTION_API_KEY)
-        self.database_id = Config.NOTION_DATABASE_ID
+        self.income_database_id = Config.NOTION_INCOME_DATABASE_ID
+        self.expense_database_id = Config.NOTION_EXPENSE_DATABASE_ID
         self.config = Config
     
     def create_page(self, properties):
@@ -29,12 +34,26 @@ class NotionClient:
             # 清理properties中的无效值，确保符合Notion API要求
             cleaned_properties = {}
             
+            # 提取收入/支出类型
+            income_expense_type = ""
+            if 'Income Expense' in properties:
+                ie_prop = properties['Income Expense']
+                if ie_prop and 'select' in ie_prop:
+                    select_value = ie_prop['select']
+                    if select_value and 'name' in select_value:
+                        income_expense_type = select_value['name'].strip()
+            
             for prop_name, prop_value in properties.items():
                 if prop_value is None:
                     continue
                 
                 # 跳过空对象
                 if isinstance(prop_value, dict) and not prop_value:
+                    continue
+                
+                # 收支字段 不处理
+                if prop_name == 'Income Expense':
+                    logger.info(f"跳过Income Expense字段: {prop_value}")
                     continue
                 
                 cleaned_prop = {}
@@ -83,11 +102,17 @@ class NotionClient:
             if not cleaned_properties:
                 cleaned_properties['Name'] = {'title': [{'text': {'content': 'Unknown Record'}}]}
             
+            # 根据收入/支出类型选择数据库
+            if income_expense_type == '收入':
+                database_id = self.income_database_id
+            else:
+                database_id = self.expense_database_id
+            
             response = self.client.pages.create(
-                parent={"database_id": self.database_id},
+                parent={"database_id": database_id},
                 properties=cleaned_properties
             )
-            logger.info(f"Created page: {response['id']}")
+            logger.info(f"Created page: {response['id']} in database: {'income' if income_expense_type == '收入' else 'expense'}")
             return response
         except Exception as e:
             logger.error(f"Failed to create page: {e}")
@@ -145,9 +170,13 @@ class NotionClient:
             test_response = self.client.users.me()
             logger.info(f"API密钥有效，当前用户: {test_response.get('name', '未知')}")
             
-            # Test database access
-            response = self.client.databases.retrieve(database_id=self.database_id)
-            logger.info(f"成功访问数据库，数据库名称: {response.get('title', [{}])[0].get('text', {}).get('content', '未知')}")
+            # Test income database access
+            income_response = self.client.databases.retrieve(database_id=self.income_database_id)
+            logger.info(f"成功访问收入数据库，数据库名称: {income_response.get('title', [{}])[0].get('text', {}).get('content', '未知')}")
+            
+            # Test expense database access
+            expense_response = self.client.databases.retrieve(database_id=self.expense_database_id)
+            logger.info(f"成功访问支出数据库，数据库名称: {expense_response.get('title', [{}])[0].get('text', {}).get('content', '未知')}")
             
             logger.info("Notion API连接验证成功")
             return True

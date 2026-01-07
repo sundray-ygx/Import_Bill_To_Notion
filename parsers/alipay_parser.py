@@ -8,7 +8,7 @@ class AlipayParser(BaseBillParser):
     """Alipay bill parser"""
     
     def get_platform(self):
-        return "支付宝"
+        return "Alipay"
     
     def parse(self):
         """Parse Alipay bill CSV file"""
@@ -278,7 +278,7 @@ class AlipayParser(BaseBillParser):
                 }
             },
             # 支付平台 (Payment Platform)
-            'Payment Platform': {
+            'From': {
                 'select': {
                     'name': self.get_platform()
                 }

@@ -111,9 +111,9 @@ class UnionPayParser(BaseBillParser):
                 'select': {
                     'name': str(record.get('income_expense', '')).strip() if 'income_expense' in record and record['income_expense'] else ''
                 }
-            },
+            }, 
             # 支付平台 (Payment Platform)
-            'Payment Platform': {
+            'From': {
                 'select': {
                     'name': self.get_platform()
                 }

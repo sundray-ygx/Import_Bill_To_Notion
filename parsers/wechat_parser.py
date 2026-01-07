@@ -8,7 +8,7 @@ class WeChatParser(BaseBillParser):
     """WeChat payment bill parser"""
     
     def get_platform(self):
-        return "微信支付"
+        return "WeChatPay"
     
     def parse(self):
         """Parse WeChat payment bill CSV file"""
@@ -292,7 +292,7 @@ class WeChatParser(BaseBillParser):
                 'select': {
                     'name': str(record.get('income_expense', '')).strip() if record.get('income_expense') else ''
                 }
-            },
+            }, 
             # 交易订单号 (Transaction Number)
             'Transaction Number': {
                 'rich_text': [{
@@ -316,7 +316,7 @@ class WeChatParser(BaseBillParser):
                 }
             },
             # 支付平台 (Payment Platform)
-            'Payment Platform': {
+            'From': {
                 'select': {
                     'name': self.get_platform()
                 }

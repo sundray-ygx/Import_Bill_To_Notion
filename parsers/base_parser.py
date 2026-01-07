@@ -65,6 +65,9 @@ class BaseBillParser(ABC):
         notion_records = []
         
         for _, record in parsed_data.iterrows():
+            # 跳过不计收支的行
+            if hasattr(record, 'income_expense') and record['income_expense'] == '不计收支':
+                continue
             notion_record = self._convert_to_notion(record)
             notion_records.append(notion_record)
         
