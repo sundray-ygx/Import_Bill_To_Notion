@@ -53,7 +53,7 @@ class NotionClient:
                 
                 # 收支字段 不处理
                 if prop_name == 'Income Expense':
-                    logger.info(f"跳过Income Expense字段: {prop_value}")
+                    # logger.info(f"跳过Income Expense字段: {prop_value}")
                     continue
                 
                 cleaned_prop = {}
