@@ -1,30 +1,33 @@
 // 页面加载完成后执行
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Notion账单导入服务已加载');
-    
+
     // 获取当前页面的元素
     const uploadForm = document.getElementById('upload-form');
     const fileListDiv = document.getElementById('file-list');
     const filePreviewDiv = document.getElementById('file-preview');
     const closePreviewBtn = document.getElementById('close-preview');
-    
+
     // 加载文件列表（如果在账单管理页面）
     if (fileListDiv) {
         loadFileList();
     }
-    
+
     // 关闭预览事件（如果在账单管理页面）
     if (closePreviewBtn) {
         closePreviewBtn.addEventListener('click', () => {
             filePreviewDiv.style.display = 'none';
         });
     }
-    
+
     // 上传表单处理（如果在上传或账单管理页面）
     if (uploadForm) {
         setupUploadForm(uploadForm);
     }
-    
+
+    // 服务管理页面处理
+    setupServiceManagement();
+
     // 日志管理页面处理
     setupLogManagement();
 });
@@ -217,17 +220,94 @@ window.viewFile = async function(fileName) {
     }
 }
 
+// 设置服务管理页面
+function setupServiceManagement() {
+    // 检查是否在服务管理页面
+    if (document.querySelector('.service-info') || document.querySelector('.service-stats')) {
+        loadServiceInfo();
+
+        // 每5秒刷新一次服务信息
+        setInterval(loadServiceInfo, 5000);
+    }
+}
+
+// 加载服务信息
+async function loadServiceInfo() {
+    try {
+        const response = await fetch('/api/service-info');
+        const data = await response.json();
+
+        // 更新启动时间
+        const startTimeElement = document.querySelector('.info-item:nth-child(4)');
+        if (startTimeElement && data.start_time) {
+            startTimeElement.innerHTML = `<strong>启动时间:</strong> ${data.start_time}`;
+        }
+
+        // 更新运行时间（添加新的info-item如果不存在）
+        let uptimeElement = document.querySelector('.info-item[data-uptime]');
+        if (!uptimeElement) {
+            const infoGrid = document.querySelector('.info-grid');
+            if (infoGrid) {
+                const newUptimeElement = document.createElement('div');
+                newUptimeElement.className = 'info-item';
+                newUptimeElement.setAttribute('data-uptime', 'true');
+                newUptimeElement.innerHTML = `<strong>运行时间:</strong> ${data.uptime || '未知'}`;
+                infoGrid.appendChild(newUptimeElement);
+                uptimeElement = newUptimeElement;
+            }
+        } else {
+            uptimeElement.innerHTML = `<strong>运行时间:</strong> ${data.uptime || '未知'}`;
+        }
+
+        // 更新Python版本
+        const pythonVersionElement = document.querySelector('.info-item:nth-child(3)');
+        if (pythonVersionElement && data.python_version) {
+            pythonVersionElement.innerHTML = `<strong>运行环境:</strong> Python ${data.python_version}`;
+        }
+
+        // 更新内存使用
+        let memoryElement = document.querySelector('.info-item[data-memory]');
+        if (!memoryElement) {
+            const infoGrid = document.querySelector('.info-grid');
+            if (infoGrid) {
+                const newMemoryElement = document.createElement('div');
+                newMemoryElement.className = 'info-item';
+                newMemoryElement.setAttribute('data-memory', 'true');
+                newMemoryElement.innerHTML = `<strong>内存使用:</strong> ${data.memory_usage || '未知'}`;
+                infoGrid.appendChild(newMemoryElement);
+                memoryElement = newMemoryElement;
+            }
+        } else {
+            memoryElement.innerHTML = `<strong>内存使用:</strong> ${data.memory_usage || '未知'}`;
+        }
+
+        // 更新统计数据
+        if (data.stats) {
+            const totalFilesElement = document.getElementById('total-files');
+            const successImportsElement = document.getElementById('success-imports');
+            const failedImportsElement = document.getElementById('failed-imports');
+
+            if (totalFilesElement) totalFilesElement.textContent = data.stats.total_uploads || 0;
+            if (successImportsElement) successImportsElement.textContent = data.stats.success_imports || 0;
+            if (failedImportsElement) failedImportsElement.textContent = data.stats.failed_imports || 0;
+        }
+    } catch (error) {
+        console.error('加载服务信息失败:', error);
+    }
+}
+
 // 设置日志管理页面
 function setupLogManagement() {
     const refreshLogsBtn = document.getElementById('refresh-logs');
     const clearLogsBtn = document.getElementById('clear-logs');
-    
+    const logLevelSelect = document.getElementById('log-level');
+
     if (refreshLogsBtn) {
         refreshLogsBtn.addEventListener('click', () => {
             loadLogs();
         });
     }
-    
+
     if (clearLogsBtn) {
         clearLogsBtn.addEventListener('click', () => {
             if (confirm('确定要清空日志吗？')) {
@@ -235,7 +315,14 @@ function setupLogManagement() {
             }
         });
     }
-    
+
+    // 日志级别变更时自动刷新
+    if (logLevelSelect) {
+        logLevelSelect.addEventListener('change', () => {
+            loadLogs();
+        });
+    }
+
     // 初始加载日志
     if (document.getElementById('log-container')) {
         loadLogs();

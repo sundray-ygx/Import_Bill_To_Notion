@@ -1,66 +1,51 @@
+"""Parser factory with auto-detection."""
+
 from .base_parser import BaseBillParser
 from .alipay_parser import AlipayParser
 from .wechat_parser import WeChatParser
 from .unionpay_parser import UnionPayParser
 
-# List of all available parsers
-PARSERS = [
-    AlipayParser,
-    WeChatParser,
-    UnionPayParser
-]
+PARSERS = [AlipayParser, WeChatParser, UnionPayParser]
+
 
 def get_parser(file_path):
-    """Auto-detect the bill format and return the appropriate parser"""
-    import os
+    """Auto-detect bill format and return appropriate parser."""
     import logging
-    
+    from utils import read_file_lines
+
     logger = logging.getLogger(__name__)
-    logger.info(f"尝试自动检测账单格式: {file_path}")
-    
-    # 读取文件前20行进行检测
-    try:
-        with open(file_path, 'r', encoding='gbk') as f:
-            lines = [f.readline().strip() for _ in range(20)]
-    except UnicodeDecodeError:
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                lines = [f.readline().strip() for _ in range(20)]
-        except UnicodeDecodeError:
-            logger.error(f"无法读取文件: {file_path}")
-            return None
-    
-    # 合并所有行，方便检测
+    logger.info(f"Detecting bill format: {file_path}")
+
+    lines = read_file_lines(file_path, 20)
+    if not lines:
+        logger.error(f"Cannot read file: {file_path}")
+        return None
+
     content = '\n'.join(lines)
-    
-    # 检测微信支付账单
-    if any(keyword in content for keyword in ['微信支付账单明细','微信昵称']):
-        logger.info(f"检测到微信支付账单格式")
+
+    # Detect platform by keywords
+    if any(kw in content for kw in ['微信支付账单明细', '微信昵称']):
+        logger.info("Detected WeChat Pay format")
         return WeChatParser(file_path)
-    
-    # 检测支付宝账单
-    if any(keyword in content for keyword in ['支付宝支付科技有限公司', '支付宝账户']):
-        logger.info(f"检测到支付宝账单格式")
+
+    if any(kw in content for kw in ['支付宝支付科技有限公司', '支付宝账户']):
+        logger.info("Detected Alipay format")
         return AlipayParser(file_path)
-    
-    # 检测银联账单
-    if any(keyword in content for keyword in ['银联', 'unionpay']):
-        logger.info(f"检测到银联账单格式")
+
+    if any(kw in content for kw in ['银联', 'unionpay']):
+        logger.info("Detected UnionPay format")
         return UnionPayParser(file_path)
-    
-    # 如果无法检测，返回None
-    logger.error(f"无法检测账单格式: {file_path}")
+
+    logger.error(f"Cannot detect format: {file_path}")
     return None
 
+
 def get_parser_by_platform(file_path, platform):
-    """Get parser by platform name"""
-    platform_mapping = {
+    """Get parser by platform name."""
+    mapping = {
         'alipay': AlipayParser,
         'wechat': WeChatParser,
         'unionpay': UnionPayParser
     }
-    
-    parser_class = platform_mapping.get(platform.lower())
-    if parser_class:
-        return parser_class(file_path)
-    return None
+    parser_class = mapping.get(platform.lower())
+    return parser_class(file_path) if parser_class else None

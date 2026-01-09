@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .env
+.bak_env
 .env.local
 .env.*.local
 venv/
