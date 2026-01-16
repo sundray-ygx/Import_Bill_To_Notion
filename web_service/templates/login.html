@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- 左侧：品牌信息 -->
+        <div class="auth-brand">
+            <div class="brand-logo">📊</div>
+            <h1 class="brand-title">欢迎回来</h1>
+            <p class="brand-subtitle">登录您的账户，继续管理您的账单</p>
+
+            <div class="brand-features">
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>支持多种支付平台</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>自动同步到Notion</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>安全可靠的数据隔离</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>随时随地管理账单</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：登录表单 -->
+        <div class="auth-form-wrapper">
+            <form class="auth-form" id="login-form">
+                <div class="form-header">
+                    <h2>登录账户</h2>
+                    <p>输入您的凭证以继续</p>
+                </div>
+
+                <!-- 消息提示 -->
+                <div id="alert-container"></div>
+
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="输入您的用户名"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <div class="input-with-icon">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="输入您的密码"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="input-icon" id="toggle-password" title="显示/隐藏密码">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        <span>记住我</span>
+                    </label>
+                    <a href="/forgot-password" class="link">忘记密码？</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-large" id="login-btn">
+                    <span class="btn-text">登录</span>
+                    <span class="btn-loading">
+                        <span class="icon-spinner">⏳</span> 登录中...
+                    </span>
+                </button>
+
+                <div class="form-footer">
+                    <p>还没有账户？<a href="/register" class="link">立即注册</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 性能优化工具库 -->
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/login.js"></script>
+</body>
+</html>

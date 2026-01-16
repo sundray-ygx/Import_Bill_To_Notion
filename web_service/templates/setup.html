@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎使用 - Notion账单导入服务</title>
+    <style>
+        /* Toast 容器样式 */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/setup.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body class="setup-page">
+    <!-- Toast 容器 -->
+    <div id="toast-container"></div>
+
+    <div class="setup-container">
+        <!-- 进度指示器 -->
+        <div class="setup-progress">
+            <div class="progress-steps">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">欢迎</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Notion配置</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">完成</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 1: 欢迎 -->
+        <div class="setup-step active" id="step-1">
+            <div class="setup-card">
+                <div class="setup-icon">👋</div>
+                <h1>欢迎使用 Notion账单导入服务</h1>
+                <p class="setup-subtitle">只需3步，开始自动导入您的账单数据到 Notion</p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">💰</div>
+                        <div class="feature-content">
+                            <h3>支持多平台</h3>
+                            <p>支付宝、微信支付、银联等主流平台</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-content">
+                            <h3>数据安全</h3>
+                            <p>每个用户独立存储，数据完全隔离</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-content">
+                            <h3>快速导入</h3>
+                            <p>上传账单文件，自动解析导入</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-actions">
+                    <button class="btn btn-secondary" id="skip-setup-btn">稍后配置</button>
+                    <button class="btn btn-primary btn-large" id="start-setup-btn">
+                        开始配置
+                        <span class="btn-arrow">→</span>
+                    </button>
+                </div>
+
+                <div class="setup-hint">
+                    <p>💡 您也可以稍后在"设置"页面中配置 Notion</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 2: Notion配置 -->
+        <div class="setup-step" id="step-2">
+            <div class="setup-card">
+                <div class="setup-icon">🔗</div>
+                <h1>连接您的 Notion 数据库</h1>
+                <p class="setup-subtitle">配置 Notion API 密钥，开始自动导入账单</p>
+
+                <!-- 配置表单 -->
+                <form id="notion-setup-form">
+                    <!-- 消息提示 -->
+                    <div id="alert-container"></div>
+
+                    <div class="form-group">
+                        <label>配置名称</label>
+                        <input type="text" id="config-name" class="form-input" value="默认配置" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notion API 密钥 <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <input type="password" id="notion-api-key" class="form-input" placeholder="secret_..." required>
+                            <button type="button" class="input-icon" id="toggle-api-key">👁️</button>
+                        </div>
+                        <div class="form-hint">
+                            在 <a href="https://www.notion.so/my-integrations" target="_blank" class="link">Notion 集成页面</a> 创建集成
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>收入数据库 ID <span class="required">*</span></label>
+                            <input type="text" id="income-db-id" class="form-input" placeholder="32位字符" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>支出数据库 ID <span class="required">*</span></label>
+                            <input type="text" id="expense-db-id" class="form-input" placeholder="32位字符" required>
+                        </div>
+                    </div>
+
+                    <div class="setup-actions">
+                        <button type="button" class="btn btn-secondary" id="back-step-1">上一步</button>
+                        <button type="button" class="btn btn-secondary" id="skip-step-2">稍后配置</button>
+                        <button type="submit" class="btn btn-primary" id="verify-config-btn">
+                            验证并保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 步骤 3: 完成 -->
+        <div class="setup-step" id="step-3">
+            <div class="setup-card">
+                <div class="setup-icon success">✓</div>
+                <h1>配置完成！</h1>
+                <p class="setup-subtitle">您的 Notion 账单导入服务已准备就绪</p>
+
+                <div class="setup-actions">
+                    <button class="btn btn-primary btn-large" id="go-to-dashboard-btn">
+                        开始使用
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/notion-setup.js"></script>
+</body>
+</html>

@@ -1012,3 +1012,111 @@ footer {
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
 .stagger-5 { animation-delay: 0.5s; }
+
+/* ========================================
+   BILL CONTENT VIEW
+   ======================================== */
+
+.bill-content-modal {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.bill-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.bill-content-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.record-count {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    background: rgba(102, 126, 234, 0.1);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.platform-tag {
+    font-size: 0.875rem;
+    color: var(--accent-primary);
+    background: rgba(102, 126, 234, 0.1);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.bill-records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bill-record-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-subtle);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.bill-record-item:hover {
+    background: var(--bg-hover);
+    border-color: rgba(102, 126, 234, 0.2);
+}
+
+.record-index {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-primary);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.record-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.record-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.field-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.field-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .record-content {
+        grid-template-columns: 1fr;
+    }
+}

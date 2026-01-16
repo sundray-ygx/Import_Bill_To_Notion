@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能介绍 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <div class="container" style="margin-top: 80px;">
+        <main class="docs-main">
+            <div class="docs-header">
+                <h1>功能介绍</h1>
+                <p class="docs-subtitle">强大的账单导入功能，让财务管理更轻松</p>
+            </div>
+
+            <div class="features-content">
+                <!-- 多平台支持 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">💳</div>
+                    <div class="feature-section-content">
+                        <h2>支持多种支付平台</h2>
+                        <p>全面支持支付宝、微信支付和银联三大主流支付平台的账单导入，一键同步所有交易记录。</p>
+                        <ul class="feature-list">
+                            <li>✅ 支付宝账单 CSV 格式</li>
+                            <li>✅ 微信支付账单 CSV 格式</li>
+                            <li>✅ 银联消费记录 CSV 格式</li>
+                            <li>✅ 自动识别账单类型和编码</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 智能识别 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">🔍</div>
+                    <div class="feature-section-content">
+                        <h2>智能格式识别</h2>
+                        <p>无需手动选择平台，系统自动检测账单格式和编码方式，支持 GBK 和 UTF-8 双编码自动切换。</p>
+                        <ul class="feature-list">
+                            <li>✅ 自动识别支付平台</li>
+                            <li>✅ 自动检测文件编码</li>
+                            <li>✅ 自动定位表头行</li>
+                            <li>✅ 智能数据清洗</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 灵活同步 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">⏰</div>
+                    <div class="feature-section-content">
+                        <h2>灵活的同步方式</h2>
+                        <p>支持立即导入或定时自动导入，满足不同场景需求。设置好 Cron 表达式，系统自动定期获取最新账单。</p>
+                        <ul class="feature-list">
+                            <li>✅ 立即上传导入</li>
+                            <li>✅ 定时自动导入</li>
+                            <li>✅ 自定义 Cron 表达式</li>
+                            <li>✅ 导入进度实时显示</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 数据安全 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">🔒</div>
+                    <div class="feature-section-content">
+                        <h2>安全可靠的数据隔离</h2>
+                        <p>多租户架构确保用户数据完全隔离，每个用户只能访问自己的账单数据和 Notion 配置，保障隐私安全。</p>
+                        <ul class="feature-list">
+                            <li>✅ 用户数据完全隔离</li>
+                            <li>✅ JWT Token 认证</li>
+                            <li>✅ 密码 BCrypt 加密</li>
+                            <li>✅ 完整的审计日志</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 多用户管理 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">👥</div>
+                    <div class="feature-section-content">
+                        <h2>多用户协作管理</h2>
+                        <p>支持多用户注册使用，超级管理员可以管理所有用户，包括重置密码、禁用账户、查看使用统计等。</p>
+                        <ul class="feature-list">
+                            <li>✅ 用户注册和登录</li>
+                            <li>✅ 角色权限管理</li>
+                            <li>✅ 后台用户管理</li>
+                            <li>✅ 系统设置配置</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 丰富的统计 -->
+                <section class="feature-section">
+                    <div class="feature-section-icon">📊</div>
+                    <div class="feature-section-content">
+                        <h2>丰富的数据统计</h2>
+                        <p>提供详细的导入历史记录和统计数据，让您清楚了解每笔账单的处理状态和结果。</p>
+                        <ul class="feature-list">
+                            <li>✅ 导入历史查询</li>
+                            <li>✅ 成功/失败统计</li>
+                            <li>✅ 错误日志记录</li>
+                            <li>✅ 文件管理功能</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- CTA -->
+            <div class="docs-cta">
+                <h2>立即开始使用</h2>
+                <p>注册账户，几分钟内即可完成配置</p>
+                <div class="cta-buttons">
+                    <a href="/register" class="btn btn-primary btn-large">免费注册</a>
+                    <a href="/docs" class="btn btn-outline btn-large">查看文档</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2025 Notion账单导入服务 - 多租户SaaS平台</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+
+    <style>
+    .docs-main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .docs-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .docs-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .docs-subtitle {
+        font-size: 1.25rem;
+        color: #6b7280;
+    }
+
+    .features-content {
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+    }
+
+    .feature-section {
+        display: flex;
+        gap: 24px;
+        padding: 32px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .feature-section:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .feature-section-icon {
+        font-size: 4rem;
+        flex-shrink: 0;
+    }
+
+    .feature-section-content h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #1a1a2e;
+    }
+
+    .feature-section-content p {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .feature-list li {
+        color: #374151;
+        font-size: 0.95rem;
+        padding: 4px 0;
+    }
+
+    .docs-cta {
+        margin-top: 60px;
+        padding: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        text-align: center;
+        color: white;
+    }
+
+    .docs-cta h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .docs-cta p {
+        font-size: 1.1rem;
+        margin-bottom: 24px;
+        opacity: 0.95;
+    }
+
+    .cta-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .docs-cta .btn-primary {
+        background: white;
+        color: #667eea;
+    }
+
+    .docs-cta .btn-outline {
+        border-color: white;
+        color: white;
+    }
+
+    .docs-cta .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .docs-header h1 {
+            font-size: 2rem;
+        }
+
+        .feature-section {
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        .feature-section-icon {
+            font-size: 3rem;
+            text-align: center;
+        }
+
+        .feature-list {
+            grid-template-columns: 1fr;
+        }
+
+        .cta-buttons {
+            flex-direction: column;
+        }
+    }
+    </style>
+</body>
+</html>

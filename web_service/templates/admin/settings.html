@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 后台管理</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- 页面标题 -->
+            <div class="admin-header">
+                <h1>系统设置</h1>
+            </div>
+
+            <!-- 设置分类 -->
+            <div class="settings-categories">
+                <button class="category-tab active" data-category="general">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">通用设置</span>
+                </button>
+                <button class="category-tab" data-category="security">
+                    <span class="tab-icon">🔒</span>
+                    <span class="tab-label">安全设置</span>
+                </button>
+                <button class="category-tab" data-category="registration">
+                    <span class="tab-icon">📝</span>
+                    <span class="tab-label">注册设置</span>
+                </button>
+            </div>
+
+            <!-- 通用设置 -->
+            <div class="settings-panel active" id="panel-general">
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2>系统参数</h2>
+                        <p class="card-description">配置系统级别的基本参数</p>
+                    </div>
+
+                    <form class="settings-form" id="general-settings-form">
+                        <div class="form-group">
+                            <label class="form-label">
+                                最大文件大小
+                                <span class="label-hint">（字节）</span>
+                            </label>
+                            <input type="number" id="max-file-size" class="form-input" value="52428800" min="1048576" max="524288000">
+                            <div class="form-hint">默认：52428800 (50MB)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">允许的文件类型</label>
+                            <input type="text" id="allowed-file-types" class="form-input" value=".csv,.txt,.xls,.xlsx">
+                            <div class="form-hint">用逗号分隔，例如：.csv,.txt,.xls,.xlsx</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">保存设置</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 安全设置 -->
+            <div class="settings-panel" id="panel-security">
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2>安全策略</h2>
+                        <p class="card-description">配置用户登录和会话安全策略</p>
+                    </div>
+
+                    <form class="settings-form" id="security-settings-form">
+                        <div class="form-group">
+                            <label class="form-label">
+                                会话超时时间
+                                <span class="label-hint">（分钟）</span>
+                            </label>
+                            <input type="number" id="session-timeout" class="form-input" value="15" min="5" max="120">
+                            <div class="form-hint">用户无操作后自动登出的时间</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                最大登录尝试次数
+                            </label>
+                            <input type="number" id="max-login-attempts" class="form-input" value="5" min="3" max="10">
+                            <div class="form-hint">超过此次数后将锁定账户</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                锁定持续时间
+                                <span class="label-hint">（分钟）</span>
+                            </label>
+                            <input type="number" id="lockout-duration" class="form-input" value="30" min="5" max="1440">
+                            <div class="form-hint">账户被锁定后的持续时间</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">保存设置</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 注册设置 -->
+            <div class="settings-panel" id="panel-registration">
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2>注册控制</h2>
+                        <p class="card-description">控制新用户注册的开关和策略</p>
+                    </div>
+
+                    <form class="settings-form" id="registration-settings-form">
+                        <div class="form-group">
+                            <div class="form-switch">
+                                <input type="checkbox" id="registration-enabled" class="switch-input">
+                                <label for="registration-enabled" class="switch-label">
+                                    <span class="switch-slider"></span>
+                                    <span class="switch-text">允许新用户注册</span>
+                                </label>
+                            </div>
+                            <div class="form-hint">关闭后，新用户无法自行注册，只能由管理员创建账户</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">保存设置</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast 容器 -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+
+    <!-- 性能优化工具库 -->
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/admin-settings.js"></script>
+</body>
+</html>
