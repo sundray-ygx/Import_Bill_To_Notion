@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if mode == 'edit' %}编辑用户{% else %}添加用户{% endif %} - 后台管理</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="/static/css/user-form.css">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="admin-main">
+        <div class="form-container">
+            <!-- 页面标题 -->
+            <div class="form-header">
+                <div class="form-header-left">
+                    <a href="/admin/users" class="btn-back">
+                        <span>←</span>
+                        <span>返回用户列表</span>
+                    </a>
+                    <h1 id="form-title">{% if mode == 'edit' %}编辑用户{% else %}添加用户{% endif %}</h1>
+                </div>
+                <div class="form-header-right">
+                    <span class="form-badge" id="form-mode-badge">{% if mode == 'edit' %}编辑{% else %}新增{% endif %}</span>
+                </div>
+            </div>
+
+            <!-- 表单卡片 -->
+            <div class="form-card">
+                <form id="user-form" class="user-form">
+                    <input type="hidden" id="user-id" name="user_id" value="{% if user_id %}{{ user_id }}{% endif %}">
+                    <input type="hidden" id="form-mode" name="mode" value="{% if mode %}{{ mode }}{% else %}create{% endif %}">
+
+                    <!-- 基本信息区域 -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h2 class="form-section-title">
+                                <span class="section-icon">👤</span>
+                                <span>基本信息</span>
+                            </h2>
+                            <p class="form-section-desc">填写用户的基本账户信息</p>
+                        </div>
+
+                        <div class="form-fields">
+                            <!-- 用户名 -->
+                            <div class="form-field" id="username-field">
+                                <label class="form-label" for="username">
+                                    用户名 <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    class="form-input"
+                                    placeholder="请输入用户名（3-50个字符）"
+                                    minlength="3"
+                                    maxlength="50"
+                                    required
+                                    {% if mode == 'edit' %}disabled{% endif %}
+                                >
+                                <span class="form-hint">用户名用于登录，3-50个字符</span>
+                            </div>
+
+                            <!-- 邮箱 -->
+                            <div class="form-field">
+                                <label class="form-label" for="email">
+                                    邮箱地址 <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    class="form-input"
+                                    placeholder="请输入邮箱地址"
+                                    required
+                                >
+                                <span class="form-hint">邮箱用于接收通知和找回密码</span>
+                            </div>
+
+                            <!-- 密码（仅创建时显示） -->
+                            <div class="form-field" id="password-field" {% if mode == 'edit' %}style="display: none;"{% endif %}>
+                                <label class="form-label" for="password">
+                                    密码 <span class="required">*</span>
+                                </label>
+                                <div class="password-input-wrapper">
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        class="form-input"
+                                        placeholder="请输入密码（至少8个字符）"
+                                        minlength="8"
+                                        {% if mode == 'create' %}required{% endif %}
+                                    >
+                                    <button type="button" class="password-toggle" id="toggle-password">
+                                        <span id="password-icon">👁</span>
+                                    </button>
+                                </div>
+                                <span class="form-hint">密码需包含大小写字母和数字，至少8个字符</span>
+
+                                <!-- 密码强度指示器 -->
+                                <div class="password-strength" id="password-strength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="strength-fill"></div>
+                                    </div>
+                                    <span class="strength-text" id="strength-text">请输入密码</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限设置区域 -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h2 class="form-section-title">
+                                <span class="section-icon">⚙️</span>
+                                <span>权限设置</span>
+                            </h2>
+                            <p class="form-section-desc">设置用户的角色和状态</p>
+                        </div>
+
+                        <div class="form-fields">
+                            <!-- 用户角色 -->
+                            <div class="form-field">
+                                <label class="form-label">用户角色</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="is_superuser" value="false" checked>
+                                        <span class="radio-mark"></span>
+                                        <span class="radio-label">
+                                            <strong>普通用户</strong>
+                                            <small>只能管理自己的账单和配置</small>
+                                        </span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="is_superuser" value="true">
+                                        <span class="radio-mark"></span>
+                                        <span class="radio-label">
+                                            <strong>超级管理员</strong>
+                                            <small>可以管理所有用户和系统设置</small>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 账户状态 -->
+                            <div class="form-field">
+                                <label class="form-label">账户状态</label>
+                                <div class="toggle-group">
+                                    <label class="toggle-option">
+                                        <input type="checkbox" name="is_active" checked>
+                                        <span class="toggle-mark"></span>
+                                        <span class="toggle-label">启用账户</span>
+                                    </label>
+                                    <span class="toggle-hint">取消勾选将禁用该账户，用户无法登录</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 表单操作区域 -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">
+                            取消
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <span class="btn-icon">💾</span>
+                            <span class="btn-text">{% if mode == 'edit' %}保存更改{% else %}创建用户{% endif %}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 额外操作区域（仅编辑模式显示） -->
+            {% if mode == 'edit' %}
+            <div class="form-extra-actions">
+                <h3>其他操作</h3>
+                <div class="extra-actions-grid">
+                    <button class="action-card warning" id="reset-password-btn">
+                        <span class="action-icon">🔑</span>
+                        <div class="action-content">
+                            <strong>重置密码</strong>
+                            <small>为用户设置新密码</small>
+                        </div>
+                    </button>
+                    <button class="action-card danger" id="delete-user-btn">
+                        <span class="action-icon">🗑️</span>
+                        <div class="action-content">
+                            <strong>删除用户</strong>
+                            <small>永久删除该用户</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Toast 容器 -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+
+    <!-- 确认模态框 -->
+    <div class="modal" id="confirm-modal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container modal-sm">
+            <div class="modal-header">
+                <h2 id="confirm-title">确认操作</h2>
+                <button class="modal-close" id="confirm-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirm-cancel">取消</button>
+                <button class="btn btn-danger" id="confirm-ok">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置密码模态框 -->
+    <div class="modal" id="password-modal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>重置密码</h2>
+                <button class="modal-close" id="password-close">✕</button>
+            </div>
+            <form id="password-reset-form" class="modal-body">
+                <div class="form-field">
+                    <label class="form-label">新密码 <span class="required">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input
+                            type="password"
+                            id="new-password"
+                            name="new_password"
+                            class="form-input"
+                            placeholder="请输入新密码"
+                            minlength="8"
+                            required
+                        >
+                        <button type="button" class="password-toggle" id="toggle-new-password">
+                            <span>👁</span>
+                        </button>
+                    </div>
+                    <span class="form-hint">密码需包含大小写字母和数字，至少8个字符</span>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">确认密码 <span class="required">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            name="confirm_password"
+                            class="form-input"
+                            placeholder="请再次输入新密码"
+                            minlength="8"
+                            required
+                        >
+                        <button type="button" class="password-toggle" id="toggle-confirm-password">
+                            <span>👁</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="password-cancel">取消</button>
+                <button class="btn btn-primary" id="password-submit">重置密码</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/user-form.js"></script>
+</body>
+</html>

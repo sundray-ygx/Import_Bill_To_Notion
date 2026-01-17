@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮助文档 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <div class="container" style="margin-top: 80px;">
+        <main class="docs-main">
+            <div class="docs-header">
+                <h1>帮助文档</h1>
+                <p class="docs-subtitle">快速上手指南</p>
+            </div>
+
+            <div class="docs-content">
+                <!-- 快速开始 -->
+                <section class="doc-section">
+                    <h2>🚀 快速开始</h2>
+                    <div class="doc-content">
+                        <h3>1. 注册账户</h3>
+                        <p>访问注册页面，填写用户名、邮箱和密码完成注册。</p>
+
+                        <h3>2. 配置 Notion</h3>
+                        <p>在"设置"页面配置您的 Notion API 密钥和数据库 ID：</p>
+                        <ul>
+                            <li>前往 <a href="https://www.notion.so/my-integrations" target="_blank">Notion 集成页面</a> 创建集成</li>
+                            <li>复制 Internal Integration Token</li>
+                            <li>在 Notion 中创建收入和支出数据库</li>
+                            <li>复制数据库 ID（从 URL 中获取）</li>
+                        </ul>
+
+                        <h3>3. 上传账单</h3>
+                        <p>在"账单管理"页面上传账单文件，系统会自动识别平台并导入数据。</p>
+                    </div>
+                </section>
+
+                <!-- Notion 数据库配置 -->
+                <section class="doc-section">
+                    <h2>📊 Notion 数据库配置</h2>
+                    <div class="doc-content">
+                        <h3>必需的属性</h3>
+                        <p>您的 Notion 数据库需要包含以下属性：</p>
+                        <div class="properties-table">
+                            <div class="property-row">
+                                <div class="property-name">Name</div>
+                                <div class="property-type">Title</div>
+                                <div class="property-desc">交易名称</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Price</div>
+                                <div class="property-type">Number</div>
+                                <div class="property-desc">交易金额</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Date</div>
+                                <div class="property-type">Date</div>
+                                <div class="property-desc">交易日期</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Category</div>
+                                <div class="property-type">Select</div>
+                                <div class="property-desc">交易分类</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Counterparty</div>
+                                <div class="property-type">Text</div>
+                                <div class="property-desc">交易对方</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Remarks</div>
+                                <div class="property-type">Text</div>
+                                <div class="property-desc">备注信息</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Income/Expense</div>
+                                <div class="property-type">Select</div>
+                                <div class="property-desc">收入/支出标识（"收入"或"支出"）</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Merchant Tracking Number</div>
+                                <div class="property-type">Text</div>
+                                <div class="property-desc">商户订单号</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Transaction Number</div>
+                                <div class="property-type">Text</div>
+                                <div class="property-desc">交易流水号</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">Payment Method</div>
+                                <div class="property-type">Select</div>
+                                <div class="property-desc">支付方式</div>
+                            </div>
+                            <div class="property-row">
+                                <div class="property-name">From</div>
+                                <div class="property-type">Select</div>
+                                <div class="property-desc">支付平台</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 支持的账单格式 -->
+                <section class="doc-section">
+                    <h2>📄 支持的账单格式</h2>
+                    <div class="doc-content">
+                        <h3>支付宝</h3>
+                        <ul>
+                            <li>文件格式：CSV</li>
+                            <li>编码：GBK 或 UTF-8</li>
+                            <li>下载方式：支付宝 App → 账单 → 账单下载</li>
+                        </ul>
+
+                        <h3>微信支付</h3>
+                        <ul>
+                            <li>文件格式：CSV</li>
+                            <li>编码：UTF-8</li>
+                            <li>下载方式：微信支付 → 账单 → 账单下载</li>
+                        </ul>
+
+                        <h3>银联</h3>
+                        <ul>
+                            <li>文件格式：CSV 或 TXT</li>
+                            <li>编码：GBK 或 UTF-8</li>
+                            <li>下载方式：云闪付 App → 账单 → 导出</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 常见问题 -->
+                <section class="doc-section">
+                    <h2>❓ 常见问题</h2>
+                    <div class="doc-content">
+                        <div class="faq-item">
+                            <h3>Q: 导入失败怎么办？</h3>
+                            <p>A: 请检查以下几点：</p>
+                            <ul>
+                                <li>Notion API 密钥是否正确</li>
+                                <li>数据库 ID 是否正确</li>
+                                <li>数据库属性是否完整配置</li>
+                                <li>账单文件格式是否正确</li>
+                            </ul>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>Q: 为什么有些记录被跳过？</h3>
+                            <p>A: "不计收支"的记录会自动跳过，不会被导入到 Notion。</p>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>Q: 如何查看导入历史？</h3>
+                            <p>A: 在"历史记录"页面可以查看所有导入记录，包括成功、失败和跳过的统计。</p>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>Q: 密码忘记了怎么办？</h3>
+                            <p>A: 如果忘记密码，请联系管理员重置密码。个人用户可以在登录页面点击"忘记密码"。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API 接口 -->
+                <section class="doc-section">
+                    <h2>🔌 API 接口</h2>
+                    <div class="doc-content">
+                        <p>本系统提供 RESTful API，可用于自动化集成。详细的 API 文档请访问 <code>/docs</code> 端点查看 Swagger 接口文档。</p>
+                        <div class="api-endpoints">
+                            <div class="endpoint">
+                                <span class="endpoint-method">POST</span>
+                                <span class="endpoint-path">/api/auth/register</span>
+                                <span class="endpoint-desc">用户注册</span>
+                            </div>
+                            <div class="endpoint">
+                                <span class="endpoint-method">POST</span>
+                                <span class="endpoint-path">/api/auth/login</span>
+                                <span class="endpoint-desc">用户登录</span>
+                            </div>
+                            <div class="endpoint">
+                                <span class="endpoint-method">POST</span>
+                                <span class="endpoint-path">/api/bills/upload</span>
+                                <span class="endpoint-desc">上传账单</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2025 Notion账单导入服务 - 多租户SaaS平台</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+
+    <style>
+    .docs-main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .docs-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .docs-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .docs-subtitle {
+        font-size: 1.25rem;
+        color: #6b7280;
+    }
+
+    .doc-section {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .doc-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #1a1a2e;
+    }
+
+    .doc-content h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #374151;
+    }
+
+    .doc-content p, .doc-content li {
+        color: #4b5563;
+        line-height: 1.6;
+    }
+
+    .doc-content ul {
+        margin-left: 20px;
+    }
+
+    .doc-content a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .doc-content a:hover {
+        text-decoration: underline;
+    }
+
+    .properties-table {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .property-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 3fr;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .property-row:last-child {
+        border-bottom: none;
+    }
+
+    .property-name {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    .property-type {
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+
+    .property-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .faq-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+
+    .faq-item h3 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        color: #667eea;
+    }
+
+    .api-endpoints {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .endpoint {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    .endpoint-method {
+        background: #10b981;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .endpoint-path {
+        font-family: monospace;
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+
+    .endpoint-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .docs-header h1 {
+            font-size: 2rem;
+        }
+
+        .doc-section {
+            padding: 20px;
+        }
+
+        .property-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+    }
+    </style>
+</body>
+</html>

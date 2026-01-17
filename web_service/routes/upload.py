@@ -82,44 +82,82 @@ async def get_files():
 
 @router.get("/file/{file_name}/content")
 async def get_file_content(file_name: str):
-    """Get CSV file content for preview."""
+    """Get file content for preview (supports CSV, TXT, XLS, XLSX)."""
     try:
         file_path = os.path.join(file_service.upload_dir, file_name)
 
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"message": "File not found"})
 
-        if not file_name.endswith('.csv'):
-            return JSONResponse(status_code=400, content={"message": "Only CSV files supported"})
+        # Get file extension
+        file_ext = file_name.lower().split('.')[-1]
 
-        # Try multiple encodings
-        encodings = ['gbk', 'utf-8', 'gb2312', 'latin-1']
+        if file_ext not in ['csv', 'txt', 'xls', 'xlsx']:
+            return JSONResponse(status_code=400, content={"message": f"Unsupported file format: .{file_ext}. Supported formats: CSV, TXT, XLS, XLSX"})
+
         df = None
         header_line = None
 
-        for encoding in encodings:
-            try:
-                with open(file_path, 'r', encoding=encoding) as f:
-                    lines = f.readlines()
+        # For CSV and TXT files
+        if file_ext in ['csv', 'txt']:
+            # Try multiple encodings
+            encodings = ['gbk', 'utf-8', 'gb2312', 'latin-1']
 
-                for i, line in enumerate(lines):
-                    if any(kw in line for kw in ['交易时间', '交易分类']):
-                        header_line = i
-                        break
-
-                if header_line is not None:
-                    df = pd.read_csv(file_path, encoding=encoding, skiprows=header_line, header=0, nrows=20)
-                    break
-            except Exception:
-                continue
-
-        if df is None:
             for encoding in encodings:
                 try:
-                    df = pd.read_csv(file_path, encoding=encoding, nrows=20)
-                    break
+                    with open(file_path, 'r', encoding=encoding) as f:
+                        lines = f.readlines()
+
+                    for i, line in enumerate(lines):
+                        if any(kw in line for kw in ['交易时间', '交易分类']):
+                            header_line = i
+                            break
+
+                    if header_line is not None:
+                        df = pd.read_csv(file_path, encoding=encoding, skiprows=header_line, header=0, nrows=20)
+                        break
                 except Exception:
                     continue
+
+            if df is None:
+                for encoding in encodings:
+                    try:
+                        df = pd.read_csv(file_path, encoding=encoding, nrows=20)
+                        break
+                    except Exception:
+                        continue
+
+        # For Excel files (XLS, XLSX)
+        elif file_ext in ['xls', 'xlsx']:
+            try:
+                # Try to import required libraries
+                if file_ext == 'xlsx':
+                    import openpyxl
+                    df = pd.read_excel(file_path, engine='openpyxl', nrows=20)
+                else:  # xls
+                    import xlrd
+                    df = pd.read_excel(file_path, engine='xlrd', nrows=20)
+
+                # Try to find header row with keywords
+                for idx in range(min(10, len(df))):
+                    row_str = ' '.join([str(v) for v in df.iloc[idx].values if pd.notna(v)])
+                    if any(kw in row_str for kw in ['交易时间', '交易分类']):
+                        df = pd.read_excel(
+                            file_path,
+                            skiprows=idx,
+                            header=0,
+                            nrows=20,
+                            engine='openpyxl' if file_ext == 'xlsx' else 'xlrd'
+                        )
+                        break
+
+            except ImportError as e:
+                return JSONResponse(
+                    status_code=500,
+                    content={"message": f"Excel support requires additional libraries. Please install: pip install openpyxl xlrd. Error: {str(e)}"}
+                )
+            except Exception as e:
+                return JSONResponse(status_code=500, content={"message": f"Failed to read Excel file: {str(e)}"})
 
         if df is None:
             return JSONResponse(status_code=500, content={"message": "Cannot read file"})
@@ -145,6 +183,7 @@ async def get_file_content(file_name: str):
 
         return JSONResponse(status_code=200, content={
             "file_name": file_name,
+            "file_type": file_ext.upper(),
             "columns": df.columns.tolist(),
             "data": records
         })

@@ -24,8 +24,9 @@ class UnionPayParser(BaseBillParser):
         return "UnionPay"
 
     def parse(self) -> pd.DataFrame:
-        """Parse UnionPay bill CSV file."""
-        self.data = pd.read_csv(self.file_path, encoding='gbk', header=0)
+        """Parse UnionPay bill file (CSV, TXT, XLS, XLSX)."""
+        # Read file using the new read_file method
+        self.data = self.read_file()
 
         # Apply column mapping
         self.data = self.apply_column_mapping(self.COLUMN_MAP, STANDARD_COLUMNS)

@@ -5,87 +5,2303 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>账单管理 - Notion账单导入服务</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Notion账单导入服务</h1>
-            <nav>
-                <a href="/" class="nav-link">首页</a>
-                <a href="/bill-management" class="nav-link active">账单管理</a>
-                <a href="/service-management" class="nav-link">服务管理</a>
-                <a href="/log-management" class="nav-link">日志管理</a>
-            </nav>
-        </header>
-        
-        <main>
-            <!-- 顶部：上传账单表单 -->
-            <div class="upload-form-container">
-                <h2>上传账单</h2>
-                <form id="upload-form" enctype="multipart/form-data">
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 2;">
-                            <label for="file">选择账单文件</label>
-                            <input type="file" id="file" name="file" accept=".csv,.txt,.xls,.xlsx" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="platform">账单平台（可选）</label>
-                            <select id="platform" name="platform">
-                                <option value="">自动检测</option>
-                                <option value="alipay">支付宝</option>
-                                <option value="wechat">微信支付</option>
-                                <option value="unionpay">银联</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="sync_type">同步类型</label>
-                            <select id="sync_type" name="sync_type">
-                                <option value="immediate">立即执行</option>
-                                <option value="scheduled">定时执行</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group" style="display: flex; align-items: flex-end;">
-                            <button type="submit" class="btn btn-primary" id="upload-btn">
-                                <span class="btn-text">上传并导入</span>
-                                <span class="btn-loading" style="display: none;">上传中...</span>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="upload-main">
+        <div class="upload-container">
+            <!-- 页面标题 -->
+            <div class="page-header-upload">
+                <div>
+                    <h1>账单管理</h1>
+                    <p class="page-description">上传您的账单文件，系统将自动识别并导入到Notion</p>
+                </div>
+            </div>
+
+            <!-- 上传区域 -->
+            <div class="upload-section">
+                <div class="upload-card">
+                    <h2>📤 上传账单</h2>
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <div class="upload-form-content">
+                            <div class="form-group">
+                                <label for="file">选择账单文件</label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="file" name="file" accept=".csv,.txt,.xls,.xlsx" required>
+                                    <div class="file-input-label" id="file-label">
+                                        <span class="file-icon">📄</span>
+                                        <span class="file-text">点击选择或拖拽文件到这里</span>
+                                    </div>
+                                </div>
+                                <div class="form-hint">支持格式：CSV, TXT, XLS, XLSX（最大50MB）</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="platform">账单平台（可选）</label>
+                                <select id="platform" name="platform" class="form-select">
+                                    <option value="">自动检测</option>
+                                    <option value="alipay">支付宝</option>
+                                    <option value="wechat">微信支付</option>
+                                    <option value="unionpay">银联</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-large" id="upload-btn">
+                                <span class="btn-text">上传账单</span>
+                                <span class="btn-loading" style="display: none;">
+                                    <span class="icon-spinner">⏳</span> 上传中...
+                                </span>
                             </button>
                         </div>
-                    </div>
-                    
-                    <div id="result" class="result" style="display: none;"></div>
-                    <div id="progress" class="progress" style="display: none;">
-                        <div class="progress-bar" style="width: 0%;"></div>
-                        <div class="progress-text">0%</div>
-                    </div>
-                </div>
-                
-                <!-- 底部：文件列表和预览 -->
-                <div class="file-list-container">
-                    <h2>已上传账单</h2>
-                    <div id="file-list" class="file-list">
-                        <!-- 文件列表将通过JavaScript动态生成 -->
-                        <div class="file-list-loading">加载中...</div>
-                    </div>
-                    
-                    <!-- 文件内容预览区域 -->
-                    <div id="file-preview" class="file-preview" style="display: none;">
-                        <h3 id="preview-title">账单详情: <span></span></h3>
-                        <div class="preview-controls">
-                            <button type="button" class="btn btn-secondary" id="close-preview">关闭预览</button>
+
+                        <div id="progress" class="upload-progress" style="display: none;">
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-text">正在处理... 0%</div>
                         </div>
-                        <div id="preview-content" class="preview-content"></div>
+
+                        <div id="result" class="upload-result" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 文件列表 -->
+            <div class="uploads-section">
+                <div class="section-header">
+                    <h2>已上传账单</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-outline btn-sm" id="refresh-btn">
+                            <span>🔄</span> 刷新
+                        </button>
                     </div>
                 </div>
-        </main>
-        
-        <footer>
-            <p>© 2025 Notion账单导入服务</p>
-        </footer>
-    </div>
-    
-    <script src="/static/js/main.js"></script>
+
+                <!-- 过滤器 -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="status-filter-select">状态筛选：</label>
+                        <select id="status-filter-select" class="filter-select">
+                            <option value="">全部</option>
+                            <option value="pending">待处理</option>
+                            <option value="processing">处理中</option>
+                            <option value="completed">已完成</option>
+                            <option value="failed">失败</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="platform-filter-select">平台筛选：</label>
+                        <select id="platform-filter-select" class="filter-select">
+                            <option value="">全部</option>
+                            <option value="alipay">支付宝</option>
+                            <option value="wechat">微信支付</option>
+                            <option value="unionpay">银联</option>
+                            <option value="auto">自动检测</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn btn-secondary btn-sm" id="clear-filters-btn">
+                            <span>✕</span> 清除筛选
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="bulk-actions-bar" id="bulk-actions-bar" style="display: none;">
+                    <div class="bulk-actions-left">
+                        <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox">
+                        <label for="select-all-checkbox" class="select-all-label">
+                            已选择 <span id="selected-count">0</span> 项
+                        </label>
+                    </div>
+                    <div class="bulk-actions-right">
+                        <button class="btn btn-danger btn-sm" id="bulk-delete-btn">
+                            <span>🗑</span> 批量删除
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="cancel-selection-btn">
+                            取消选择
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文件表格 -->
+                <div class="table-wrapper">
+                    <table class="files-table" id="files-table">
+                        <thead>
+                            <tr>
+                                <th class="col-select">
+                                    <input type="checkbox" id="table-select-all" class="table-select-all">
+                                </th>
+                                <th class="col-platform">平台</th>
+                                <th class="col-filename">文件名</th>
+                                <th class="col-original-name">原始文件名</th>
+                                <th class="col-size">文件大小</th>
+                                <th class="col-status">状态</th>
+                                <th class="col-created">上传时间</th>
+                                <th class="col-actions">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="file-list-body">
+                            <tr>
+                                <td colspan="8" class="table-loading">
+                                    <div class="loading-spinner"></div>
+                                    <p>加载中...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 文件详情模态框 -->
+                <div class="modal" id="detail-modal" style="display: none;">
+                    <div class="modal-backdrop" id="modal-backdrop"></div>
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <h2>账单详情</h2>
+                            <button class="modal-close" id="modal-close">✕</button>
+                        </div>
+                        <div class="modal-body" id="modal-body-content">
+                            <!-- 动态加载详情 -->
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" id="modal-ok">关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast 容器 -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script>
+    // 调试：检查Auth模块是否加载
+    window.addEventListener('load', () => {
+        console.log('=== 页面加载完成 ===');
+        console.log('window.Auth 存在:', !!window.Auth);
+        if (window.Auth) {
+            console.log('isLoggedIn():', window.Auth.isLoggedIn());
+            console.log('getAccessToken():', window.Auth.getAccessToken() ? '有token' : '无token');
+            const userInfo = window.Auth.getUserInfo();
+            console.log('getUserInfo():', userInfo);
+        }
+    });
+    </script>
+    <script>
+    (function() {
+        'use strict';
+
+        // 显示 Toast 消息
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+                    <span class="toast-message">${message}</span>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 渲染文件列表为表格
+        function renderFileList(files) {
+            const tableBody = document.getElementById('file-list-body');
+            if (!tableBody) return;
+
+            if (files.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <p>还没有上传任何账单</p>
+                                <p class="empty-hint">上传您的第一个账单文件开始使用</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                clearSelection();
+                return;
+            }
+
+            tableBody.innerHTML = files.map(file => {
+                // 根据状态显示不同的操作按钮
+                const isPendingOrFailed = file.status === 'pending' || file.status === 'failed';
+                const importButton = isPendingOrFailed ? `
+                            <button class="btn-action btn-import" data-action="import" data-file-id="${file.id}" title="导入到Notion">
+                                <span class="action-icon">📥</span>
+                                <span class="action-text">导入</span>
+                            </button>
+                ` : '';
+
+                return `
+                <tr class="file-row" data-file-id="${file.id}" data-status="${file.status}" data-platform="${file.platform}">
+                    <td class="col-select">
+                        <input type="checkbox" class="file-select-checkbox" data-file-id="${file.id}">
+                    </td>
+                    <td class="col-platform">
+                        <span class="platform-badge ${file.platform}">
+                            <span class="platform-icon">${getPlatformIcon(file.platform)}</span>
+                            <span class="platform-name">${getPlatformLabel(file.platform)}</span>
+                        </span>
+                    </td>
+                    <td class="col-filename">
+                        <div class="filename-cell" title="${escapeHtml(file.file_name)}">
+                            <span class="filename-text">${escapeHtml(file.file_name)}</span>
+                        </div>
+                    </td>
+                    <td class="col-original-name">
+                        <div class="filename-cell" title="${escapeHtml(file.original_file_name)}">
+                            <span class="filename-text filename-original">${escapeHtml(file.original_file_name)}</span>
+                        </div>
+                    </td>
+                    <td class="col-size">
+                        <span class="size-text">${formatFileSize(file.file_size)}</span>
+                    </td>
+                    <td class="col-status">
+                        <span class="status-badge ${file.status}">
+                            ${getStatusLabel(file.status)}
+                        </span>
+                    </td>
+                    <td class="col-created">
+                        <span class="date-text">${formatDateTime(file.created_at)}</span>
+                    </td>
+                    <td class="col-actions">
+                        <div class="action-buttons">
+                            ${importButton}
+                            <button class="btn-action btn-view" data-action="view" data-file-id="${file.id}" title="查看详情">
+                                <span class="action-icon">👁</span>
+                                <span class="action-text">查看</span>
+                            </button>
+                            <button class="btn-action btn-content" data-action="content" data-file-id="${file.id}" title="查看内容">
+                                <span class="action-icon">📋</span>
+                                <span class="action-text">内容</span>
+                            </button>
+                            <button class="btn-action btn-delete" data-action="delete" data-file-id="${file.id}" title="删除">
+                                <span class="action-icon">🗑️</span>
+                                <span class="action-text">删除</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            bindActionButtons();
+            bindCheckboxEvents();
+            updateTableSelectAll();
+        }
+
+        // 绑定操作按钮事件
+        function bindActionButtons() {
+            document.querySelectorAll('.btn-action[data-action]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const fileId = parseInt(btn.dataset.fileId);
+                    const action = btn.dataset.action;
+
+                    if (action === 'view') {
+                        await showFileDetail(fileId);
+                    } else if (action === 'content') {
+                        await showFileContent(fileId);
+                    } else if (action === 'import') {
+                        await importFile(fileId);
+                    } else if (action === 'delete') {
+                        await deleteFile(fileId);
+                    }
+                });
+            });
+        }
+
+        // 显示文件详情
+        async function showFileDetail(fileId) {
+            try {
+                const response = await window.Auth.apiRequest(`/api/bills/uploads/${fileId}`);
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    const modal = document.getElementById('detail-modal');
+                    const modalBody = document.getElementById('modal-body-content');
+
+                    modalBody.innerHTML = `
+                        <div class="detail-section">
+                            <h3>文件信息</h3>
+                            <div class="detail-row">
+                                <span class="detail-label">文件名：</span>
+                                <span class="detail-value">${escapeHtml(data.file_name)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">平台：</span>
+                                <span class="detail-value">${getPlatformLabel(data.platform)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">状态：</span>
+                                <span class="detail-value">
+                                    <span class="status-badge ${data.status}">
+                                        ${getStatusLabel(data.status)}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">上传时间：</span>
+                                <span class="detail-value">${formatDateTime(data.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    modal.style.display = 'flex';
+
+                    // 绑定关闭按钮
+                    document.getElementById('modal-close').onclick = closeModal;
+                    document.getElementById('modal-ok').onclick = closeModal;
+                    document.getElementById('modal-backdrop').onclick = closeModal;
+                }
+            } catch (error) {
+                console.error('Failed to load file detail:', error);
+                showToast('加载详情失败', 'error');
+            }
+        }
+
+        // 显示文件内容（账单数据）
+        async function showFileContent(fileId) {
+            try {
+                const response = await window.Auth.apiRequest(`/api/bills/uploads/${fileId}/preview?max_rows=500`);
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    const modal = document.getElementById('detail-modal');
+                    const modalBody = document.getElementById('modal-body-content');
+
+                    // 使用 content-preview-modal 类标识这是内容预览弹窗
+                    modal.classList.add('content-preview-modal');
+
+                    // 构建账单数据表格
+                    let tableHtml = '';
+                    if (data.data && data.data.length > 0) {
+                        const columns = data.columns || [];
+                        tableHtml = `
+                            <div class="preview-header">
+                                <div class="preview-stats">
+                                    <span class="stat-item">
+                                        <span class="stat-icon">📊</span>
+                                        <span class="stat-text">共 ${data.total_records} 条记录</span>
+                                    </span>
+                                    <span class="stat-item">
+                                        <span class="stat-icon">🔍</span>
+                                        <span class="stat-text">显示前 ${data.preview_records} 条</span>
+                                    </span>
+                                    <span class="stat-item">
+                                        <span class="stat-icon">${getPlatformIcon(data.detected_platform || data.platform)}</span>
+                                        <span class="stat-text">${getPlatformLabel(data.detected_platform || data.platform)}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="bill-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-index">#</th>
+                                            ${columns.map(col => `<th>${escapeHtml(String(col))}</th>`).join('')}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.data.map((record, index) => `
+                                            <tr class="${index % 2 === 0 ? 'even-row' : 'odd-row'}">
+                                                <td class="col-index">${index + 1}</td>
+                                                ${columns.map(col => `
+                                                    <td>${escapeHtml(String(record[col] !== undefined && record[col] !== null ? record[col] : '-'))}</td>
+                                                `).join('')}
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    } else {
+                        tableHtml = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <p>暂无账单数据</p>
+                            </div>
+                        `;
+                    }
+
+                    modalBody.innerHTML = `
+                        <div class="bill-preview-content">
+                            <div class="preview-title">
+                                <h3>账单内容预览</h3>
+                                <p class="preview-filename">${escapeHtml(data.file_name || '未知文件')}</p>
+                            </div>
+                            ${tableHtml}
+                        </div>
+                    `;
+
+                    modal.style.display = 'flex';
+
+                    // 绑定关闭按钮，同时移除 content-preview-modal 类
+                    const closeHandler = () => {
+                        closeModal();
+                        modal.classList.remove('content-preview-modal');
+                    };
+                    document.getElementById('modal-close').onclick = closeHandler;
+                    document.getElementById('modal-ok').onclick = closeHandler;
+                    document.getElementById('modal-backdrop').onclick = closeHandler;
+                }
+            } catch (error) {
+                console.error('Failed to load file content:', error);
+                showToast('加载内容失败', 'error');
+            }
+        }
+
+        // 导入文件到Notion
+        async function importFile(fileId) {
+            const confirm = window.confirm('确定要将此账单导入到 Notion 吗？');
+            if (!confirm) return;
+
+            try {
+                const response = await window.Auth.apiRequest(`/api/bills/uploads/${fileId}/import`, {
+                    method: 'POST'
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'already_imported') {
+                        showToast('此文件已经导入过了', 'warning');
+                    } else if (data.success) {
+                        showToast(`导入成功！共导入 ${data.imported || 0} 条记录`);
+                    } else {
+                        showToast(data.message || '导入失败', 'error');
+                    }
+                    loadFiles();
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '导入失败', 'error');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                showToast('网络错误', 'error');
+            }
+        }
+
+        // 删除文件
+        async function deleteFile(fileId) {
+            const confirm = window.confirm('确定要删除这个文件吗？此操作不可撤销！');
+            if (!confirm) return;
+
+            try {
+                const response = await window.Auth.apiRequest(`/api/bills/uploads/${fileId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response && response.ok) {
+                    showToast('文件已删除');
+                    loadFiles();
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to delete file:', error);
+                showToast('网络错误', 'error');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 上传表单处理
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file');
+        const fileLabel = document.getElementById('file-label');
+        const uploadBtn = document.getElementById('upload-btn');
+        const progress = document.getElementById('progress');
+        const result = document.getElementById('result');
+
+        // 文件选择显示
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileLabel.innerHTML = `
+                    <span class="file-icon">📄</span>
+                    <span class="file-text">${escapeHtml(file.name)}</span>
+                `;
+            }
+        });
+
+        // 表单提交
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!window.Auth.isLoggedIn()) {
+                showToast('请先登录', 'error');
+                window.location.href = '/login';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('请选择文件', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('platform', document.getElementById('platform').value);
+
+            // 显示加载状态
+            uploadBtn.disabled = true;
+            uploadBtn.querySelector('.btn-text').style.display = 'none';
+            uploadBtn.querySelector('.btn-loading').style.display = 'inline';
+            progress.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await window.Auth.apiRequest('/api/bills/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // 隐藏进度
+                progress.style.display = 'none';
+                result.style.display = 'block';
+
+                if (response.ok) {
+                    // 上传成功
+                    result.className = 'upload-result success';
+                    result.innerHTML = `
+                        <div class="result-icon">✓</div>
+                        <div class="result-message">${escapeHtml(data.message || '上传成功，请从下方列表选择文件进行导入')}</div>
+                    `;
+                    showToast('账单上传成功！请在下方列表中导入');
+                    loadFiles();
+                } else {
+                    result.className = 'upload-result error';
+                    result.innerHTML = `
+                        <div class="result-icon">✕</div>
+                        <div class="result-message">${escapeHtml(data.detail || '上传失败')}</div>
+                    `;
+                    showToast(data.detail || '上传失败', 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                progress.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'upload-result error';
+                result.innerHTML = `
+                    <div class="result-icon">✕</div>
+                    <div class="result-message">网络错误，请检查连接</div>
+                `;
+                showToast('网络错误', 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.querySelector('.btn-text').style.display = 'inline';
+                uploadBtn.querySelector('.btn-loading').style.display = 'none';
+            }
+        });
+
+        // 刷新按钮
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadFiles);
+        }
+
+        // 工具函数
+        function getPlatformIcon(platform) {
+            const icons = {
+                'alipay': '💰',
+                'wechat': '💚',
+                'unionpay': '💳'
+            };
+            return icons[platform] || '📄';
+        }
+
+        function getPlatformLabel(platform) {
+            const labels = {
+                'alipay': '支付宝',
+                'wechat': '微信支付',
+                'unionpay': '银联'
+            };
+            return labels[platform] || platform || '未知';
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': '处理中',
+                'processing': '处理中',
+                'success': '成功',
+                'failed': '失败',
+                'completed': '已完成'
+            };
+            return labels[status] || status || '未知';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 检查 Notion 配置状态
+        async function checkNotionConfig() {
+            if (!window.Auth.isLoggedIn()) return;
+
+            try {
+                const response = await window.Auth.apiRequest('/api/user/notion-config');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (!data.is_configured) {
+                        showNotionConfigBanner();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check Notion config:', error);
+            }
+        }
+
+        // 显示 Notion 配置提示横幅
+        function showNotionConfigBanner() {
+            if (document.getElementById('notion-config-banner')) return;
+
+            const banner = document.createElement('div');
+            banner.id = 'notion-config-banner';
+            banner.className = 'notion-config-banner';
+
+            const content = document.createElement('div');
+            content.className = 'banner-content';
+
+            const icon = document.createElement('div');
+            icon.className = 'banner-icon';
+            icon.textContent = '🔗';
+
+            const text = document.createElement('div');
+            text.className = 'banner-text';
+
+            const strong = document.createElement('strong');
+            strong.textContent = '请先配置 Notion 集成';
+
+            const span = document.createElement('span');
+            span.textContent = '您需要配置 Notion API 密钥才能导入账单数据';
+
+            text.appendChild(strong);
+            text.appendChild(span);
+
+            const actions = document.createElement('div');
+            actions.className = 'banner-actions';
+
+            const configBtn = document.createElement('a');
+            configBtn.href = '/setup';
+            configBtn.className = 'btn btn-primary btn-small';
+            configBtn.textContent = '立即配置';
+
+            const dismissBtn = document.createElement('button');
+            dismissBtn.className = 'btn btn-ghost btn-small';
+            dismissBtn.textContent = '稍后';
+            dismissBtn.onclick = function() {
+                banner.remove();
+            };
+
+            actions.appendChild(configBtn);
+            actions.appendChild(dismissBtn);
+
+            content.appendChild(icon);
+            content.appendChild(text);
+            content.appendChild(actions);
+            banner.appendChild(content);
+
+            const uploadContainer = document.querySelector('.upload-container');
+            if (uploadContainer) {
+                uploadContainer.insertBefore(banner, uploadContainer.firstChild);
+            }
+        }
+
+        // 过滤状态
+        let currentFilters = {
+            status: '',
+            platform: ''
+        };
+        let selectedFileIds = new Set();
+        let allFiles = [];
+
+        // 应用过滤
+        function applyFilters() {
+            const filteredFiles = allFiles.filter(file => {
+                const matchStatus = !currentFilters.status || file.status === currentFilters.status;
+                const matchPlatform = !currentFilters.platform || file.platform === currentFilters.platform;
+                return matchStatus && matchPlatform;
+            });
+            renderFileList(filteredFiles);
+        }
+
+        // 清除过滤
+        function clearFilters() {
+            currentFilters = { status: '', platform: '' };
+            document.getElementById('status-filter-select').value = '';
+            document.getElementById('platform-filter-select').value = '';
+            renderFileList(allFiles);
+        }
+
+        // 初始化过滤器
+        function initFilters() {
+            const statusFilter = document.getElementById('status-filter-select');
+            const platformFilter = document.getElementById('platform-filter-select');
+            const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', () => {
+                    currentFilters.status = statusFilter.value;
+                    applyFilters();
+                });
+            }
+
+            if (platformFilter) {
+                platformFilter.addEventListener('change', () => {
+                    currentFilters.platform = platformFilter.value;
+                    applyFilters();
+                });
+            }
+
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', clearFilters);
+            }
+        }
+
+        // 绑定复选框事件
+        function bindCheckboxEvents() {
+            // 文件项复选框
+            document.querySelectorAll('.file-select-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const fileId = parseInt(e.target.dataset.fileId);
+                    if (e.target.checked) {
+                        selectedFileIds.add(fileId);
+                    } else {
+                        selectedFileIds.delete(fileId);
+                    }
+                    updateBulkActionsBar();
+                    updateSelectAllCheckbox();
+                });
+            });
+        }
+
+        // 更新批量操作栏
+        function updateBulkActionsBar() {
+            const bulkActionsBar = document.getElementById('bulk-actions-bar');
+            const selectedCount = document.getElementById('selected-count');
+
+            if (selectedFileIds.size > 0) {
+                bulkActionsBar.style.display = 'flex';
+                selectedCount.textContent = selectedFileIds.size;
+            } else {
+                bulkActionsBar.style.display = 'none';
+            }
+        }
+
+        // 更新全选复选框状态
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const visibleCheckboxes = document.querySelectorAll('.file-select-checkbox');
+            const checkedCount = document.querySelectorAll('.file-select-checkbox:checked').length;
+
+            if (visibleCheckboxes.length > 0 && checkedCount === visibleCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedCount > 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+        }
+
+        // 更新表格全选复选框状态
+        function updateTableSelectAll() {
+            const tableSelectAll = document.getElementById('table-select-all');
+            const visibleCheckboxes = document.querySelectorAll('.file-select-checkbox');
+            const checkedCount = document.querySelectorAll('.file-select-checkbox:checked').length;
+
+            if (visibleCheckboxes.length > 0 && checkedCount === visibleCheckboxes.length) {
+                tableSelectAll.checked = true;
+                tableSelectAll.indeterminate = false;
+            } else if (checkedCount > 0) {
+                tableSelectAll.checked = false;
+                tableSelectAll.indeterminate = true;
+            } else {
+                tableSelectAll.checked = false;
+                tableSelectAll.indeterminate = false;
+            }
+        }
+
+        // 清空选择
+        function clearSelection() {
+            selectedFileIds.clear();
+            document.querySelectorAll('.file-select-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateBulkActionsBar();
+            updateSelectAllCheckbox();
+        }
+
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const visibleCheckboxes = document.querySelectorAll('.file-select-checkbox');
+
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                const fileId = parseInt(checkbox.dataset.fileId);
+                if (selectAllCheckbox.checked) {
+                    selectedFileIds.add(fileId);
+                } else {
+                    selectedFileIds.delete(fileId);
+                }
+            });
+            updateBulkActionsBar();
+        }
+
+        // 批量删除
+        async function bulkDeleteFiles() {
+            if (selectedFileIds.size === 0) {
+                showToast('请先选择要删除的文件', 'warning');
+                return;
+            }
+
+            const count = selectedFileIds.size;
+            const confirm = window.confirm(`确定要删除选中的 ${count} 个文件吗？此操作不可撤销！`);
+            if (!confirm) return;
+
+            try {
+                const response = await window.Auth.apiRequest('/api/bills/uploads/batch-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ upload_ids: Array.from(selectedFileIds) })
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    showToast(data.message || `成功删除 ${count} 个文件`);
+                    clearSelection();
+                    loadFiles();
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '批量删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('Bulk delete error:', error);
+                showToast('网络错误', 'error');
+            }
+        }
+
+        // 初始化批量操作
+        function initBulkActions() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', toggleSelectAll);
+            }
+
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.addEventListener('click', bulkDeleteFiles);
+            }
+
+            if (cancelSelectionBtn) {
+                cancelSelectionBtn.addEventListener('click', clearSelection);
+            }
+        }
+
+        // 加载文件列表
+        async function loadFiles() {
+            const tableBody = document.getElementById('file-list-body');
+            if (!tableBody) return;
+
+            // 检查 Auth 模块是否加载
+            if (!window.Auth) {
+                console.error('Auth module not loaded');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="table-empty">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⚠️</div>
+                                <p>认证模块未加载，请刷新页面重试</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            if (!window.Auth.isLoggedIn()) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="table-empty">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🔒</div>
+                                <p>请先登录查看上传记录</p>
+                                <a href="/login" class="btn btn-primary">立即登录</a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            try {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="table-loading">
+                            <div class="loading-spinner"></div>
+                            <p>加载中...</p>
+                        </td>
+                    </tr>
+                `;
+
+                console.log('Loading files from /api/bills/uploads...');
+                const response = await window.Auth.apiRequest('/api/bills/uploads');
+                console.log('Response received:', response);
+
+                if (!response) {
+                    throw new Error('请求失败：未收到响应');
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Files data:', data);
+                    allFiles = data.files || [];
+                    applyFilters(); // 使用过滤器渲染
+                } else if (response.status === 401) {
+                    window.location.href = '/login';
+                } else {
+                    const errorData = await response.json().catch(() => ({ detail: '未知错误' }));
+                    throw new Error(errorData.detail || `加载失败 (${response.status})`);
+                }
+            } catch (error) {
+                console.error('Failed to load files:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="table-empty">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⚠️</div>
+                                <p>加载失败：${escapeHtml(error.message)}</p>
+                                <p class="empty-hint">请检查网络连接或刷新页面重试</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // 页面初始化
+        function init() {
+            // 确保Auth模块已加载
+            if (!window.Auth) {
+                console.error('Auth module not available, retrying in 100ms...');
+                setTimeout(init, 100);
+                return;
+            }
+
+            console.log('Initializing page, Auth module loaded');
+            loadFiles();
+            checkNotionConfig();
+            initFilters();
+            initBulkActions();
+        }
+
+        // 等待所有资源加载完成后再初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                // 额外等待一小段时间确保所有脚本都已执行
+                setTimeout(init, 50);
+            });
+        } else {
+            // DOM已经准备好，但等待脚本执行
+            setTimeout(init, 50);
+        }
+    })();
+    </script>
+
+    <style>
+    .upload-main {
+        min-height: calc(100vh - 64px);
+        background: #f9fafb;
+    }
+
+    .upload-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    /* 表格包装器 - 支持水平滚动 */
+    .table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+    }
+
+    /* 文件表格样式 */
+    .files-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .files-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f9fafb;
+    }
+
+    .files-table th {
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+        background: #f9fafb;
+        position: relative;
+    }
+
+    .files-table th.col-select {
+        width: 50px;
+        text-align: center;
+    }
+
+    .files-table th.col-platform {
+        width: 120px;
+    }
+
+    .files-table th.col-filename {
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+    .files-table th.col-original-name {
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+    .files-table th.col-size {
+        width: 100px;
+        text-align: right;
+    }
+
+    .files-table th.col-status {
+        width: 120px;
+    }
+
+    .files-table th.col-created {
+        width: 160px;
+    }
+
+    .files-table th.col-actions {
+        width: 200px;
+        text-align: center;
+    }
+
+    .files-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        color: #4b5563;
+        vertical-align: middle;
+    }
+
+    .files-table td.col-select {
+        text-align: center;
+    }
+
+    .files-table td.col-size {
+        text-align: right;
+    }
+
+    .files-table td.col-actions {
+        text-align: center;
+    }
+
+    .files-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .files-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .files-table tbody tr.file-row {
+        cursor: default;
+    }
+
+    /* 表格复选框 */
+    .file-select-checkbox,
+    .table-select-all {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    /* 平台徽章 */
+    .platform-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .platform-badge.alipay {
+        background: rgba(30, 136, 229, 0.1);
+        color: #1e88e5;
+    }
+
+    .platform-badge.wechat {
+        background: rgba(9, 187, 93, 0.1);
+        color: #09bb57;
+    }
+
+    .platform-badge.unionpay {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .platform-icon {
+        font-size: 1rem;
+    }
+
+    .platform-name {
+        font-weight: 500;
+    }
+
+    /* 文件名单元格 */
+    .filename-cell {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .filename-text {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .filename-original {
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    /* 文件大小 */
+    .size-text {
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    /* 表格加载和空状态 */
+    .table-loading,
+    .table-empty {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .page-header-upload {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .page-header-upload h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 4px;
+    }
+
+    .page-description {
+        color: #6b7280;
+    }
+
+    .upload-section {
+        margin-bottom: 32px;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .upload-card h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: #1a1a2e;
+    }
+
+    .upload-form-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 16px;
+    }
+
+    .form-select {
+        padding: 10px 14px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 24px;
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .file-input-label:hover {
+        border-color: #667eea;
+        background: #f0fdf4;
+    }
+
+    .file-icon {
+        font-size: 2rem;
+    }
+
+    .file-text {
+        color: #6b7280;
+    }
+
+    .form-hint {
+        font-size: 0.85rem;
+        color: #9ca3af;
+    }
+
+    .upload-progress {
+        margin-top: 16px;
+    }
+
+    .progress-bar-bg {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        margin-top: 8px;
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .upload-result {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .upload-result.success {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+
+    .upload-result.warning {
+        background: #fffbeb;
+        color: #b45309;
+    }
+
+    .upload-result.error {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .result-icon {
+        font-size: 1.5rem;
+    }
+
+    .uploads-section {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .section-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    /* 过滤器样式 */
+    .filters-bar {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 12px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #6b7280;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .filter-select {
+        padding: 8px 32px 8px 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 32px;
+    }
+
+    .filter-select:hover {
+        border-color: #d1d5db;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* 批量操作栏样式 */
+    .bulk-actions-bar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        border: 1px solid #c7d2fe;
+        border-radius: 10px;
+        animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .bulk-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .select-all-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .select-all-label {
+        font-weight: 600;
+        color: #4338ca;
+        font-size: 0.9rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .select-all-label #selected-count {
+        color: #667eea;
+        font-weight: 700;
+    }
+
+    .bulk-actions-right {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+    }
+
+    /* 文件项复选框样式 */
+    .file-checkbox {
+        margin-right: 12px;
+    }
+
+    .file-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+    }
+
+    .file-item:last-child {
+        border-bottom: none;
+    }
+
+    .file-item:hover {
+        background: #f9fafb;
+    }
+
+    .file-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .file-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: #f3f4f6;
+        flex-shrink: 0;
+    }
+
+    .file-icon.alipay {
+        background: rgba(30, 136, 229, 0.1);
+    }
+
+    .file-icon.wechat {
+        background: rgba(9, 187, 93, 0.1);
+    }
+
+    .file-icon.unionpay {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .file-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: #1a1a2e;
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .file-meta {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .file-meta-item {
+        white-space: nowrap;
+    }
+
+    .status-badge {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .status-badge.pending, .status-badge.processing {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.failed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .file-item:hover .file-actions {
+        opacity: 1;
+    }
+
+    /* 操作按钮容器 */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+    }
+
+    .files-table tbody tr:hover .action-buttons {
+        opacity: 1;
+    }
+
+    /* 操作按钮样式 */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: white;
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-action:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-action .action-icon {
+        font-size: 0.9rem;
+        line-height: 1;
+    }
+
+    .btn-action .action-text {
+        line-height: 1;
+    }
+
+    .btn-action.btn-view:hover {
+        color: #6366f1;
+        border-color: #e0e7ff;
+        background: #eef2ff;
+    }
+
+    .btn-action.btn-content:hover {
+        color: #0891b2;
+        border-color: #cffafe;
+        background: #ecfeff;
+    }
+
+    .btn-action.btn-delete:hover {
+        color: #dc2626;
+        border-color: #fee2e2;
+        background: #fef2f2;
+    }
+
+    .btn-action.btn-import {
+        color: #059669;
+        border-color: #d1fae5;
+    }
+
+    .btn-action.btn-import:hover {
+        color: #047857;
+        border-color: #a7f3d0;
+        background: #ecfdf5;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #9ca3af;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 16px;
+    }
+
+    .empty-hint {
+        margin-top: 8px;
+        font-size: 0.9rem;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+    }
+
+    .loading-spinner {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 16px;
+        border: 3px solid #e5e7eb;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 500;
+    }
+
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-container {
+        position: relative;
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    .modal-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        background: #f3f4f6;
+    }
+
+    .modal-footer {
+        margin-top: 24px;
+        text-align: right;
+    }
+
+    .detail-section {
+        margin-bottom: 16px;
+    }
+
+    .detail-section h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #667eea;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        width: 120px;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #1a1a2e;
+    }
+
+    @media (max-width: 1400px) {
+        .upload-container {
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .upload-container {
+            padding: 20px 16px;
+        }
+
+        .page-header-upload {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .form-row {
+            flex-direction: column;
+        }
+
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .filter-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .bulk-actions-bar {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .bulk-actions-left,
+        .bulk-actions-right {
+            justify-content: center;
+        }
+
+        .bulk-actions-right {
+            flex-direction: column;
+        }
+
+        /* 移动端表格样式 - 允许水平滚动 */
+        .table-wrapper {
+            margin: 0 -16px;
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+        }
+
+        .files-table {
+            font-size: 0.8rem;
+        }
+
+        .files-table th,
+        .files-table td {
+            padding: 10px 12px;
+        }
+
+        /* 移动端操作按钮始终可见 */
+        .action-buttons {
+            opacity: 1;
+        }
+
+        .banner-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .banner-actions {
+            width: 100%;
+        }
+
+        .banner-actions .btn {
+            flex: 1;
+        }
+
+        .modal.content-preview-modal .modal-container {
+            width: 100vw;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+
+        .preview-title {
+            padding: 16px;
+        }
+
+        .preview-header {
+            padding: 12px 16px;
+        }
+
+        .preview-stats {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bill-table {
+            font-size: 0.75rem;
+        }
+
+        .bill-table th,
+        .bill-table td {
+            padding: 8px 12px;
+        }
+
+        .table-container {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bill-table {
+            min-width: 600px;
+        }
+    }
+
+    /* Notion 配置横幅 */
+    .notion-config-banner {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid #f59e0b;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .banner-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        flex-wrap: wrap;
+    }
+
+    .banner-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .banner-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .banner-text strong {
+        color: #92400e;
+        font-size: 0.95rem;
+    }
+
+    .banner-text span {
+        color: #b45309;
+        font-size: 0.875rem;
+    }
+
+    .banner-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    /* 内容预览弹窗样式 - 更宽的弹窗 */
+    .modal.content-preview-modal .modal-container {
+        max-width: 95vw;
+        width: 95vw;
+        max-height: 90vh;
+        padding: 0;
+    }
+
+    .modal.content-preview-modal .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 0;
+    }
+
+    .modal.content-preview-modal .modal-body {
+        padding: 0;
+        max-height: calc(90vh - 140px);
+        overflow: auto;
+    }
+
+    .modal.content-preview-modal .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 0;
+    }
+
+    /* 账单预览内容样式 */
+    .bill-preview-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .preview-title {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+
+    .preview-title h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0 0 8px 0;
+    }
+
+    .preview-filename {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0;
+        word-break: break-all;
+    }
+
+    .preview-header {
+        padding: 16px 24px;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .preview-stats {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #4b5563;
+    }
+
+    .stat-icon {
+        font-size: 1.1rem;
+    }
+
+    .stat-text {
+        font-weight: 500;
+    }
+
+    /* 表格容器 */
+    .table-container {
+        overflow: auto;
+        flex: 1;
+    }
+
+    /* 账单表格样式 */
+    .bill-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .bill-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f9fafb;
+    }
+
+    .bill-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+        background: #f9fafb;
+    }
+
+    .bill-table th.col-index {
+        width: 50px;
+        text-align: center;
+        background: #f3f4f6;
+    }
+
+    .bill-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        color: #4b5563;
+    }
+
+    .bill-table td.col-index {
+        text-align: center;
+        font-weight: 600;
+        color: #9ca3af;
+        background: #fafafa;
+    }
+
+    .bill-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .bill-table tbody tr.even-row {
+        background: #fafafa;
+    }
+
+    .bill-table tbody tr.odd-row {
+        background: white;
+    }
+
+    .bill-table tbody tr.even-row:hover {
+        background: #f9fafb;
+    }
+
+    @media (max-width: 768px) {
+        .banner-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .banner-actions {
+            width: 100%;
+        }
+
+        .banner-actions .btn {
+            flex: 1;
+        }
+
+        /* 移动端预览弹窗样式 */
+        .modal.content-preview-modal .modal-container {
+            width: 100vw;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+
+        .preview-title {
+            padding: 16px;
+        }
+
+        .preview-header {
+            padding: 12px 16px;
+        }
+
+        .preview-stats {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bill-table {
+            font-size: 0.75rem;
+        }
+
+        .bill-table th,
+        .bill-table td {
+            padding: 8px 12px;
+        }
+
+        .table-container {
+            /* 移动端水平滚动表格 */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bill-table {
+            /* 确保表格在移动端可滚动 */
+            min-width: 600px;
+        }
+    }
+    </style>
 </body>
 </html>

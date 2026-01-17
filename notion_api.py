@@ -1,21 +1,85 @@
 """Notion API client for bill management."""
 
-from notion_client import Client as NotionApiClient
+from notion_client import Client as NotionApiClient, APIResponseError
 from config import Config
 import logging
 
 
 logger = logging.getLogger(__name__)
 
+# Notion API 超时配置（秒）
+NOTION_TIMEOUT = 30
+
 
 class NotionClient:
-    """Notion API client wrapper."""
+    """Notion API client wrapper.
 
-    def __init__(self):
-        logger.info(f"Initializing Notion client (API key: {'***' if Config.NOTION_API_KEY else 'not configured'})")
-        self.client = NotionApiClient(auth=Config.NOTION_API_KEY)
-        self.income_db = Config.NOTION_INCOME_DATABASE_ID
-        self.expense_db = Config.NOTION_EXPENSE_DATABASE_ID
+    支持单用户模式和多租户模式：
+    - 单用户模式：使用全局配置的 Notion API key 和数据库 ID
+    - 多租户模式：根据 user_id 从数据库获取用户的 Notion 配置
+    """
+
+    def __init__(self, user_id=None):
+        """初始化 Notion 客户端。
+
+        Args:
+            user_id: 用户ID（多租户模式必需）
+        """
+        self.user_id = user_id
+
+        if Config.is_single_user_mode():
+            # 单用户模式：使用全局配置
+            logger.info(f"Initializing Notion client in single-user mode (API key: {'***' if Config.NOTION_API_KEY else 'not configured'})")
+            self.client = NotionApiClient(auth=Config.NOTION_API_KEY, timeout_ms=NOTION_TIMEOUT * 1000)
+            self.income_db = Config.NOTION_INCOME_DATABASE_ID
+            self.expense_db = Config.NOTION_EXPENSE_DATABASE_ID
+        else:
+            # 多用户模式：从数据库获取用户配置
+            if not user_id:
+                raise ValueError("user_id is required in multi-tenant mode")
+
+            logger.info(f"Initializing Notion client for user {user_id}")
+            config = self._get_user_notion_config(user_id)
+
+            # 脱敏日志
+            masked_key = f"{config['api_key'][:8]}***" if config['api_key'] else "not configured"
+            logger.info(f"User {user_id} Notion API key: {masked_key}")
+
+            self.client = NotionApiClient(auth=config['api_key'], timeout_ms=NOTION_TIMEOUT * 1000)
+            self.income_db = config['income_db']
+            self.expense_db = config['expense_db']
+
+    def _get_user_notion_config(self, user_id):
+        """从数据库获取用户的 Notion 配置。
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            包含配置信息的字典，包含 api_key, income_db, expense_db
+
+        Raises:
+            ValueError: 配置不存在时
+        """
+        from database import get_db_context
+        from models import UserNotionConfig
+
+        with get_db_context() as db:
+            config = db.query(UserNotionConfig).filter(
+                UserNotionConfig.user_id == user_id
+            ).first()
+
+            if not config:
+                raise ValueError(f"Notion config not found for user {user_id}")
+
+            # 在会话关闭前提取所有需要的值
+            # 这样可以避免会话关闭后访问对象属性的错误
+            return {
+                'api_key': config.notion_api_key,
+                'income_db': config.notion_income_database_id,
+                'expense_db': config.notion_expense_database_id,
+                'is_verified': config.is_verified
+            }
 
     def _clean_properties(self, properties: dict) -> tuple:
         """Clean properties and extract income/expense type.
@@ -130,20 +194,46 @@ class NotionClient:
         return {"imported": imported, "updated": 0, "skipped": skipped}
 
     def verify_connection(self) -> bool:
-        """Verify Notion API connection."""
+        """验证 Notion API 连接。
+
+        尝试连接到 Notion API 并验证配置是否正确。
+
+        Returns:
+            bool: 连接成功返回 True，否则返回 False
+        """
         logger.info("Verifying Notion connection...")
         try:
+            # 验证 API 密钥
+            logger.debug("Fetching user info from Notion API...")
             user = self.client.users.me()
             logger.info(f"API key valid, user: {user.get('name', 'unknown')}")
 
+            # 验证收入数据库
+            logger.debug(f"Fetching income database: {self.income_db[:8]}***")
             income_db = self.client.databases.retrieve(database_id=self.income_db)
-            logger.info(f"Income DB accessible: {income_db.get('title', [{}])[0].get('text', {}).get('content', 'unknown')}")
+            income_title = income_db.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
+            logger.info(f"Income DB accessible: {income_title}")
 
+            # 验证支出数据库
+            logger.debug(f"Fetching expense database: {self.expense_db[:8]}***")
             expense_db = self.client.databases.retrieve(database_id=self.expense_db)
-            logger.info(f"Expense DB accessible: {expense_db.get('title', [{}])[0].get('text', {}).get('content', 'unknown')}")
+            expense_title = expense_db.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
+            logger.info(f"Expense DB accessible: {expense_title}")
 
-            logger.info("Connection verified")
+            logger.info("Connection verified successfully")
             return True
+
+        except APIResponseError as e:
+            # Notion API 返回了错误响应
+            logger.error(f"Notion API error: {e}")
+            if hasattr(e, 'body') and e.body:
+                logger.error(f"Error details: {e.body}")
+            if hasattr(e, 'status'):
+                logger.error(f"Status code: {e.status}")
+            return False
+
         except Exception as e:
-            logger.error(f"Connection failed: {e}")
+            # 其他错误（网络错误、超时等）
+            error_type = type(e).__name__
+            logger.error(f"Connection failed ({error_type}): {e}")
             return False

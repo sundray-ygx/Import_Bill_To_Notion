@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账户设置 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/settings.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="settings-main">
+        <div class="settings-container">
+            <!-- 侧边栏导航 -->
+            <aside class="settings-sidebar">
+                <div class="sidebar-section">
+                    <h3>账户设置</h3>
+                    <nav class="sidebar-nav">
+                        <a href="#profile" class="sidebar-item active" data-section="profile">
+                            <span>👤</span>
+                            <span>个人资料</span>
+                        </a>
+                        <a href="#security" class="sidebar-item" data-section="security">
+                            <span>🔒</span>
+                            <span>安全设置</span>
+                        </a>
+                        <a href="#notion" class="sidebar-item" data-section="notion">
+                            <span>🔗</span>
+                            <span>Notion配置</span>
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- 主内容区 -->
+            <div class="settings-content">
+                <!-- 个人资料卡片 -->
+                <section class="settings-section" id="profile-section">
+                    <h2>个人资料</h2>
+
+                    <div class="profile-card">
+                        <div class="profile-avatar-section">
+                            <div class="profile-avatar-large">👤</div>
+                            <div>
+                                <h3 id="profile-username" style="margin: 0 0 4px 0; font-size: 1.25rem;">加载中...</h3>
+                                <p id="profile-email" style="margin: 0; color: #6b7280;">加载中...</p>
+                            </div>
+                        </div>
+
+                        <form class="profile-form" id="profile-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>用户名</label>
+                                    <input type="text" id="profile-username-input" class="form-input" readonly>
+                                    <div class="form-hint">用户名不能修改</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>电子邮箱</label>
+                                    <input type="email" id="profile-email-input" class="form-input" required>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" id="cancel-profile-btn">取消</button>
+                                <button type="submit" class="btn btn-primary">保存更改</button>
+                            </div>
+                        </form>
+
+                        <!-- 账户统计 -->
+                        <div class="stats-card">
+                            <h3>账户统计</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="stat-uploads">0</div>
+                                    <div class="stat-label">总上传次数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="stat-records">0</div>
+                                    <div class="stat-label">导入记录数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="stat-days">0天</div>
+                                    <div class="stat-label">注册时长</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 安全设置卡片 -->
+                <section class="settings-section" id="security-section" style="display: none;">
+                    <h2>安全设置</h2>
+
+                    <div class="security-card">
+                        <form id="password-form">
+                            <h3>修改密码</h3>
+
+                            <div class="form-group">
+                                <label>当前密码</label>
+                                <input type="password" id="current-password" class="form-input" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>新密码</label>
+                                <div class="input-with-icon">
+                                    <input type="password" id="new-password" class="form-input" required minlength="8">
+                                    <button type="button" class="input-icon" id="toggle-new-password">👁️</button>
+                                </div>
+
+                                <!-- 密码强度指示器 -->
+                                <div class="password-strength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="password-strength-fill"></div>
+                                    </div>
+                                    <div class="strength-text" id="password-strength-text">密码强度：未输入</div>
+                                </div>
+
+                                <div class="form-hint">至少8个字符，包含大小写字母和数字</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>确认新密码</label>
+                                <input type="password" id="confirm-new-password" class="form-input" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">更新密码</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 会话管理 -->
+                    <div class="sessions-card">
+                        <h3>活跃会话</h3>
+                        <div class="sessions-list" id="sessions-list">
+                            <!-- 动态加载 -->
+                            <div class="session-item">
+                                <div class="session-info">
+                                    <span class="session-device">当前浏览器</span>
+                                    <span class="session-time">刚刚</span>
+                                </div>
+                                <span class="badge badge-success">当前</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" id="revoke-all-sessions-btn" style="margin-top: 16px;">
+                            撤销所有其他会话
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Notion配置卡片 -->
+                <section class="settings-section" id="notion-section" style="display: none;">
+                    <h2>Notion配置</h2>
+
+                    <div class="notion-config-card">
+                        <div class="config-header">
+                            <h3>连接您的Notion数据库</h3>
+                            <p>配置您的Notion API密钥和数据库ID以开始导入账单</p>
+                        </div>
+
+                        <!-- 配置状态 -->
+                        <div class="config-status" id="config-status">
+                            <div class="config-status-icon" id="config-status-icon">❓</div>
+                            <div class="config-status-text">
+                                <h4 id="config-status-title">未配置</h4>
+                                <p id="config-status-desc">您还没有配置Notion集成</p>
+                            </div>
+                        </div>
+
+                        <form id="notion-config-form">
+                            <div class="form-group">
+                                <label>配置名称</label>
+                                <input type="text" id="config-name" class="form-input" value="默认配置">
+                                <div class="form-hint">为您的配置起一个便于识别的名称</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Notion API密钥</label>
+                                <div class="input-with-icon">
+                                    <input type="password" id="notion-api-key" class="form-input" placeholder="secret_..." required>
+                                    <button type="button" class="input-icon" id="toggle-api-key">👁️</button>
+                                </div>
+                                <div class="form-hint">
+                                    在<a href="https://www.notion.so/my-integrations" target="_blank" class="link">Notion集成页面</a>创建集成以获取API密钥
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>收入数据库ID</label>
+                                    <input type="text" id="income-db-id" class="form-input" placeholder="abc123..." required>
+                                    <div class="form-hint">从收入数据库URL中复制</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>支出数据库ID</label>
+                                    <input type="text" id="expense-db-id" class="form-input" placeholder="def456..." required>
+                                    <div class="form-hint">从支出数据库URL中复制</div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" id="verify-config-btn">
+                                    ✓ 验证配置
+                                </button>
+                                <button type="submit" class="btn btn-primary">保存配置</button>
+                            </div>
+                        </form>
+
+                        <!-- 验证结果 -->
+                        <div class="verification-result" id="verification-result" style="display: none;">
+                            <!-- 动态显示验证结果 -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 消息提示容器 -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 2000;"></div>
+
+    <!-- 性能优化工具库 -->
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/settings.js"></script>
+
+    <style>
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.95rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: #f9fafb;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-input[readonly] {
+        background: #f3f4f6;
+        cursor: not-allowed;
+    }
+
+    .input-with-icon {
+        position: relative;
+    }
+
+    .input-with-icon .form-input {
+        padding-right: 48px;
+    }
+
+    .input-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    .form-hint {
+        margin-top: 6px;
+        font-size: 0.875rem;
+        color: #9ca3af;
+    }
+
+    .password-strength {
+        margin-top: 12px;
+    }
+
+    .strength-bar {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s ease;
+    }
+
+    .strength-fill.weak {
+        width: 33%;
+        background: #ef4444;
+    }
+
+    .strength-fill.medium {
+        width: 66%;
+        background: #f59e0b;
+    }
+
+    .strength-fill.strong {
+        width: 100%;
+        background: #10b981;
+    }
+
+    .strength-text {
+        margin-top: 8px;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    /* Toast 样式 */
+    .toast {
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        margin-bottom: 12px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+        border-left: 4px solid #10b981;
+    }
+
+    .toast.error {
+        border-left: 4px solid #ef4444;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    </style>
+</body>
+</html>

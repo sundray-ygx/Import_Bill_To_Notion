@@ -30,24 +30,48 @@ class AlipayParser(BaseBillParser):
         return "Alipay"
 
     def parse(self) -> pd.DataFrame:
-        """Parse Alipay bill CSV file."""
+        """Parse Alipay bill file (CSV, TXT, XLS, XLSX)."""
         logger.info(f"Parsing Alipay bill: {self.file_path}")
 
-        # Find header and encoding
-        header_line, encoding = self.find_header_and_encoding(['交易时间', '交易分类'])
-        if header_line is None:
-            header_line, encoding = self.find_header_and_encoding(['金额', '收/支', '收支'])
+        # Determine file type
+        file_ext = self.file_path.lower().split('.')[-1]
 
-        if header_line is None:
-            raise ValueError("Could not find header line with expected keywords")
+        # For CSV/TXT files, find header and encoding
+        if file_ext in ['csv', 'txt']:
+            header_line, encoding = self.find_header_and_encoding(['交易时间', '交易分类'])
+            if header_line is None:
+                header_line, encoding = self.find_header_and_encoding(['金额', '收/支', '收支'])
 
-        # Read CSV
-        self.data = pd.read_csv(
-            self.file_path,
-            encoding=encoding,
-            skiprows=header_line,
-            header=0
-        )
+            if header_line is None:
+                raise ValueError("Could not find header line with expected keywords")
+
+            # Read file
+            self.data = self.read_file(skiprows=header_line, header=0)
+        else:
+            # For Excel files, read directly and find header
+            self.data = self.read_file()
+
+            # Find header row in Excel data
+            header_found = False
+            for idx, row in self.data.iterrows():
+                row_str = ' '.join([str(v) for v in row.values if pd.notna(v)])
+                if any(kw in row_str for kw in ['交易时间', '交易分类']):
+                    self.data = pd.read_excel(
+                        self.file_path,
+                        skiprows=idx,
+                        header=0,
+                        engine='openpyxl' if file_ext == 'xlsx' else 'xlrd'
+                    )
+                    header_found = True
+                    break
+
+            if not header_found:
+                # Try to use first row as header
+                self.data = pd.read_excel(
+                    self.file_path,
+                    header=0,
+                    engine='openpyxl' if file_ext == 'xlsx' else 'xlrd'
+                )
 
         # Remove summary line if present
         try:

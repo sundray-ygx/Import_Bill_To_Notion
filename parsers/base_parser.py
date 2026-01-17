@@ -38,6 +38,75 @@ class BaseBillParser(ABC):
         """Read CSV file with default encoding settings."""
         return pd.read_csv(self.file_path, **kwargs)
 
+    def read_file(self, **kwargs) -> pd.DataFrame:
+        """Read file in various formats (CSV, TXT, XLS, XLSX).
+
+        Args:
+            **kwargs: Additional arguments to pass to pandas read functions
+
+        Returns:
+            DataFrame: Parsed data
+
+        Raises:
+            ValueError: If file format is not supported
+        """
+        file_ext = self.file_path.lower().split('.')[-1]
+
+        try:
+            if file_ext in ['csv', 'txt']:
+                # Try multiple encodings for CSV/TXT files
+                encodings = kwargs.pop('encoding', ['gbk', 'utf-8', 'gb2312', 'latin-1'])
+                if isinstance(encodings, str):
+                    encodings = [encodings]
+
+                for encoding in encodings:
+                    try:
+                        return pd.read_csv(self.file_path, encoding=encoding, **kwargs)
+                    except (UnicodeDecodeError, Exception):
+                        continue
+                raise ValueError(f"Cannot read file with any of the encodings: {encodings}")
+
+            elif file_ext in ['xls', 'xlsx']:
+                # Read Excel files
+                try:
+                    import openpyxl
+                    import xlrd
+                except ImportError as e:
+                    raise ValueError(
+                        f"Excel support requires additional libraries. "
+                        f"Please install: pip install openpyxl xlrd. Error: {e}"
+                    )
+
+                # For XLSX files, use openpyxl engine
+                if file_ext == 'xlsx':
+                    kwargs.setdefault('engine', 'openpyxl')
+                # For XLS files, use xlrd engine
+                else:
+                    kwargs.setdefault('engine', 'xlrd')
+
+                return pd.read_excel(self.file_path, **kwargs)
+
+            else:
+                raise ValueError(
+                    f"Unsupported file format: .{file_ext}. "
+                    f"Supported formats: CSV, TXT, XLS, XLSX"
+                )
+
+        except Exception as e:
+            if file_ext in ['csv', 'txt']:
+                # Fallback for CSV/TXT with error handling
+                for encoding in ['gbk', 'utf-8', 'gb2312', 'latin-1']:
+                    try:
+                        return pd.read_csv(
+                            self.file_path,
+                            encoding=encoding,
+                            on_bad_lines='warn',
+                            **kwargs
+                        )
+                    except Exception:
+                        continue
+            raise ValueError(f"Failed to read file {self.file_path}: {str(e)}")
+
     def normalize_date(self, date_str: str, format_str: str) -> str:
         """Normalize date string to ISO format."""
         try:
@@ -128,13 +197,25 @@ class BaseBillParser(ABC):
     def clean_amount_column(self, amount_col: str = 'amount'):
         """Clean amount column: remove symbols, convert to float, make positive."""
         if amount_col not in self.data.columns:
+            logger.warning(f"Amount column '{amount_col}' not found in data")
             return
 
         logger.info(f"Cleaning amount column")
-        self.data[amount_col] = self.data[amount_col].astype(str).str.replace('￥', '', regex=False)
-        self.data[amount_col] = self.data[amount_col].str.replace(',', '', regex=False)
+        # Convert to string first to handle any non-string values
+        self.data[amount_col] = self.data[amount_col].astype(str)
+
+        # Remove currency symbols (both full-width and half-width)
+        self.data[amount_col] = self.data[amount_col].str.replace('￥', '', regex=False)  # Full-width ￥
+        self.data[amount_col] = self.data[amount_col].str.replace('¥', '', regex=False)   # Half-width ¥
+        self.data[amount_col] = self.data[amount_col].str.replace(',', '', regex=False)  # Thousand separator
+
+        # Convert to numeric
         self.data[amount_col] = pd.to_numeric(self.data[amount_col], errors='coerce')
+
+        # Make absolute value (positive)
         self.data[amount_col] = self.data[amount_col].abs()
+
+        logger.info(f"Amount column cleaned. Sample values: {self.data[amount_col].head().tolist()}")
 
     def get_parsed_data(self) -> pd.DataFrame:
         """Get parsed data."""

@@ -7,44 +7,146 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Notion账单导入服务</h1>
-            <nav>
-                <a href="/" class="nav-link active">首页</a>
-                <a href="/bill-management" class="nav-link">账单管理</a>
-                <a href="/service-management" class="nav-link">服务管理</a>
-                <a href="/log-management" class="nav-link">日志管理</a>
-            </nav>
-        </header>
-        
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <div class="container" style="margin-top: 80px;">
         <main>
             <div class="hero">
-                <h2>欢迎使用Notion账单导入服务</h2>
+                <h1>欢迎使用Notion账单导入服务</h1>
                 <p>轻松将支付宝、微信支付和银联账单导入到Notion数据库</p>
+                <div class="hero-actions">
+                    <a href="/login" class="btn btn-primary btn-large">立即开始</a>
+                    <a href="/bill-management" class="btn btn-outline btn-large">上传账单</a>
+                </div>
             </div>
-            
+
             <div class="features">
                 <div class="feature-card">
+                    <div class="feature-icon">💳</div>
                     <h3>支持多种支付平台</h3>
                     <p>支持支付宝、微信支付和银联账单导入</p>
                 </div>
                 <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
                     <h3>自动检测格式</h3>
                     <p>智能识别账单格式，无需手动选择</p>
                 </div>
                 <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
                     <h3>灵活的同步方式</h3>
                     <p>支持立即导入或定时导入</p>
                 </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>安全可靠</h3>
+                    <p>数据隔离存储，保障用户隐私</p>
+                </div>
             </div>
         </main>
-        
+
         <footer>
-            <p>© 2025 Notion账单导入服务</p>
+            <p>© 2025 Notion账单导入服务 - 多租户SaaS平台</p>
         </footer>
     </div>
-    
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
     <script src="/static/js/main.js"></script>
+
+    <style>
+    .hero {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        color: #6b7280;
+        margin-bottom: 32px;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+    }
+
+    .btn-large {
+        padding: 14px 32px;
+        font-size: 1.1rem;
+    }
+
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-align: center;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #1a1a2e;
+    }
+
+    .feature-card p {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+
+    footer {
+        text-align: center;
+        padding: 32px;
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
 </body>
 </html>

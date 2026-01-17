@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 后台管理</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- 页面标题 -->
+            <div class="admin-header">
+                <h1>用户管理</h1>
+                <button class="btn btn-primary" id="add-user-btn">
+                    <span>➕</span>
+                    <span>添加用户</span>
+                </button>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
+                        👥
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="total-users">0</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">
+                        ✅
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="active-users">0</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="stat-icon" style="background: rgba(240, 147, 251, 0.1);">
+                        📈
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="new-users-today">0</div>
+                        <div class="stat-label">今日新增</div>
+                    </div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="stat-icon" style="background: rgba(250, 112, 154, 0.1);">
+                        📊
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="total-uploads">0</div>
+                        <div class="stat-label">总上传数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索和筛选 -->
+            <div class="admin-filters">
+                <div class="filter-group">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="搜索用户名或邮箱...">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <select id="status-filter" class="filter-select">
+                        <option value="">所有状态</option>
+                        <option value="active">活跃</option>
+                        <option value="inactive">未激活</option>
+                    </select>
+
+                    <select id="role-filter" class="filter-select">
+                        <option value="">所有角色</option>
+                        <option value="user">普通用户</option>
+                        <option value="superuser">超级管理员</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 用户表格 -->
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-users">
+                            </th>
+                            <th>用户</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>上传次数</th>
+                            <th>注册时间</th>
+                            <th>最后登录</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- 动态加载用户数据 -->
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #9ca3af;">
+                                加载中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="admin-pagination">
+                <div class="pagination-info">
+                    显示 <span id="page-start">0</span> - <span id="page-end">0</span>
+                    共 <span id="total-items">0</span> 项
+                </div>
+
+                <div class="pagination-controls">
+                    <button class="btn btn-outline btn-sm" id="prev-page" disabled>
+                        ← 上一页
+                    </button>
+
+                    <div class="pagination-pages" id="pagination-pages">
+                        <!-- 动态生成页码 -->
+                    </div>
+
+                    <button class="btn btn-outline btn-sm" id="next-page">
+                        下一页 →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 用户详情模态框 -->
+    <div class="modal" id="user-detail-modal" style="display: none;">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>用户详情</h2>
+                <button class="modal-close" id="modal-close">✕</button>
+            </div>
+
+            <div class="modal-body" id="modal-body-content">
+                <!-- 动态加载用户详情 -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="edit-user-btn">
+                    <span class="btn-icon">✏️</span>
+                    <span>编辑用户</span>
+                </button>
+                <button class="btn btn-secondary" id="reset-password-btn">
+                    <span class="btn-icon">🔑</span>
+                    <span>重置密码</span>
+                </button>
+                <button class="btn btn-danger" id="delete-user-btn">
+                    <span class="btn-icon">🗑️</span>
+                    <span>删除用户</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+
+    <!-- 性能优化工具库 -->
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/admin-users.js"></script>
+</body>
+</html>

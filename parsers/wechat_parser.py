@@ -28,7 +28,7 @@ class WeChatParser(BaseBillParser):
         '商品名称': 'item_name',
         'Item': 'item_name',
         'Goods': 'item_name',
-        '金额(元)': 'amount',
+        '金额(元)': 'amount',  # Important: Excel format uses this exact name
         '金额': 'amount',
         '金额（元）': 'amount',
         'Amount': 'amount',
@@ -62,28 +62,87 @@ class WeChatParser(BaseBillParser):
         return "WeChatPay"
 
     def parse(self) -> pd.DataFrame:
-        """Parse WeChat Pay bill CSV file."""
+        """Parse WeChat Pay bill file (CSV, TXT, XLS, XLSX)."""
         logger.info(f"Parsing WeChat Pay bill: {self.file_path}")
 
-        # Find header and encoding
-        header_line, encoding = self.find_header_and_encoding(['交易时间'])
-        if header_line is None:
-            raise ValueError("Could not find header line with '交易时间'")
+        # Determine file type
+        file_ext = self.file_path.lower().split('.')[-1]
 
-        # Read CSV
-        self.data = pd.read_csv(
-            self.file_path,
-            encoding=encoding,
-            skiprows=header_line,
-            header=0
-        )
+        # For CSV/TXT files, find header and encoding
+        if file_ext in ['csv', 'txt']:
+            header_line, encoding = self.find_header_and_encoding(['交易时间'])
+            if header_line is None:
+                raise ValueError("Could not find header line with '交易时间'")
 
-        # Remove summary lines (contains '统计时间')
-        for i in range(len(self.data) - 1, max(0, len(self.data) - 20), -1):
-            try:
-                if '统计时间' in str(self.data.iloc[i, 0]):
-                    self.data = self.data[:i]
+            # Read file
+            self.data = self.read_file(skiprows=header_line, header=0)
+        else:
+            # For Excel files, read and find header
+            # First, read without header to find the actual data header row
+            temp_df = pd.read_excel(
+                self.file_path,
+                header=None,
+                nrows=50,
+                engine='openpyxl' if file_ext == 'xlsx' else 'xlrd'
+            )
+
+            # Find the row with actual column headers
+            header_row_idx = None
+            for idx in range(len(temp_df)):
+                row_str = ' '.join([str(v) for v in temp_df.iloc[idx].values if pd.notna(v)])
+                # Look for the header row that contains "交易时间" and column separator pattern
+                if '交易时间' in row_str and '交易类型' in row_str:
+                    header_row_idx = idx
+                    logger.info(f"Found header row at index {idx}: {row_str[:100]}")
                     break
+
+            if header_row_idx is None:
+                raise ValueError("Could not find header row with '交易时间' in Excel file")
+
+            # Now read the actual data starting from the header row
+            self.data = pd.read_excel(
+                self.file_path,
+                skiprows=header_row_idx,
+                header=0,
+                engine='openpyxl' if file_ext == 'xlsx' else 'xlrd'
+            )
+
+            # Clean column names (remove extra spaces and special characters)
+            self.data.columns = self.data.columns.str.strip()
+
+        # Remove summary lines at the end
+        # Look for rows that contain summary keywords or are empty
+        rows_to_keep = []
+        for idx, row in self.data.iterrows():
+            first_col_value = str(row.iloc[0]) if len(row) > 0 else ''
+
+            # Skip summary rows and empty rows
+            if any(kw in first_col_value for kw in ['统计时间', '汇总', '共计', 'Note:']):
+                logger.info(f"Stopping at summary row {idx}: {first_col_value}")
+                break
+
+            # Skip rows where first column is empty or just a number
+            if pd.notna(row.iloc[0]) and str(row.iloc[0]).strip() != '':
+                rows_to_keep.append(idx)
+
+        if rows_to_keep:
+            # Keep only data rows before summary
+            max_idx = max(rows_to_keep) + 1
+            self.data = self.data.loc[:max_idx]
+
+        # Remove rows where first column is just a row number
+        if len(self.data) > 0:
+            first_col = self.data.columns[0]
+            # Try to convert first column to numeric to detect row numbers
+            try:
+                is_row_number = pd.to_numeric(self.data[first_col], errors='coerce')
+                # If more than 50% of first column values are numeric, it might be row index
+                if is_row_number.notna().sum() / len(self.data) > 0.5:
+                    # Check if values are sequential integers
+                    unique_vals = is_row_number.dropna().nunique()
+                    if unique_vals == len(self.data):
+                        # This looks like row numbers, drop the column
+                        self.data = self.data.drop(columns=[first_col])
             except Exception:
                 pass
 

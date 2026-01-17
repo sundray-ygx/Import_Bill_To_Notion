@@ -9,3 +9,6 @@ venv/
 .venv/
 logs/
 *.log
+error.txt
+data/
+web_service/uploads/

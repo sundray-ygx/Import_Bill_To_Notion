@@ -1,6 +1,6 @@
 # Notion账单导入服务
 
-一个用于将支付宝、微信支付和银联账单自动导入到Notion数据库的服务，支持手动导入和定时自动导入功能。
+一个功能完善的账单导入服务，支持多用户认证、管理后台和账单历史记录。自动将支付宝、微信支付和银联账单导入到Notion数据库。
 
 ## 功能特性
 
@@ -16,43 +16,102 @@
   - 支出记录导入到支出数据库
   - 支持自定义数据库ID配置
 - ✅ **智能过滤"不计收支"记录**，只同步有效交易
+- ✅ **用户认证系统**
+  - 用户注册和登录
+  - 密码加密存储
+  - JWT会话管理
+  - 密码找回功能
+- ✅ **多用户支持**
+  - 每个用户独立的数据隔离
+  - 个性化的Notion配置
+  - 用户级别的文件管理
+- ✅ **管理后台**
+  - 用户管理（查看、编辑、删除用户）
+  - 系统设置管理
+  - 审计日志查看
+  - 角色权限控制（管理员/普通用户）
+- ✅ **账单历史记录**
+  - 完整的导入操作记录
+  - 详细的导入状态和结果
+  - 按用户和时间过滤
 - ✅ Web服务界面，方便管理和操作
 - ✅ 实时日志记录和查看
 - ✅ 支持文件管理，可查看和删除已上传的账单文件
 - ✅ 服务状态监控
 
 ### Web服务功能
-- 📁 账单管理
-  - 上传账单文件
-  - 查看已上传文件列表
-  - **智能显示表头行之后的内容**，无需查看无关信息
-  - 删除账单文件
-  - 选择导入方式（立即执行/定时执行）
-  - 自动检测或手动选择账单平台
 
-- 📊 服务管理
-  - 查看服务运行状态
-  - 监控服务统计信息
+#### 用户认证
+- 🔐 注册新用户
+- 🔑 用户登录/登出
+- 🔧 个人设置管理
+- 📧 密码找回功能
 
-- 📝 日志管理
-  - 实时查看服务日志
-  - 支持日志级别过滤
-  - 刷新日志内容
+#### 账单管理
+- 📁 上传账单文件
+- 📋 查看已上传文件列表
+- **智能显示表头行之后的内容**，无需查看无关信息
+- 🗑️ 删除账单文件
+- ⚙️ 选择导入方式（立即执行/定时执行）
+- 🔍 自动检测或手动选择账单平台
+
+#### 账单历史
+- 📊 查看所有导入历史记录
+- 📈 导入状态跟踪
+- 🔍 按日期和状态过滤
+- 📝 查看详细导入结果
+
+#### 个人设置
+- ⚙️ 配置个人Notion API
+- 🔑 修改密码
+- 👤 管理个人信息
+- 📊 查看使用统计
+
+#### 管理后台（仅管理员）
+- 👥 用户管理
+  - 查看所有用户列表
+  - 编辑用户信息
+  - 删除用户账号
+  - 重置用户密码
+- ⚙️ 系统设置
+  - 配置系统参数
+  - 管理全局设置
+- 📝 审计日志
+  - 查看系统操作记录
+  - 追踪用户活动
+
+#### 服务管理
+- 📊 查看服务运行状态
+- 📈 监控服务统计信息
+
+#### 日志管理
+- 📝 实时查看服务日志
+- 🔍 支持日志级别过滤
+- 🔄 刷新日志内容
 
 ## 技术栈
 
 ### 后端技术
 - **Python 3.8+** - 主要开发语言
-- **FastAPI** - Web服务框架
+- **FastAPI** - 现代化Web服务框架
 - **Uvicorn** - ASGI服务器
+- **SQLAlchemy** - ORM数据库框架
+- **Pydantic** - 数据验证和序列化
 - **APScheduler** - 任务调度框架
 - **Notion SDK** - Notion API客户端
 - **pandas** - 数据处理库
+- **JWT** - JSON Web Token认证
+- **bcrypt** - 密码加密
+
+### 数据库
+- **SQLite** - 默认数据库（支持PostgreSQL/MySQL）
+- **用户数据管理** - 用户、账单历史、审计日志
 
 ### 前端技术
 - **HTML5** - 页面结构
 - **CSS3** - 样式设计
 - **JavaScript (ES6+)** - 交互逻辑
+- **Jinja2** - 模板引擎
 
 ## 安装部署
 
@@ -77,9 +136,13 @@ vi .env
 ```
 
 配置项说明：
-- `NOTION_API_KEY` - Notion API密钥
-- `NOTION_INCOME_DATABASE_ID` - 收入账单目标Notion数据库ID
-- `NOTION_EXPENSE_DATABASE_ID` - 支出账单目标Notion数据库ID
+- `NOTION_API_KEY` - Notion API密钥（可选，用户可在个人设置中配置）
+- `NOTION_INCOME_DATABASE_ID` - 收入账单目标Notion数据库ID（可选，用户可在个人设置中配置）
+- `NOTION_EXPENSE_DATABASE_ID` - 支出账单目标Notion数据库ID（可选，用户可在个人设置中配置）
+- `DATABASE_URL` - 数据库连接字符串（默认：sqlite:///./data/users.db）
+- `SECRET_KEY` - JWT密钥，用于加密会话token
+- `ALGORITHM` - JWT算法（默认：HS256）
+- `ACCESS_TOKEN_EXPIRE_MINUTES` - 访问令牌过期时间（默认：30分钟）
 - `DEFAULT_BILL_DIR` - 定时任务默认账单目录
 - `LOG_LEVEL` - 日志级别（DEBUG, INFO, WARNING, ERROR）
 - `SCHEDULER_ENABLED` - 是否启用定时任务
@@ -106,7 +169,20 @@ python3 main.py --file <bill-file-path> [--platform <alipay/wechat/unionpay>]
 
 ## 使用说明
 
-### 1. Web服务使用
+### 1. 首次使用
+
+#### 注册账号
+1. 访问 `http://0.0.0.0:8000/register`
+2. 填写用户名、邮箱和密码
+3. 完成注册后自动登录
+
+#### 配置Notion API
+1. 登录后访问"设置"页面
+2. 填写Notion API密钥和数据库ID
+3. 保存配置
+4. 系统会自动验证配置是否正确
+
+### 2. Web服务使用
 
 #### 账单管理
 1. 访问 `http://0.0.0.0:8000/bill-management`
@@ -115,6 +191,26 @@ python3 main.py --file <bill-file-path> [--platform <alipay/wechat/unionpay>]
 4. 点击"上传并导入"开始导入
 5. 导入完成后可在页面查看结果
 6. 可在"已上传账单"列表中查看、删除文件
+
+#### 账单历史
+1. 访问 `http://0.0.0.0:8000/history`
+2. 查看所有导入历史记录
+3. 可按日期和状态过滤记录
+4. 查看详细导入结果
+
+#### 个人设置
+1. 访问 `http://0.0.0.0:8000/settings`
+2. 配置Notion API密钥和数据库ID
+3. 修改密码
+4. 查看个人使用统计
+
+#### 管理后台（仅管理员）
+1. 访问 `http://0.0.0.0:8000/admin/users`
+2. 管理用户账号
+3. 访问 `http://0.0.0.0:8000/admin/settings`
+4. 配置系统参数
+5. 访问 `http://0.0.0.0:8000/admin/audit-logs`
+6. 查看审计日志
 
 #### 服务管理
 1. 访问 `http://0.0.0.0:8000/service-management`
@@ -152,31 +248,59 @@ python3 main.py --schedule
 ├── notion_api.py              # Notion API客户端
 ├── utils.py                   # 共享工具（日志、编码检测）
 ├── scheduler.py               # 定时任务调度器
+├── auth.py                    # 认证工具（密码、JWT）
+├── database.py                # 数据库连接管理
+├── models.py                  # SQLAlchemy ORM模型
+├── schemas.py                 # Pydantic数据验证模型
+├── dependencies.py            # FastAPI依赖项
 ├── parsers/                   # 账单解析器目录
 │   ├── __init__.py            # 解析器工厂和自动检测
 │   ├── base_parser.py         # 解析器基类
 │   ├── alipay_parser.py       # 支付宝账单解析器
 │   ├── wechat_parser.py       # 微信支付账单解析器
 │   └── unionpay_parser.py     # 银联账单解析器
+├── tests/                     # 测试文件目录
+│   ├── __init__.py
+│   ├── test_api.py
+│   ├── test_auth.py
+│   ├── test_code_integrity.py
+│   ├── test_import.py
+│   ├── test_multi_tenant.py
+│   ├── test_notion_connection.py
+│   └── test_wechat_parser.py
 ├── web_service/               # Web服务目录
 │   ├── __init__.py            # Web服务包
 │   ├── main.py                # Web服务主入口
 │   ├── routes/                # API路由
 │   │   ├── __init__.py        # 路由入口
-│   │   └── upload.py          # 文件上传和导入路由
+│   │   ├── upload.py          # 文件上传和导入路由
+│   │   ├── auth.py            # 认证路由
+│   │   ├── users.py           # 用户路由
+│   │   ├── bills.py           # 账单历史路由
+│   │   └── admin.py           # 管理后台路由
 │   ├── services/              # 业务服务
 │   │   ├── __init__.py        # 服务入口
-│   │   └── file_service.py    # 文件服务
+│   │   ├── file_service.py    # 文件服务
+│   │   └── user_file_service.py  # 用户文件服务
 │   ├── static/                # 静态资源
 │   │   ├── css/               # CSS样式
 │   │   └── js/                # JavaScript文件
 │   ├── templates/             # HTML模板
 │   │   ├── index.html         # 首页
+│   │   ├── login.html         # 登录页面
+│   │   ├── register.html      # 注册页面
+│   │   ├── settings.html      # 设置页面
+│   │   ├── history.html       # 账单历史页面
 │   │   ├── bill_management.html    # 账单管理
 │   │   ├── service_management.html # 服务管理
-│   │   └── log_management.html     # 日志管理
+│   │   ├── log_management.html     # 日志管理
+│   │   └── admin/             # 管理后台模板
+│   │       ├── users.html
+│   │       ├── settings.html
+│   │       └── audit_logs.html
 │   ├── uploads/               # 上传文件存储目录
 │   └── logs/                  # Web服务日志目录
+├── data/                      # 数据目录（.gitignore）
 ├── .env                       # 环境变量配置
 ├── .env.example               # 环境变量示例
 ├── .gitignore                 # Git忽略文件
@@ -189,16 +313,20 @@ python3 main.py --schedule
 
 ### 环境变量
 
-| 配置项 | 说明 | 示例值 |
-|--------|------|--------|
-| NOTION_API_KEY | Notion API密钥，用于访问Notion API | secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx |
-| NOTION_INCOME_DATABASE_ID | 收入账单目标Notion数据库ID | 1234567890abcdef1234567890abcdef |
-| NOTION_EXPENSE_DATABASE_ID | 支出账单目标Notion数据库ID | 1234567890abcdef1234567890abcdef |
-| DEFAULT_BILL_DIR | 定时任务默认账单目录 | ./bills |
-| DEFAULT_BILL_PLATFORM | 默认账单平台 | alipay |
-| LOG_LEVEL | 日志级别，可选值：DEBUG, INFO, WARNING, ERROR | INFO |
-| SCHEDULER_ENABLED | 是否启用定时任务 | true |
-| SCHEDULER_CRON | 定时任务执行频率（cron表达式） | 0 0 1 * * |
+| 配置项 | 说明 | 示例值 | 必填 |
+|--------|------|--------|------|
+| NOTION_API_KEY | Notion API密钥（全局默认值） | secret_xxxxxxxxxxxx | 否 |
+| NOTION_INCOME_DATABASE_ID | 收入数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| NOTION_EXPENSE_DATABASE_ID | 支出数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| DATABASE_URL | 数据库连接字符串 | sqlite:///./data/users.db | 否 |
+| SECRET_KEY | JWT密钥，用于加密会话token | your-secret-key-here | 是 |
+| ALGORITHM | JWT加密算法 | HS256 | 否 |
+| ACCESS_TOKEN_EXPIRE_MINUTES | 访问令牌过期时间（分钟） | 30 | 否 |
+| DEFAULT_BILL_DIR | 定时任务默认账单目录 | ./bills | 否 |
+| DEFAULT_BILL_PLATFORM | 默认账单平台 | alipay | 否 |
+| LOG_LEVEL | 日志级别 | INFO | 否 |
+| SCHEDULER_ENABLED | 是否启用定时任务 | false | 否 |
+| SCHEDULER_CRON | 定时任务cron表达式 | 0 0 1 * * | 否 |
 
 ### Notion数据库配置
 
@@ -280,7 +408,10 @@ python3 main.py --schedule
 python -m pytest
 
 # 运行特定测试文件
-python -m pytest test_wechat_parser.py -v
+python -m pytest tests/test_wechat_parser.py -v
+
+# 运行测试并生成覆盖率报告
+python -m pytest --cov=. --cov-report=html
 ```
 
 ### 添加新平台解析器
@@ -293,6 +424,7 @@ python -m pytest test_wechat_parser.py -v
 - **核心导入逻辑**：`importer.py` - `import_bill()`函数
 - **账单解析**：`parsers/`目录下的各解析器
 - **Notion集成**：`notion_api.py` - `NotionClient`类
+- **用户认证**：`auth.py`, `database.py`, `models.py`, `schemas.py`
 - **Web服务**：`web_service/`目录
 - **定时任务**：`scheduler.py` - `BillScheduler`类
 - **工具函数**：`utils.py` - 日志和编码检测
@@ -322,6 +454,32 @@ MIT License
 欢迎提交Issue和Pull Request！
 
 ## 更新日志
+
+- **v2.0.0** (2026-01-16)
+  - ✨ 新增用户认证系统
+    - 用户注册、登录、登出
+    - JWT会话管理
+    - 密码加密存储（bcrypt）
+  - ✨ 新增多用户支持
+    - 每个用户独立的数据隔离
+    - 个性化的Notion配置
+    - 用户级别的文件管理
+  - ✨ 新增管理后台
+    - 用户管理功能
+    - 系统设置管理
+    - 审计日志查看
+    - 角色权限控制
+  - ✨ 新增账单历史记录
+    - 完整的导入操作记录
+    - 详细的导入状态和结果
+    - 按用户和时间过滤
+  - 🔧 优化项目结构
+    - 添加用户认证模块
+    - 添加数据库模型和schemas
+    - 更新Web服务路由结构
+  - 📝 完善文档
+    - 更新CLAUDE.md开发指南
+    - 更新README.md用户文档
 
 - **v1.1.0** (2026-01-08)
   - 优化项目结构和代码组织

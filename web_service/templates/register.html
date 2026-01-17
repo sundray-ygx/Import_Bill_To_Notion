@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <!-- 性能优化：CSS变量系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- 左侧：品牌信息 -->
+        <div class="auth-brand">
+            <div class="brand-logo">🚀</div>
+            <h1 class="brand-title">创建新账户</h1>
+            <p class="brand-subtitle">开始使用Notion账单导入服务</p>
+
+            <div class="brand-features">
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>完全免费使用</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>数据安全隔离</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>多平台支持</span>
+                </div>
+                <div class="feature-item">
+                    <i>✓</i>
+                    <span>快速导入同步</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：注册表单 -->
+        <div class="auth-form-wrapper">
+            <form class="auth-form" id="register-form">
+                <div class="form-header">
+                    <h2>创建账户</h2>
+                    <p>填写以下信息完成注册</p>
+                </div>
+
+                <!-- 消息提示 -->
+                <div id="alert-container"></div>
+
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="3-50个字符"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        autocomplete="username"
+                    >
+                    <div class="form-hint">用户名必须3-50个字符</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">电子邮箱</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-input"
+                        placeholder="your@email.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <div class="input-with-icon">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="至少8个字符"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="input-icon" id="toggle-password" title="显示/隐藏密码">
+                            👁️
+                        </button>
+                    </div>
+
+                    <!-- 密码强度指示器 -->
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strength-fill"></div>
+                        </div>
+                        <div class="strength-text" id="strength-text">密码强度：未输入</div>
+                    </div>
+
+                    <div class="form-hint" style="color: #6b7280;">至少8个字符，必须包含大小写字母和数字</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">确认密码</label>
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm_password"
+                        class="form-input"
+                        placeholder="再次输入密码"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <div class="form-hint" id="password-match-hint"></div>
+                </div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" name="terms" required>
+                    <span>我同意<a href="/terms" class="link" target="_blank">服务条款</a>和<a href="/privacy" class="link" target="_blank">隐私政策</a></span>
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-block btn-large" id="register-btn">
+                    <span class="btn-text">创建账户</span>
+                    <span class="btn-loading">
+                        <span class="icon-spinner">⏳</span> 创建中...
+                    </span>
+                </button>
+
+                <div class="form-footer">
+                    <p>已有账户？<a href="/login" class="link">立即登录</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 性能优化工具库 -->
+    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/register.js"></script>
+</body>
+</html>

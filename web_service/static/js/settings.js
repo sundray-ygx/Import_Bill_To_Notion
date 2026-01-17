@@ -1,0 +1,409 @@
+/**
+ * 设置页面逻辑
+ */
+
+(function() {
+    'use strict';
+
+    // 当前激活的部分
+    let currentSection = 'profile';
+
+    // 显示 Toast 消息
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        // 3秒后自动消失
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 切换部分
+    function switchSection(sectionId) {
+        // 隐藏所有部分
+        document.querySelectorAll('.settings-section').forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // 显示选中的部分
+        const targetSection = document.getElementById(`${sectionId}-section`);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+
+        // 更新侧边栏高亮
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const activeItem = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
+        if (activeItem) {
+            activeItem.classList.add('active');
+        }
+
+        currentSection = sectionId;
+    }
+
+    // 加载用户资料
+    async function loadUserProfile() {
+        try {
+            const response = await window.Auth.apiRequest('/api/user/profile');
+            if (response && response.ok) {
+                const profile = await response.json();
+
+                // 更新显示
+                document.getElementById('profile-username').textContent = profile.username;
+                document.getElementById('profile-email').textContent = profile.email;
+                document.getElementById('profile-username-input').value = profile.username;
+                document.getElementById('profile-email-input').value = profile.email;
+
+                // 更新统计
+                document.getElementById('stat-uploads').textContent = profile.total_uploads || 0;
+                document.getElementById('stat-records').textContent = profile.total_imports || 0;
+
+                // 计算注册时长
+                if (profile.created_at) {
+                    const createdDate = new Date(profile.created_at);
+                    const now = new Date();
+                    const days = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+                    document.getElementById('stat-days').textContent = `${days}天`;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load profile:', error);
+            showToast('加载用户资料失败', 'error');
+        }
+    }
+
+    // 初始化个人资料表单
+    function initProfileForm() {
+        const form = document.getElementById('profile-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('profile-email-input').value;
+
+            try {
+                const response = await window.Auth.apiRequest('/api/user/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({ email })
+                });
+
+                if (response && response.ok) {
+                    showToast('资料已更新');
+                    await loadUserProfile(); // 重新加载
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('网络错误，请稍后重试', 'error');
+            }
+        });
+    }
+
+    // 初始化密码表单
+    function initPasswordForm() {
+        const form = document.getElementById('password-form');
+        const passwordInput = document.getElementById('new-password');
+        const toggleBtn = document.getElementById('toggle-new-password');
+
+        if (!form) return;
+
+        // 密码切换
+        if (toggleBtn && passwordInput) {
+            toggleBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+            });
+        }
+
+        // 密码强度检测
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => {
+                const password = passwordInput.value;
+                const strength = checkPasswordStrength(password);
+                updateStrengthIndicator(strength);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-new-password').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('两次输入的密码不一致', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.Auth.apiRequest('/api/auth/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response && response.ok) {
+                    showToast('密码已修改，请重新登录');
+                    setTimeout(() => {
+                        window.Auth.logout();
+                    }, 1500);
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '修改失败', 'error');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showToast('网络错误，请稍后重试', 'error');
+            }
+        });
+    }
+
+    // 检查密码强度
+    function checkPasswordStrength(password) {
+        if (!password) return { score: 0, level: 'weak', text: '未输入' };
+
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (password.length >= 12) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+        if (score <= 2) return { score, level: 'weak', text: '弱' };
+        if (score <= 4) return { score, level: 'medium', text: '中等' };
+        return { score, level: 'strong', text: '强' };
+    }
+
+    // 更新强度指示器
+    function updateStrengthIndicator(strength) {
+        const fill = document.getElementById('password-strength-fill');
+        const text = document.getElementById('password-strength-text');
+
+        if (!fill || !text) return;
+
+        fill.className = 'strength-fill';
+        text.textContent = `密码强度：${strength.text}`;
+
+        if (strength.score > 0) {
+            fill.classList.add(strength.level);
+        }
+    }
+
+    // 初始化Notion配置
+    async function initNotionConfig() {
+        // 加载现有配置
+        try {
+            const response = await window.Auth.apiRequest('/api/user/notion-config');
+            if (response && response.ok) {
+                const config = await response.json();
+
+                // 填充表单
+                document.getElementById('config-name').value = config.config_name || '默认配置';
+                document.getElementById('income-db-id').value = config.notion_income_database_id || '';
+                document.getElementById('expense-db-id').value = config.notion_expense_database_id || '';
+
+                // 更新状态显示
+                updateConfigStatus(true, config.is_verified);
+            }
+        } catch (error) {
+            // 可能还没有配置
+            updateConfigStatus(false);
+        }
+
+        // 表单提交
+        const form = document.getElementById('notion-config-form');
+        if (!form) return;
+
+        // API Key 切换
+        const toggleBtn = document.getElementById('toggle-api-key');
+        const apiKeyInput = document.getElementById('notion-api-key');
+        if (toggleBtn && apiKeyInput) {
+            toggleBtn.addEventListener('click', () => {
+                const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                apiKeyInput.setAttribute('type', type);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const configData = {
+                notion_api_key: document.getElementById('notion-api-key').value,
+                notion_income_database_id: document.getElementById('income-db-id').value,
+                notion_expense_database_id: document.getElementById('expense-db-id').value,
+                config_name: document.getElementById('config-name').value
+            };
+
+            try {
+                const response = await window.Auth.apiRequest('/api/user/notion-config', {
+                    method: 'POST',
+                    body: JSON.stringify(configData)
+                });
+
+                if (response && response.ok) {
+                    showToast('配置已保存');
+                    updateConfigStatus(true, false);
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '保存失败', 'error');
+                }
+            } catch (error) {
+                console.error('Config save error:', error);
+                showToast('网络错误，请稍后重试', 'error');
+            }
+        });
+
+        // 验证配置
+        const verifyBtn = document.getElementById('verify-config-btn');
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', async () => {
+                try {
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = '验证中...';
+
+                    const response = await window.Auth.apiRequest('/api/user/notion-config/verify', {
+                        method: 'POST'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast('配置验证成功');
+                        updateConfigStatus(true, true);
+                    } else {
+                        showToast(data.message || '配置验证失败', 'error');
+                        updateConfigStatus(false);
+                    }
+                } catch (error) {
+                    console.error('Config verify error:', error);
+                    showToast('网络错误，请稍后重试', 'error');
+                } finally {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = '✓ 验证配置';
+                }
+            });
+        }
+    }
+
+    // 更新配置状态显示
+    function updateConfigStatus(hasConfig, isVerified = false) {
+        const icon = document.getElementById('config-status-icon');
+        const title = document.getElementById('config-status-title');
+        const desc = document.getElementById('config-status-desc');
+
+        if (!hasConfig) {
+            if (icon) icon.textContent = '❓';
+            if (title) title.textContent = '未配置';
+            if (desc) desc.textContent = '您还没有配置Notion集成';
+        } else if (isVerified) {
+            if (icon) {
+                icon.textContent = '✅';
+                icon.className = 'config-status-icon verified';
+            }
+            if (title) title.textContent = '已验证';
+            if (desc) desc.textContent = '您的Notion配置已验证通过';
+        } else {
+            if (icon) {
+                icon.textContent = '⚠️';
+                icon.className = 'config-status-icon unverified';
+            }
+            if (title) title.textContent = '未验证';
+            if (desc) desc.textContent = '配置已保存，请验证配置';
+        }
+    }
+
+    // 侧边栏导航
+    function initSidebarNav() {
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = item.getAttribute('data-section');
+                if (section) {
+                    switchSection(section);
+                }
+            });
+        });
+    }
+
+    // 撤销所有会话
+    function initRevokeSessions() {
+        const btn = document.getElementById('revoke-all-sessions-btn');
+        if (!btn) return;
+
+        btn.addEventListener('click', async () => {
+            if (!confirm('确定要撤销所有其他会话吗？这会使其他设备上的登录失效。')) {
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                const response = await window.Auth.apiRequest('/api/auth/logout', {
+                    method: 'POST',
+                    body: JSON.stringify({ refresh_token: window.Auth.getRefreshToken() })
+                });
+
+                if (response) {
+                    showToast('所有会话已撤销，请重新登录');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Revoke sessions error:', error);
+                showToast('操作失败', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // 页面初始化
+    function init() {
+        // 检查登录状态
+        if (!window.Auth.isLoggedIn()) {
+            window.location.href = '/login';
+            return;
+        }
+
+        // 初始化各个部分
+        initSidebarNav();
+        initProfileForm();
+        initPasswordForm();
+        initRevokeSessions();
+
+        // 加载用户资料
+        loadUserProfile();
+
+        // 初始化Notion配置（当切换到该部分时）
+        const notionSection = document.querySelector('.sidebar-item[data-section="notion"]');
+        if (notionSection) {
+            notionSection.addEventListener('click', () => {
+                setTimeout(initNotionConfig, 100);
+            });
+        }
+    }
+
+    // DOM 加载完成后初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
