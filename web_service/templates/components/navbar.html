@@ -23,14 +23,6 @@
                 <span>📋</span>
                 <span>历史记录</span>
             </a>
-
-            <!-- 超级管理员专属 -->
-            <div class="nav-admin-only" id="admin-nav" style="display: none;">
-                <a href="/admin/users" class="nav-item {% if '/admin' in request.url.path %}active{% endif %}">
-                    <span>⚙️</span>
-                    <span>管理后台</span>
-                </a>
-            </div>
         </div>
 
         <!-- 未登录导航 -->
@@ -64,7 +56,26 @@
                     <span>Notion配置</span>
                 </a>
 
-                <div class="dropdown-divider"></div>
+                <!-- 系统管理（超级管理员专属） -->
+                <div class="dropdown-section admin-only" id="admin-menu" style="display: none;">
+                    <div class="dropdown-section-title">
+                        <span>⚙️</span>
+                        <span>系统管理</span>
+                    </div>
+                    <a href="/admin/users" class="dropdown-item">
+                        <span>👥</span>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="/log-management" class="dropdown-item">
+                        <span>📝</span>
+                        <span>日志管理</span>
+                    </a>
+                    <a href="/service-management" class="dropdown-item">
+                        <span>🔧</span>
+                        <span>服务管理</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                </div>
 
                 <button class="dropdown-item dropdown-item-danger" id="logout-btn">
                     <span>🚪</span>
@@ -103,11 +114,12 @@
 .navbar-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 20px;
     height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
 }
 
 /* Logo */
@@ -134,21 +146,23 @@
 /* 导航项 */
 .navbar-nav {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
+    flex: 1;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
+    padding: 8px 12px;
     border-radius: 10px;
     text-decoration: none;
     color: #4b5563;
     font-weight: 500;
     font-size: 0.9rem;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -289,6 +303,27 @@
 
 .dropdown-item-danger:hover {
     background: rgba(239, 68, 68, 0.1);
+}
+
+/* 下拉菜单分组 */
+.dropdown-section {
+    padding: 4px 0;
+}
+
+.dropdown-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dropdown-section .dropdown-item {
+    padding-left: 32px;
 }
 
 .dropdown-divider {

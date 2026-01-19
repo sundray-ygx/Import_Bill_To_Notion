@@ -207,6 +207,13 @@
     }
 
     // 初始化Notion配置
+    // 存储当前配置状态，用于判断是否需要更新API密钥
+    let currentConfig = {
+        is_configured: false,
+        is_verified: false,
+        has_api_key: false
+    };
+
     async function initNotionConfig() {
         // 加载现有配置
         try {
@@ -214,13 +221,32 @@
             if (response && response.ok) {
                 const config = await response.json();
 
-                // 填充表单
+                // 更新当前配置状态
+                currentConfig = {
+                    is_configured: config.is_configured,
+                    is_verified: config.is_verified,
+                    has_api_key: !!config.notion_api_key
+                };
+
+                // 填充表单（除了API密钥）
                 document.getElementById('config-name').value = config.config_name || '默认配置';
                 document.getElementById('income-db-id').value = config.notion_income_database_id || '';
                 document.getElementById('expense-db-id').value = config.notion_expense_database_id || '';
 
+                // API密钥输入框特殊处理
+                const apiKeyInput = document.getElementById('notion-api-key');
+                if (apiKeyInput) {
+                    if (config.is_configured && config.notion_api_key) {
+                        // 如果已有配置，显示占位符而不是脱敏的值
+                        apiKeyInput.value = '';
+                        apiKeyInput.placeholder = '已配置密钥（留空则保持不变）';
+                    } else {
+                        apiKeyInput.placeholder = '请输入Notion API密钥';
+                    }
+                }
+
                 // 更新状态显示
-                updateConfigStatus(true, config.is_verified);
+                updateConfigStatus(config.is_configured, config.is_verified);
             }
         } catch (error) {
             // 可能还没有配置
@@ -244,12 +270,18 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const apiKeyValue = document.getElementById('notion-api-key').value.trim();
             const configData = {
-                notion_api_key: document.getElementById('notion-api-key').value,
                 notion_income_database_id: document.getElementById('income-db-id').value,
                 notion_expense_database_id: document.getElementById('expense-db-id').value,
                 config_name: document.getElementById('config-name').value
             };
+
+            // 只有当用户输入了新的API密钥时才包含在请求中
+            // 如果留空且已有配置，后端会保留原有的密钥
+            if (apiKeyValue) {
+                configData.notion_api_key = apiKeyValue;
+            }
 
             try {
                 const response = await window.Auth.apiRequest('/api/user/notion-config', {
@@ -259,7 +291,8 @@
 
                 if (response && response.ok) {
                     showToast('配置已保存');
-                    updateConfigStatus(true, false);
+                    // 重新加载配置以更新状态
+                    await initNotionConfig();
                 } else {
                     const data = await response.json();
                     showToast(data.detail || '保存失败', 'error');
@@ -286,10 +319,11 @@
 
                     if (data.success) {
                         showToast('配置验证成功');
+                        currentConfig.is_verified = true;
                         updateConfigStatus(true, true);
                     } else {
                         showToast(data.message || '配置验证失败', 'error');
-                        updateConfigStatus(false);
+                        updateConfigStatus(currentConfig.is_configured, false);
                     }
                 } catch (error) {
                     console.error('Config verify error:', error);
@@ -374,6 +408,73 @@
         });
     }
 
+    // 初始化注销账户功能
+    function initDeleteAccount() {
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
+        if (!deleteAccountBtn) return;
+
+        deleteAccountBtn.addEventListener('click', async () => {
+            // 二次确认
+            if (!confirm('确定要注销您的账户吗？此操作不可撤销！')) {
+                return;
+            }
+
+            // 显示警告
+            if (!confirm('警告：注销账户将永久删除您的所有数据，包括：\n\n' +
+                '• 上传的账单文件\n' +
+                '• 导入历史记录\n' +
+                '• Notion配置信息\n' +
+                '• 个人资料和设置\n\n' +
+                '此操作无法恢复，是否继续？')) {
+                return;
+            }
+
+            // 要求输入密码确认
+            const password = prompt('请输入当前密码以确认注销：');
+            if (!password) {
+                showToast('已取消注销', 'info');
+                return;
+            }
+
+            if (!password || password.length < 1) {
+                showToast('请输入密码', 'error');
+                return;
+            }
+
+            deleteAccountBtn.disabled = true;
+            deleteAccountBtn.textContent = '处理中...';
+
+            try {
+                const response = await window.Auth.apiRequest('/api/user/delete-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                if (response && response.ok) {
+                    showToast('账户已注销，即将跳转到首页...');
+                    // 清除本地存储
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '注销失败：' + (data.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                showToast('操作失败，请检查网络连接', 'error');
+            } finally {
+                deleteAccountBtn.disabled = false;
+                deleteAccountBtn.textContent = '注销账户';
+            }
+        });
+    }
+
     // 页面初始化
     function init() {
         // 检查登录状态
@@ -387,6 +488,7 @@
         initProfileForm();
         initPasswordForm();
         initRevokeSessions();
+        initDeleteAccount();
 
         // 加载用户资料
         loadUserProfile();

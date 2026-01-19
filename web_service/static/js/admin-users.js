@@ -271,7 +271,20 @@
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">角色：</span>
-                            <span class="detail-value">${data.user.is_superuser ? '超级管理员' : '普通用户'}</span>
+                            <span class="detail-value">
+                                <span class="role-badge ${data.user.is_superuser ? 'superuser' : 'user'}">
+                                    ${data.user.is_superuser ? '👑 超级管理员' : '👤 普通用户'}
+                                </span>
+                                ${(() => {
+                                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                    const canModify = currentUser.is_superuser && currentUser.id !== userId;
+                                    return canModify ? `
+                                    <button class="btn-role-toggle" id="toggle-role-btn" data-user-id="${userId}" data-is-superuser="${data.user.is_superuser}">
+                                        ${data.user.is_superuser ? '降级为普通用户' : '提升为超级管理员'}
+                                    </button>
+                                ` : '';
+                                })()}
+                            </span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">状态：</span>
@@ -310,10 +323,61 @@
 
                 // 绑定模态框按钮事件
                 bindModalButtons(userId);
+
+                // 绑定角色切换按钮事件
+                const toggleRoleBtn = document.getElementById('toggle-role-btn');
+                if (toggleRoleBtn) {
+                    toggleRoleBtn.addEventListener('click', () => {
+                        const isSuperuser = toggleRoleBtn.dataset.isSuperuser === 'true';
+                        toggleUserRole(userId, !isSuperuser);
+                    });
+                }
             }
         } catch (error) {
             console.error('Failed to load user detail:', error);
             showToast('加载用户详情失败', 'error');
+        }
+    }
+
+    // 获取当前用户信息
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('user');
+        return userStr ? JSON.parse(userStr) : null;
+    }
+
+    // 切换用户角色
+    async function toggleUserRole(userId, makeSuperuser) {
+        const action = makeSuperuser ? '提升为超级管理员' : '降级为普通用户';
+        const confirmMsg = `确定要${action}吗？${makeSuperuser ? '' : '该用户将失去管理员权限。'}`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    is_superuser: makeSuperuser
+                })
+            });
+
+            if (response.ok) {
+                showToast(action + '成功');
+                closeModal();
+                loadUsers();
+                loadStats();
+            } else {
+                const data = await response.json();
+                showToast(data.detail || '操作失败', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to toggle user role:', error);
+            showToast('网络错误', 'error');
         }
     }
 

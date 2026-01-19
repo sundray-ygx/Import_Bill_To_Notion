@@ -35,6 +35,9 @@ async def register(
 
     创建新用户账户。需要检查用户名和邮箱是否已被使用。
     注册成功后自动登录用户并返回 token。
+
+    特殊规则：如果是系统的第一个用户，或当前没有超级管理员，
+    该用户将自动成为超级管理员。
     """
     # 检查是否允许注册
     if not Config.REGISTRATION_ENABLED and Config.is_multi_tenant_mode():
@@ -65,16 +68,28 @@ async def register(
             detail="Email already exists"
         )
 
+    # 检查是否需要设置超级管理员
+    user_count = db.query(User).count()
+    superuser_count = db.query(User).filter(User.is_superuser == True).count()
+
+    # 如果没有用户或没有超级管理员，新用户自动成为超级管理员
+    should_be_superuser = (user_count == 0) or (superuser_count == 0)
+
     # 创建用户
     new_user = User(
         username=user_data.username,
         email=user_data.email,
         password_hash=get_password_hash(user_data.password),
+        is_superuser=should_be_superuser,
         is_active=True
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # 记录日志（超级管理员提升）
+    if should_be_superuser:
+        logger.info(f"User {new_user.username} automatically promoted to superuser (first user or no superuser exists)")
 
     # 注册成功后自动登录：生成 tokens
     access_token = create_access_token(data={"sub": str(new_user.id)})
@@ -102,10 +117,13 @@ async def register(
         user_id=new_user.id,
         action="register",
         request=request,
-        details={"username": new_user.username}
+        details={
+            "username": new_user.username,
+            "auto_superuser": should_be_superuser
+        }
     )
 
-    logger.info(f"New user registered: {new_user.username} (ID: {new_user.id})")
+    logger.info(f"New user registered: {new_user.username} (ID: {new_user.id}), is_superuser={should_be_superuser}")
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -382,98 +400,63 @@ class SetupCheckResponse(BaseModel):
     user_count: int
 
 
-class SetupCreateAdminRequest(BaseModel):
-    """创建管理员请求。"""
-    username: str
-    email: EmailStr
-    password: str
-    settings: Optional[dict] = None
-
-
-@router.get("/setup/check", response_model=SetupCheckResponse, tags=["Setup"])
-async def check_setup_needed(db: Session = Depends(get_db)):
-    """检查是否需要进行初始设置。"""
-    user_count = db.query(User).count()
-    return {
-        "needs_setup": user_count == 0,
-        "user_count": user_count
-    }
-
-
-@router.post("/setup/check-username", tags=["Setup"])
-async def check_username_available(
-    request_data: dict,
-    db: Session = Depends(get_db)
-):
-    """检查用户名是否可用。"""
-    username = request_data.get("username", "")
-    existing = db.query(User).filter(User.username == username).first()
-    return {
-        "exists": existing is not None
-    }
-
-
-@router.post("/setup/create-admin", tags=["Setup"])
-async def create_initial_admin(
-    admin_data: SetupCreateAdminRequest,
+@router.get("/setup/check", tags=["Setup"])
+async def check_setup_needed(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """创建初始管理员账户。
+    """检查是否需要进行初始设置。
 
-    只能在没有用户时调用。第一个用户自动成为超级管理员。
+    检查是否有超级管理员。如果没有，返回需要设置的信息。
+    此接口不需要登录，用于前端判断是否显示设置提示。
+
+    返回信息说明：
+    - needs_setup: 是否需要设置（没有超级管理员时为true）
+    - setup_type: 设置类型
+      - "first_user": 没有任何用户，需要创建第一个用户
+      - "promote_available": 有用户但没有超级管理员，新注册用户会自动成为超级管理员
+      - "none": 已经有超级管理员，不需要设置
     """
-    # 检查是否已有用户
+    # 尝试从请求头获取token并获取当前用户
+    current_user = None
+    try:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            from auth import verify_access_token
+            payload = verify_access_token(token)
+            if payload:
+                user_id = int(payload.get("sub"))
+                current_user = db.query(User).filter(User.id == user_id).first()
+    except:
+        pass
+
+    # 检查是否有超级管理员
+    superuser_count = db.query(User).filter(User.is_superuser == True).count()
     user_count = db.query(User).count()
-    if user_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="系统已初始化，无法使用此接口"
-        )
 
-    # 创建超级管理员
-    admin_user = User(
-        username=admin_data.username,
-        email=admin_data.email,
-        password_hash=get_password_hash(admin_data.password),
-        is_superuser=True,
-        is_active=True
-    )
-    db.add(admin_user)
-    db.commit()
-    db.refresh(admin_user)
+    # 判断设置类型
+    setup_type = "none"
+    needs_setup = superuser_count == 0
 
-    # 保存系统设置
-    if admin_data.settings:
-        from models import SystemSettings
-        for key, value in admin_data.settings.items():
-            setting = SystemSettings(
-                setting_key=key,
-                setting_value=str(value),
-                updated_by=admin_user.id
-            )
-            db.add(setting)
-        db.commit()
+    if user_count == 0:
+        setup_type = "first_user"
+    elif superuser_count == 0:
+        setup_type = "promote_available"
 
-    # 记录审计日志
-    _create_audit_log(
-        db=db,
-        user_id=admin_user.id,
-        action="system_initialized",
-        request=request,
-        details={
-            "admin_username": admin_user.username,
-            "settings": admin_data.settings
-        }
-    )
-
-    logger.info(f"System initialized by admin: {admin_user.username}")
     return {
-        "success": True,
-        "message": "Admin user created successfully",
-        "username": admin_user.username
+        "needs_setup": needs_setup,
+        "setup_type": setup_type,
+        "user_count": user_count,
+        "superuser_count": superuser_count,
+        "current_user_is_superuser": current_user.is_superuser if current_user else False,
+        "is_logged_in": current_user is not None,
+        "current_username": current_user.username if current_user else None
     }
 
+
+# 注意：不再需要 /setup/create-admin 接口
+# 首个注册用户会自动成为超级管理员，请通过 /register 注册
 
 # ==================== 辅助函数 ====================
 

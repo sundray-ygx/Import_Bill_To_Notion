@@ -61,6 +61,31 @@ async def upload_bill(
         upload.file_name = file_path.split("/")[-1]
         upload.file_path = file_path
         upload.file_size = file_service.get_file_size(current_user.id, upload.id, upload.file_name)
+
+        # 如果平台为auto，立即进行平台检测
+        detected_platform = None
+        if upload.platform == "auto":
+            try:
+                # 调用平台检测逻辑
+                from parsers import get_parser
+                parser = get_parser(file_path)
+                if parser:
+                    detected_platform = parser.get_platform()
+                    # 映射平台名称到数据库存储格式
+                    platform_mapping = {
+                        'Alipay': 'alipay',
+                        'WeChat': 'wechat',
+                        'UnionPay': 'unionpay'
+                    }
+                    upload.platform = platform_mapping.get(detected_platform, detected_platform.lower())
+                    logger.info(f"Auto-detected platform: {upload.platform} for file {file.filename}")
+                else:
+                    # 无法检测，保持auto
+                    upload.platform = "auto"
+            except Exception as e:
+                logger.warning(f"Platform detection failed for {file.filename}: {e}, keeping as 'auto'")
+                upload.platform = "auto"
+
         db.commit()
 
         # 记录审计日志
@@ -72,7 +97,8 @@ async def upload_bill(
             details={
                 "upload_id": upload.id,
                 "file_name": file.filename,
-                "platform": platform or "auto"
+                "platform": upload.platform,
+                "detected_platform": detected_platform
             }
         )
 
@@ -399,10 +425,16 @@ async def preview_upload_file(
                 detail="Failed to parse file"
             )
 
+        # 如果检测到平台且当前是auto，更新数据库中的平台
+        detected_platform = result.get('detected_platform')
+        if detected_platform and upload.platform == 'auto':
+            upload.platform = detected_platform
+            db.commit()
+
         return {
             "upload_id": upload_id,
             "file_name": upload.original_file_name,
-            "platform": upload.platform,
+            "platform": upload.platform,  # 返回更新后的平台
             "detected_platform": result.get('detected_platform', upload.platform),
             "total_records": result.get('total_rows', 0),
             "preview_records": len(result.get('data', [])),

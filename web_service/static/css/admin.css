@@ -509,3 +509,83 @@
         display: none;
     }
 }
+
+/* ==================== 角色切换按钮 ==================== */
+.btn-role-toggle {
+    margin-left: 12px;
+    padding: 6px 12px;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #667eea;
+}
+
+.btn-role-toggle:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.btn-role-toggle:active {
+    transform: translateY(0);
+}
+
+/* 用户详情行样式 */
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6b7280;
+    min-width: 120px;
+    font-size: 0.95rem;
+}
+
+.detail-value {
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 用户详情区块 */
+.user-detail-section {
+    margin-bottom: 24px;
+}
+
+.user-detail-section h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    color: #1a1a2e;
+}
+
+/* 统计数字样式 */
+.stat-number {
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.date-text {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+/* 分页省略号 */
+.pagination-ellipsis {
+    padding: 0 4px;
+    color: #9ca3af;
+}

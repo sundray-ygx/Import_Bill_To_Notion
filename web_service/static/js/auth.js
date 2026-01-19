@@ -9,7 +9,7 @@ const API_BASE = '/api/auth';
 const STORAGE_KEYS = {
     ACCESS_TOKEN: 'access_token',
     REFRESH_TOKEN: 'refresh_token',
-    USER_INFO: 'user_info'
+    USER_INFO: 'user'
 };
 
 /**
@@ -218,13 +218,14 @@ async function logout(refreshToken = null) {
 /**
  * 页面初始化
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // 设置密码切换
     setupPasswordToggle();
 
     // 如果已登录且在登录/注册页面，跳转到首页
     if (isLoggedIn() && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
         window.location.href = '/';
+        return;
     }
 });
 

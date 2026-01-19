@@ -1,0 +1,273 @@
+/**
+ * 性能优化样式
+ * 通过CSS优化提升页面渲染性能
+ */
+
+/* ==================== GPU加速 ==================== */
+
+/* 对需要动画的元素启用GPU加速 */
+.gpu-accelerated {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* 动画结束后移除will-change */
+.gpu-accelerated.animation-ended {
+    will-change: auto;
+}
+
+/* ==================== 内容可见性优化 ==================== */
+
+/* 对不在视口内的内容使用content-visibility */
+.files-table tbody {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+}
+
+/* ==================== 渲染优化 ==================== */
+
+/* 减少重排 */
+.table-wrapper {
+    contain: layout style paint;
+}
+
+/* 批量处理DOM更新 */
+.files-table {
+    transform: translateZ(0);
+}
+
+/* ==================== 滚动优化 ==================== */
+
+/* 平滑滚动 */
+.smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== 图层优化 ==================== */
+
+/* 为固定元素创建单独图层 */
+.navbar {
+    transform: translateZ(0);
+}
+
+.modal-backdrop {
+    transform: translateZ(0);
+}
+
+.bulk-actions-bar {
+    transform: translateZ(0);
+}
+
+/* ==================== 动画性能优化 ==================== */
+
+/* 使用transform代替位置变化 */
+@keyframes slideDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 使用opacity代替display */
+.fade-enter {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.fade-exit {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 100ms ease-in, transform 100ms ease-in;
+}
+
+/* ==================== 字体加载优化 ==================== */
+
+/* 字体显示策略 */
+@font-face {
+    font-family: 'CustomFont';
+    font-display: swap; /* 立即显示后备字体，加载完成后切换 */
+}
+
+/* ==================== 图片优化 ==================== */
+
+/* 图片懒加载占位 */
+img[data-src] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    min-height: 100px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ==================== 避免布局抖动 ==================== */
+
+/* 为动态内容预留空间 */
+.loading-skeleton {
+    min-height: 40px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+/* ==================== 减少重绘 ==================== */
+
+/* 使用伪元素减少DOM操作 */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.btn:hover::before {
+    opacity: 0.1;
+}
+
+/* ==================== 交互反馈优化 ==================== */
+
+/* 使用pointer-events优化点击区域 */
+.clickable-area {
+    pointer-events: auto;
+}
+
+.non-interactive {
+    pointer-events: none;
+}
+
+/* ==================== 媒体查询优化 ==================== */
+
+/* 减少小屏幕上的动画 */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== 对比度优化 ==================== */
+
+@media (prefers-contrast: high) {
+    .btn {
+        border: 2px solid currentColor;
+    }
+
+    .input {
+        border: 2px solid currentColor;
+    }
+}
+
+/* ==================== 深色模式优化 ==================== */
+
+@media (prefers-color-scheme: dark) {
+    /* 减少深色模式下的发光效果 */
+    .box-shadow {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* ==================== 打印优化 ==================== */
+
+@media print {
+    /* 隐藏不需要打印的元素 */
+    .no-print {
+        display: none !important;
+    }
+
+    /* 优化文字颜色 */
+    body {
+        color: #000;
+        background: #fff;
+    }
+
+    /* 移除背景和阴影 */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+}
+
+/* ==================== 关键CSS内联 ==================== */
+
+/* 这些是首屏渲染所需的关键样式，应该内联在HTML中 */
+.critical-above-fold {
+    /* 首屏内容样式 */
+}
+
+.critical-hidden {
+    display: none;
+}
+
+/* ==================== 资源加载提示 ==================== */
+
+/* 加载状态 */
+.is-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.is-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==================== 性能监控 ==================== */
+
+/* 标记性能关注区域 */
+.perf-critical {
+    /* 关键渲染路径 */
+}
+
+.perf-low-priority {
+    /* 低优先级内容 */
+    content-visibility: auto;
+}

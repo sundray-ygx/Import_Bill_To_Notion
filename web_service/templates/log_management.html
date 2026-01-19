@@ -19,15 +19,32 @@
             </div>
 
             <div class="log-controls">
-                <div class="log-filter">
-                    <label for="log-level">日志级别:</label>
-                    <select id="log-level">
-                        <option value="all">所有级别</option>
-                        <option value="INFO">INFO</option>
-                        <option value="ERROR">ERROR</option>
-                        <option value="WARNING">WARNING</option>
-                        <option value="DEBUG">DEBUG</option>
-                    </select>
+                <div class="log-filters">
+                    <div class="log-filter">
+                        <label for="log-level">日志级别:</label>
+                        <select id="log-level">
+                            <option value="all">所有级别</option>
+                            <option value="INFO">INFO</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="DEBUG">DEBUG</option>
+                        </select>
+                    </div>
+                    <div class="log-filter">
+                        <label for="search-input">搜索:</label>
+                        <input type="text" id="search-input" placeholder="搜索日志内容..." class="search-input">
+                    </div>
+                    <div class="log-filter">
+                        <label for="start-time">开始时间:</label>
+                        <input type="datetime-local" id="start-time" class="time-input">
+                    </div>
+                    <div class="log-filter">
+                        <label for="end-time">结束时间:</label>
+                        <input type="datetime-local" id="end-time" class="time-input">
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="clear-filters">
+                        <span>✕</span> 清除筛选
+                    </button>
                 </div>
                 <div class="log-actions">
                     <button class="btn btn-secondary" id="refresh-logs">
@@ -37,6 +54,11 @@
                         <span>🗑 清空</span>
                     </button>
                 </div>
+            </div>
+
+            <div class="log-stats">
+                <span>共 <strong id="total-count">0</strong> 条日志</span>
+                <span>显示 <strong id="displayed-count">0</strong> 条</span>
             </div>
 
             <div class="log-content">
@@ -59,22 +81,63 @@
 
         const logContainer = document.getElementById('log-container');
         const logLevelSelect = document.getElementById('log-level');
+        const searchInput = document.getElementById('search-input');
+        const startTimeInput = document.getElementById('start-time');
+        const endTimeInput = document.getElementById('end-time');
         const refreshBtn = document.getElementById('refresh-logs');
         const clearBtn = document.getElementById('clear-logs');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const totalCountEl = document.getElementById('total-count');
+        const displayedCountEl = document.getElementById('displayed-count');
 
         let currentLogs = [];
         let filteredLogs = [];
+
+        // 北京时间格式化函数（时间已经是北京时间，直接显示）
+        function formatBeijingTime(timestamp) {
+            if (!timestamp) return '-';
+            // 日志文件中的时间格式: YYYY-MM-DD HH:MM:SS
+            return timestamp;
+        }
+
+        // 将 datetime-local 格式转换为日志时间格式
+        function datetimeLocalToLogTime(datetimeLocal) {
+            if (!datetimeLocal) return null;
+            // datetime-local 格式: YYYY-MM-DDTHH:MM
+            // 转换为: YYYY-MM-DD HH:MM:SS
+            return datetimeLocal.replace('T', ' ') + ':00';
+        }
 
         // 加载日志
         async function loadLogs() {
             try {
                 logContainer.innerHTML = '<div class="log-loading">加载日志中...</div>';
 
-                const response = await fetch('/api/admin/logs?limit=500');
-                if (response.ok) {
+                // 构建查询参数
+                const params = new URLSearchParams({ limit: 500 });
+                const level = logLevelSelect.value;
+                if (level !== 'all') {
+                    params.append('level', level);
+                }
+                if (searchInput.value.trim()) {
+                    params.append('search', searchInput.value.trim());
+                }
+                if (startTimeInput.value) {
+                    const startTime = datetimeLocalToLogTime(startTimeInput.value);
+                    if (startTime) params.append('start_time', startTime);
+                }
+                if (endTimeInput.value) {
+                    const endTime = datetimeLocalToLogTime(endTimeInput.value);
+                    if (endTime) params.append('end_time', endTime);
+                }
+
+                const response = await window.Auth.apiRequest(`/api/admin/logs?${params.toString()}`);
+                if (response && response.ok) {
                     const data = await response.json();
                     currentLogs = data.logs || [];
-                    filterLogs();
+                    filteredLogs = currentLogs;
+                    updateStats();
+                    renderLogs();
                 } else {
                     logContainer.innerHTML = '<div class="log-error">加载日志失败</div>';
                 }
@@ -84,56 +147,57 @@
             }
         }
 
-        // 过滤日志
-        function filterLogs() {
-            const level = logLevelSelect.value;
-            filteredLogs = level === 'all'
-                ? currentLogs
-                : currentLogs.filter(log => log.level === level);
-            renderLogs();
+        // 更新统计信息
+        function updateStats() {
+            totalCountEl.textContent = currentLogs.length;
+            displayedCountEl.textContent = filteredLogs.length;
         }
 
         // 渲染日志
         function renderLogs() {
             if (filteredLogs.length === 0) {
                 logContainer.innerHTML = '<div class="log-empty">暂无日志记录</div>';
+                updateStats();
                 return;
             }
 
             logContainer.innerHTML = filteredLogs.map(log => `
                 <div class="log-entry log-${log.level.toLowerCase()}">
                     <div class="log-meta">
-                        <span class="log-time">${formatTime(log.timestamp)}</span>
-                        <span class="log-level">${log.level}</span>
+                        <span class="log-time">${escapeHtml(formatBeijingTime(log.timestamp))}</span>
+                        <span class="log-level">${escapeHtml(log.level)}</span>
+                        ${log.logger ? `<span class="log-logger">${escapeHtml(log.logger)}</span>` : ''}
+                        ${log.location ? `<span class="log-location">${escapeHtml(log.location)}</span>` : ''}
                     </div>
                     <div class="log-message">${escapeHtml(log.message)}</div>
-                    ${log.details ? `<div class="log-details">${escapeHtml(log.details)}</div>` : ''}
                 </div>
             `).join('');
-        }
-
-        // 格式化时间
-        function formatTime(timestamp) {
-            if (!timestamp) return '-';
-            const date = new Date(timestamp);
-            return date.toLocaleString('zh-CN', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            updateStats();
         }
 
         // HTML转义
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // 清除筛选
+        function clearFilters() {
+            logLevelSelect.value = 'all';
+            searchInput.value = '';
+            startTimeInput.value = '';
+            endTimeInput.value = '';
+            loadLogs();
+        }
+
         // 事件监听
-        logLevelSelect.addEventListener('change', filterLogs);
+        logLevelSelect.addEventListener('change', loadLogs);
+        searchInput.addEventListener('input', debounce(loadLogs, 500));
+        startTimeInput.addEventListener('change', loadLogs);
+        endTimeInput.addEventListener('change', loadLogs);
+        clearFiltersBtn.addEventListener('click', clearFilters);
 
         refreshBtn.addEventListener('click', loadLogs);
 
@@ -141,8 +205,8 @@
             if (!confirm('确定要清空所有日志吗？此操作不可撤销。')) return;
 
             try {
-                const response = await fetch('/api/admin/logs', { method: 'DELETE' });
-                if (response.ok) {
+                const response = await window.Auth.apiRequest('/api/admin/logs', { method: 'DELETE' });
+                if (response && response.ok) {
                     currentLogs = [];
                     filteredLogs = [];
                     renderLogs();
@@ -153,6 +217,19 @@
                 alert('清空日志失败');
             }
         });
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
         // 自动刷新
         let autoRefreshInterval;
@@ -183,70 +260,143 @@
     </script>
 
     <style>
+    /* ==================== 日志管理 - Linux终端风格（仅日志显示区域） ==================== */
+
     .log-main {
-        max-width: 1200px;
+        max-width: 1600px;
         margin: 0 auto;
         padding: 20px;
     }
 
     .page-header {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
     }
 
     .page-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: #1a1a2e;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #e5e7eb;
     }
 
     .page-header p {
-        color: #6b7280;
+        color: #9ca3af;
+        font-size: 0.85rem;
     }
 
+    /* 控制区域 */
     .log-controls {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+        align-items: flex-start;
+        margin-bottom: 12px;
         flex-wrap: wrap;
-        gap: 16px;
+        gap: 12px;
+    }
+
+    .log-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
     }
 
     .log-filter {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
 
     .log-filter label {
-        color: #4b5563;
+        color: #9ca3af;
         font-weight: 500;
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
 
-    .log-filter select {
-        padding: 8px 16px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        background: white;
-        font-size: 0.9rem;
+    .log-filter select,
+    .search-input,
+    .time-input {
+        padding: 6px 10px;
+        border: 1px solid #374151;
+        border-radius: 4px;
+        background: #1f2937;
+        color: #e5e7eb;
+        font-size: 0.8rem;
+    }
+
+    .log-filter select:focus,
+    .search-input:focus,
+    .time-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+
+    .search-input {
+        width: 180px;
+    }
+
+    .time-input {
+        width: 160px;
     }
 
     .log-actions {
         display: flex;
-        gap: 12px;
+        gap: 8px;
     }
 
+    .log-actions .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* 统计信息 */
+    .log-stats {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        background: #1f2937;
+        border-radius: 4px;
+        color: #9ca3af;
+        font-size: 0.8rem;
+    }
+
+    .log-stats strong {
+        color: #e5e7eb;
+    }
+
+    /* 日志容器 - 终端风格 */
     .log-content {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        background: #0d1117;
+        border-radius: 6px;
+        border: 1px solid #30363d;
         overflow: hidden;
     }
 
     .log-container {
-        max-height: 600px;
+        max-height: calc(100vh - 280px);
+        min-height: 400px;
         overflow-y: auto;
+        background: #0d1117;
+    }
+
+    /* 滚动条样式 */
+    .log-container::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .log-container::-webkit-scrollbar-track {
+        background: #161b22;
+    }
+
+    .log-container::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 5px;
+    }
+
+    .log-container::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
     }
 
     .log-loading,
@@ -254,14 +404,22 @@
     .log-error {
         padding: 40px;
         text-align: center;
-        color: #6b7280;
+        color: #8b949e;
+        font-family: 'Monaco', 'Consolas', 'SF Mono', monospace;
     }
 
+    /* 单条日志 - 紧凑风格 */
     .log-entry {
-        padding: 12px 16px;
-        border-bottom: 1px solid #f3f4f6;
-        font-family: 'Monaco', 'Consolas', monospace;
-        font-size: 0.85rem;
+        display: flex;
+        align-items: flex-start;
+        padding: 2px 8px;
+        border-bottom: 1px solid #21262d;
+        font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: #c9d1d9;
+        background: #0d1117;
+        transition: background 0.1s ease;
     }
 
     .log-entry:last-child {
@@ -269,71 +427,105 @@
     }
 
     .log-entry:hover {
-        background: #f9fafb;
+        background: #161b22;
     }
 
-    .log-meta {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 4px;
-    }
-
+    /* 时间戳 */
     .log-time {
-        color: #6b7280;
+        color: #8b949e;
+        flex-shrink: 0;
+        margin-right: 8px;
     }
 
+    /* 日志级别 - 彩色文字（Linux风格） */
     .log-level {
         font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 4px;
+        flex-shrink: 0;
+        margin-right: 8px;
+        text-transform: uppercase;
     }
 
+    /* INFO - 蓝色 */
     .log-info .log-level {
-        background: #dbeafe;
-        color: #1e40af;
+        color: #58a6ff;
     }
 
+    /* ERROR - 红色 */
     .log-error .log-level {
-        background: #fee2e2;
-        color: #991b1b;
+        color: #ff7b72;
     }
 
+    /* WARNING - 黄色 */
     .log-warning .log-level {
-        background: #fef3c7;
-        color: #92400e;
+        color: #d29922;
     }
 
+    /* DEBUG - 灰色 */
     .log-debug .log-level {
-        background: #f3f4f6;
-        color: #374151;
+        color: #8b949e;
     }
 
+    /* Logger和位置 */
+    .log-logger,
+    .log-location {
+        color: #7ee787;
+        flex-shrink: 0;
+        margin-right: 8px;
+    }
+
+    .log-logger::after {
+        content: ":";
+        color: #8b949e;
+    }
+
+    .log-location {
+        color: #79c0ff;
+    }
+
+    /* 日志消息 */
     .log-message {
-        color: #1a1a2e;
+        color: #c9d1d9;
         word-break: break-all;
+        flex: 1;
     }
 
-    .log-details {
-        margin-top: 8px;
-        padding: 8px;
-        background: #f9fafb;
-        border-radius: 4px;
-        color: #6b7280;
-        font-size: 0.8rem;
+    /* ERROR级别的消息用红色 */
+    .log-error .log-message {
+        color: #ffa198;
     }
 
-    @media (max-width: 640px) {
-        .log-controls {
+    /* ERROR日志整行微红背景提示 */
+    .log-error {
+        background: rgba(248, 81, 73, 0.05);
+    }
+
+    /* 响应式 */
+    @media (max-width: 1024px) {
+        .log-filters {
             flex-direction: column;
             align-items: stretch;
         }
 
+        .search-input,
+        .time-input {
+            width: 100%;
+        }
+
+        .log-controls {
+            flex-direction: column;
+        }
+
         .log-actions {
+            width: 100%;
             justify-content: stretch;
         }
 
         .log-actions button {
             flex: 1;
+        }
+
+        .log-container {
+            max-height: calc(100vh - 320px);
         }
     }
     </style>

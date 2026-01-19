@@ -1,10 +1,13 @@
 """Admin routes for user management, system settings, and audit logs."""
 
+import os
+import re
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 from database import get_db
 from models import User, UserUpload, ImportHistory, AuditLog
 from schemas import (
@@ -19,6 +22,11 @@ import json
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# 日志配置
+MAX_LOG_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_LOG_LINES = 5000  # 最大保留行数
+LOG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs", "web_service.log")
 
 
 # ==================== 用户管理 ====================
@@ -135,6 +143,17 @@ async def update_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+
+    # 检查是否要移除超级管理员权限
+    if user_data.is_superuser is not None and user_data.is_superuser == False:
+        if user.is_superuser:
+            # 检查是否是最后一个超级管理员
+            superuser_count = db.query(User).filter(User.is_superuser == True).count()
+            if superuser_count <= 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot remove superuser role from the last superuser"
+                )
 
     # 更新字段
     if user_data.email is not None:
@@ -489,6 +508,229 @@ async def update_system_settings(
     }
 
 
+# ==================== 日志管理 ====================
+
+class LogEntry(BaseModel):
+    """日志条目模型"""
+    timestamp: str
+    level: str
+    logger: str
+    location: str
+    message: str
+    details: Optional[str] = None
+
+
+def _parse_log_line(line: str) -> Optional[dict]:
+    """解析日志行。
+
+    实际日志格式: 2025-12-29 23:10:33,996 - module_name - LEVEL - message
+    或: 2025-01-19 15:30:45 - module_name - filename.py:123 - LEVEL - message
+    """
+    # 首先尝试带文件位置的新格式
+    pattern_with_location = r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:,\d+)?) - ([\w.]+) - ([\w./]+):(\d+) - (\w+) - (.+)$'
+    match = re.match(pattern_with_location, line.strip())
+    if match:
+        return {
+            "timestamp": match.group(1).split(',')[0],  # 移除毫秒部分
+            "logger": match.group(2),
+            "location": f"{match.group(3)}:{match.group(4)}",
+            "level": match.group(5),
+            "message": match.group(6)
+        }
+
+    # 尝试不带文件位置的简化格式
+    pattern_simple = r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:,\d+)?) - ([\w.]+) - (\w+) - (.+)$'
+    match = re.match(pattern_simple, line.strip())
+    if match:
+        return {
+            "timestamp": match.group(1).split(',')[0],  # 移除毫秒部分
+            "logger": match.group(2),
+            "location": "",
+            "level": match.group(3),
+            "message": match.group(4)
+        }
+
+    return None
+
+
+def _read_log_file(
+    limit: int = 500,
+    level: Optional[str] = None,
+    search: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None
+) -> List[dict]:
+    """读取日志文件并解析。
+
+    Args:
+        limit: 返回的最大日志条数
+        level: 日志级别筛选 (INFO, ERROR, WARNING, DEBUG)
+        search: 搜索关键词
+        start_time: 开始时间 (YYYY-MM-DD HH:MM:SS)
+        end_time: 结束时间 (YYYY-MM-DD HH:MM:SS)
+
+    Returns:
+        日志条目列表
+    """
+    if not os.path.exists(LOG_FILE_PATH):
+        return []
+
+    logs = []
+    lines = []
+
+    # 尝试多种编码读取日志文件
+    encodings = ['utf-8', 'gbk', 'gb2312', 'latin-1']
+    for encoding in encodings:
+        try:
+            with open(LOG_FILE_PATH, 'r', encoding=encoding) as f:
+                lines = f.readlines()
+            break  # 成功读取，退出循环
+        except UnicodeDecodeError:
+            continue
+
+    # 如果所有编码都失败，使用 errors='replace' 作为最后手段
+    if not lines:
+        with open(LOG_FILE_PATH, 'r', encoding='utf-8', errors='replace') as f:
+            lines = f.readlines()
+
+    try:
+
+        # 从文件末尾开始读取（最新的日志在前）
+        for line in reversed(lines[-MAX_LOG_LINES:]):
+            parsed = _parse_log_line(line)
+            if parsed:
+                # 级别筛选
+                if level and parsed["level"] != level.upper():
+                    continue
+
+                # 搜索筛选
+                if search and search.lower() not in parsed["message"].lower():
+                    continue
+
+                # 时间范围筛选
+                if start_time and parsed["timestamp"] < start_time:
+                    continue
+                if end_time and parsed["timestamp"] > end_time:
+                    continue
+
+                logs.append(parsed)
+                if len(logs) >= limit:
+                    break
+
+    except Exception as e:
+        logger.error(f"Failed to read log file: {e}")
+
+    return logs
+
+
+def _rotate_log_file():
+    """日志文件轮转：当文件过大时清理老日志。"""
+    if not os.path.exists(LOG_FILE_PATH):
+        return
+
+    try:
+        file_size = os.path.getsize(LOG_FILE_PATH)
+        if file_size > MAX_LOG_FILE_SIZE:
+            # 尝试多种编码读取日志文件
+            lines = []
+            encodings = ['utf-8', 'gbk', 'gb2312', 'latin-1']
+            for encoding in encodings:
+                try:
+                    with open(LOG_FILE_PATH, 'r', encoding=encoding) as f:
+                        lines = f.readlines()
+                    break  # 成功读取，退出循环
+                except UnicodeDecodeError:
+                    continue
+
+            # 如果所有编码都失败，使用 errors='replace' 作为最后手段
+            if not lines:
+                with open(LOG_FILE_PATH, 'r', encoding='utf-8', errors='replace') as f:
+                    lines = f.readlines()
+
+            # 保留最后N行
+            keep_lines = lines[-MAX_LOG_LINES:] if len(lines) > MAX_LOG_LINES else lines
+
+            # 写回文件
+            with open(LOG_FILE_PATH, 'w', encoding='utf-8') as f:
+                f.writelines(keep_lines)
+
+            logger.info(f"Log file rotated: kept {len(keep_lines)} lines")
+    except Exception as e:
+        logger.error(f"Failed to rotate log file: {e}")
+
+
+@router.get("/logs", tags=["Admin"])
+async def get_logs(
+    limit: int = Query(500, ge=1, le=2000),
+    level: Optional[str] = Query(None, regex="^(INFO|ERROR|WARNING|DEBUG|all)$"),
+    search: Optional[str] = Query(None),
+    start_time: Optional[str] = Query(None),
+    end_time: Optional[str] = Query(None),
+    current_admin: User = Depends(get_current_superuser)
+):
+    """获取系统日志（超级管理员）。
+
+    支持按级别、关键词和时间范围筛选。
+    """
+    # 自动轮转日志（如果文件过大）
+    _rotate_log_file()
+
+    # 处理级别筛选
+    filter_level = None if level == "all" else level
+
+    logs = _read_log_file(
+        limit=limit,
+        level=filter_level,
+        search=search,
+        start_time=start_time,
+        end_time=end_time
+    )
+
+    return {
+        "logs": logs,
+        "total": len(logs),
+        "log_file": LOG_FILE_PATH
+    }
+
+
+@router.delete("/logs", tags=["Admin"])
+async def clear_logs(
+    request: Request,
+    current_admin: User = Depends(get_current_superuser)
+):
+    """清空日志文件（超级管理员）。"""
+    try:
+        if os.path.exists(LOG_FILE_PATH):
+            # 清空文件
+            with open(LOG_FILE_PATH, 'w', encoding='utf-8') as f:
+                f.write("")
+
+            # 记录审计日志
+            _create_audit_log(
+                db=None,  # 不需要db
+                user_id=current_admin.id,
+                action="logs_cleared",
+                request=request
+            )
+
+            logger.info(f"Logs cleared by admin {current_admin.username}")
+            return {
+                "success": True,
+                "message": "日志已清空"
+            }
+        else:
+            return {
+                "success": True,
+                "message": "日志文件不存在"
+            }
+    except Exception as e:
+        logger.error(f"Failed to clear logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"清空日志失败: {str(e)}"
+        )
+
+
 # ==================== 辅助函数 ====================
 
 def _create_audit_log(
@@ -500,6 +742,11 @@ def _create_audit_log(
 ):
     """创建审计日志记录。"""
     try:
+        if db is None:
+            # 如果没有db，只记录到系统日志
+            logger.info(f"Audit: user_id={user_id}, action={action}, details={details}")
+            return
+
         audit_log = AuditLog(
             user_id=user_id,
             action=action,
