@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>欢迎使用 - Notion账单导入服务</title>
+    <title>系统初始化设置 - Notion账单导入服务</title>
     <style>
         /* Toast 容器样式 */
         #toast-container {
@@ -35,11 +35,16 @@
                 <div class="progress-line"></div>
                 <div class="progress-step" data-step="2">
                     <div class="step-number">2</div>
-                    <div class="step-label">Notion配置</div>
+                    <div class="step-label">管理员</div>
                 </div>
                 <div class="progress-line"></div>
                 <div class="progress-step" data-step="3">
                     <div class="step-number">3</div>
+                    <div class="step-label">Notion配置</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="4">
+                    <div class="step-number">4</div>
                     <div class="step-label">完成</div>
                 </div>
             </div>
@@ -50,9 +55,16 @@
             <div class="setup-card">
                 <div class="setup-icon">👋</div>
                 <h1>欢迎使用 Notion账单导入服务</h1>
-                <p class="setup-subtitle">只需3步，开始自动导入您的账单数据到 Notion</p>
+                <p class="setup-subtitle">只需4步，完成系统初始化设置</p>
 
                 <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">👤</div>
+                        <div class="feature-content">
+                            <h3>创建管理员</h3>
+                            <p>首先创建系统超级管理员账户</p>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="feature-icon">💰</div>
                         <div class="feature-content">
@@ -77,21 +89,78 @@
                 </div>
 
                 <div class="setup-actions">
-                    <button class="btn btn-secondary" id="skip-setup-btn">稍后配置</button>
                     <button class="btn btn-primary btn-large" id="start-setup-btn">
-                        开始配置
+                        开始设置
                         <span class="btn-arrow">→</span>
                     </button>
-                </div>
-
-                <div class="setup-hint">
-                    <p>💡 您也可以稍后在"设置"页面中配置 Notion</p>
                 </div>
             </div>
         </div>
 
-        <!-- 步骤 2: Notion配置 -->
+        <!-- 步骤 2: 创建管理员 -->
         <div class="setup-step" id="step-2">
+            <div class="setup-card">
+                <div class="setup-icon">👤</div>
+                <h1>创建管理员账户</h1>
+                <p class="setup-subtitle">此账户将成为系统的超级管理员，拥有所有权限</p>
+
+                <form id="admin-setup-form">
+                    <!-- 消息提示 -->
+                    <div id="alert-container"></div>
+
+                    <div class="form-group">
+                        <label>用户名 <span class="required">*</span></label>
+                        <input type="text" id="admin-username" class="form-input" placeholder="至少3个字符" required minlength="3" maxlength="50">
+                        <div class="form-hint">用于登录系统</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>邮箱 <span class="required">*</span></label>
+                        <input type="email" id="admin-email" class="form-input" placeholder="your@email.com" required>
+                        <div class="form-hint">用于接收重要通知</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>密码 <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <input type="password" id="admin-password" class="form-input" placeholder="至少8个字符" required minlength="8" maxlength="100">
+                                <button type="button" class="input-icon" id="toggle-admin-password">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>确认密码 <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <input type="password" id="admin-password-confirm" class="form-input" placeholder="再次输入密码" required minlength="8" maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 密码强度指示器 -->
+                    <div class="password-strength" id="password-strength-indicator" style="display: none;">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strength-fill"></div>
+                        </div>
+                        <div class="strength-text" id="strength-text">密码强度：未检测</div>
+                    </div>
+
+                    <div class="form-hint" style="margin-top: 12px;">
+                        密码需包含：大写字母、小写字母、数字
+                    </div>
+
+                    <div class="setup-actions">
+                        <button type="button" class="btn btn-secondary" id="back-step-1">上一步</button>
+                        <button type="submit" class="btn btn-primary" id="create-admin-btn">
+                            创建管理员
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 步骤 3: Notion配置 -->
+        <div class="setup-step" id="step-3">
             <div class="setup-card">
                 <div class="setup-icon">🔗</div>
                 <h1>连接您的 Notion 数据库</h1>
@@ -100,7 +169,7 @@
                 <!-- 配置表单 -->
                 <form id="notion-setup-form">
                     <!-- 消息提示 -->
-                    <div id="alert-container"></div>
+                    <div id="alert-container-2"></div>
 
                     <div class="form-group">
                         <label>配置名称</label>
@@ -131,8 +200,8 @@
                     </div>
 
                     <div class="setup-actions">
-                        <button type="button" class="btn btn-secondary" id="back-step-1">上一步</button>
-                        <button type="button" class="btn btn-secondary" id="skip-step-2">稍后配置</button>
+                        <button type="button" class="btn btn-secondary" id="back-step-2">上一步</button>
+                        <button type="button" class="btn btn-secondary" id="skip-step-3">稍后配置</button>
                         <button type="submit" class="btn btn-primary" id="verify-config-btn">
                             验证并保存
                         </button>
@@ -141,12 +210,29 @@
             </div>
         </div>
 
-        <!-- 步骤 3: 完成 -->
-        <div class="setup-step" id="step-3">
+        <!-- 步骤 4: 完成 -->
+        <div class="setup-step" id="step-4">
             <div class="setup-card">
                 <div class="setup-icon success">✓</div>
-                <h1>配置完成！</h1>
-                <p class="setup-subtitle">您的 Notion 账单导入服务已准备就绪</p>
+                <h1>设置完成！</h1>
+                <p class="setup-subtitle">您的系统已准备就绪，可以开始使用了</p>
+
+                <div class="setup-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">👤</div>
+                        <div class="summary-content">
+                            <div class="summary-label">管理员账户</div>
+                            <div class="summary-value" id="summary-username">-</div>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">🔗</div>
+                        <div class="summary-content">
+                            <div class="summary-label">Notion配置</div>
+                            <div class="summary-value" id="summary-notion">-</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="setup-actions">
                     <button class="btn btn-primary btn-large" id="go-to-dashboard-btn">
@@ -158,7 +244,6 @@
     </div>
 
     <script src="/static/js/perf-utils.js"></script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/notion-setup.js"></script>
+    <script src="/static/js/setup.js"></script>
 </body>
 </html>

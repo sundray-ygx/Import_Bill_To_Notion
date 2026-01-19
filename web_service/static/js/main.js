@@ -396,15 +396,17 @@ async function loadLogs() {
 // 获取模拟日志数据
 function getMockLogs() {
     const now = new Date();
-    const formattedNow = now.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    
+    const formattedNow = window.DateTimeUtils
+        ? window.DateTimeUtils.formatFullDateTime(now.toISOString())
+        : now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
     return [
         {
             level: 'INFO',
@@ -451,14 +453,15 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// 格式化日期
+// 使用 DateTimeUtils 格式化日期（北京时间）
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    return window.DateTimeUtils
+        ? window.DateTimeUtils.formatDateTime(dateString)
+        : new Date(dateString).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 }

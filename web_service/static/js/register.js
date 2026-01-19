@@ -163,7 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                showAlert('注册成功！正在进入配置向导...', 'success');
+                // 调试日志：检查响应数据
+                console.log('注册响应数据:', data);
+                console.log('用户信息:', data.user);
+                console.log('is_superuser:', data.user?.is_superuser);
 
                 // 保存认证信息到本地存储
                 if (window.Auth && window.Auth.saveAuth) {
@@ -171,12 +174,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         access_token: data.access_token,
                         refresh_token: data.refresh_token
                     }, data.user);
+                    console.log('用户信息已保存到localStorage');
                 }
 
-                // 延迟跳转到配置向导
-                setTimeout(() => {
-                    window.location.href = '/setup';
-                }, 1500);
+                // 验证保存是否成功
+                const savedUser = localStorage.getItem('user');
+                console.log('localStorage中的用户信息:', savedUser ? JSON.parse(savedUser) : null);
+
+                // 根据用户角色决定跳转目标
+                const isSuperuser = data.user?.is_superuser || false;
+                console.log('是否超级管理员:', isSuperuser);
+
+                if (isSuperuser) {
+                    showAlert('注册成功！您是系统管理员，正在前往设置页面...', 'success');
+                    setTimeout(() => {
+                        console.log('跳转到 /settings');
+                        window.location.href = '/settings';
+                    }, 1500);
+                } else {
+                    showAlert('注册成功！正在前往首页...', 'success');
+                    setTimeout(() => {
+                        console.log('跳转到首页');
+                        window.location.href = '/';
+                    }, 1500);
+                }
             } else {
                 // 注册失败
                 const errorMsg = data.detail || '注册失败，请稍后重试';

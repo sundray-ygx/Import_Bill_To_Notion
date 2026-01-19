@@ -96,14 +96,18 @@ class PasswordResetRequest(BaseModel):
 
 class NotionConfigBase(BaseModel):
     """Notion配置基础schema。"""
-    notion_api_key: str = Field(..., min_length=10, description="Notion API密钥")
+    notion_api_key: Optional[str] = Field(None, min_length=10, description="Notion API密钥（更新时可选）")
     notion_income_database_id: str = Field(..., min_length=1, description="收入数据库ID")
     notion_expense_database_id: str = Field(..., min_length=1, description="支出数据库ID")
     config_name: str = Field(default="默认配置", max_length=100, description="配置名称")
 
 
 class NotionConfigCreate(NotionConfigBase):
-    """创建Notion配置schema。"""
+    """创建Notion配置schema。
+
+    注意：notion_api_key 在创建新配置时是必需的，
+    但在更新现有配置时可以省略（将保留原有密钥）。
+    """
     pass
 
 

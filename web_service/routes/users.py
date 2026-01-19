@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Optional
+from pydantic import BaseModel
 from database import get_db
 from models import User, UserNotionConfig, UserUpload, ImportHistory
 from schemas import (
@@ -148,6 +149,7 @@ async def create_or_update_notion_config(
     """创建或更新当前用户的Notion配置。
 
     配置Notion API密钥和数据库ID。
+    注意：如果更新时 notion_api_key 为空，将保留原有的API密钥。
     """
     require_multi_tenant()
 
@@ -158,11 +160,21 @@ async def create_or_update_notion_config(
 
     if existing_config:
         # 更新现有配置
-        existing_config.notion_api_key = config_data.notion_api_key
+        # 如果提供了新的API密钥则更新，否则保留原有密钥
+        if config_data.notion_api_key:
+            existing_config.notion_api_key = config_data.notion_api_key
+            api_key_changed = True
+        else:
+            api_key_changed = False
+
         existing_config.notion_income_database_id = config_data.notion_income_database_id
         existing_config.notion_expense_database_id = config_data.notion_expense_database_id
         existing_config.config_name = config_data.config_name
-        existing_config.is_verified = False  # 需要重新验证
+
+        # 只有API密钥变化时才需要重新验证
+        if api_key_changed:
+            existing_config.is_verified = False
+
         existing_config.updated_at = datetime.utcnow()
 
         db.commit()
@@ -173,13 +185,20 @@ async def create_or_update_notion_config(
             db=db,
             user_id=current_user.id,
             action="notion_config_updated",
-            request=request
+            request=request,
+            details={"api_key_changed": api_key_changed}
         )
 
-        logger.info(f"Notion config updated for user: {current_user.username} (ID: {current_user.id})")
+        logger.info(f"Notion config updated for user: {current_user.username} (ID: {current_user.id}), api_key_changed={api_key_changed}")
         return existing_config
     else:
-        # 创建新配置
+        # 创建新配置时，API密钥是必需的
+        if not config_data.notion_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="API key is required for new configuration"
+            )
+
         new_config = UserNotionConfig(
             user_id=current_user.id,
             notion_api_key=config_data.notion_api_key,
@@ -299,6 +318,98 @@ async def delete_notion_config(
         "success": True,
         "message": "Notion configuration deleted successfully"
     }
+
+
+# ==================== 用户注销 ====================
+
+class AccountDeletionRequest(BaseModel):
+    """用户注销请求模型"""
+    password: str
+
+
+@router.post("/delete-account", response_model=MessageResponse, tags=["User"])
+async def delete_account(
+    request_data: AccountDeletionRequest,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """注销用户账户并删除所有相关数据。
+
+    需要验证当前密码。超级管理员账户无法注销。
+
+    删除内容包括：
+    - 用户基本信息（User表）
+    - 上传的账单文件（UserUpload表 + 物理文件）
+    - 导入历史记录（ImportHistory表）
+    - Notion配置（UserNotionConfig表）
+    - 会话信息（UserSession表）
+    - 审计日志（AuditLog表）
+    """
+    # 超级管理员不允许注销
+    if current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superuser accounts cannot be deleted"
+        )
+
+    # 验证密码
+    if not verify_password(request_data.password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password"
+        )
+
+    try:
+        user_id = current_user.id
+        username = current_user.username
+
+        # 1. 删除物理文件（上传的账单文件）
+        from web_service.services.user_file_service import UserFileService
+        file_service = UserFileService()
+
+        uploads = db.query(UserUpload).filter(UserUpload.user_id == user_id).all()
+        for upload in uploads:
+            try:
+                file_service.delete_file(user_id, upload.id, upload.file_name)
+            except Exception as e:
+                logger.warning(f"Failed to delete file {upload.file_name}: {e}")
+
+        # 2. 删除上传记录（UserUpload表）
+        db.query(UserUpload).filter(UserUpload.user_id == user_id).delete()
+
+        # 3. 删除导入历史（ImportHistory表）
+        db.query(ImportHistory).filter(ImportHistory.user_id == user_id).delete()
+
+        # 4. 删除Notion配置（UserNotionConfig表）
+        db.query(UserNotionConfig).filter(UserNotionConfig.user_id == user_id).delete()
+
+        # 5. 删除会话信息（UserSession表）
+        from models import UserSession
+        db.query(UserSession).filter(UserSession.user_id == user_id).delete()
+
+        # 6. 删除审计日志（AuditLog表）
+        db.query(AuditLog).filter(AuditLog.user_id == user_id).delete()
+
+        # 7. 最后删除用户记录（User表）
+        db.delete(current_user)
+        db.commit()
+
+        logger.info(f"User account deleted: {username} (ID: {user_id})")
+        return {
+            "success": True,
+            "message": "Account deleted successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete user account {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete account: {str(e)}"
+        )
 
 
 # ==================== 辅助函数 ====================

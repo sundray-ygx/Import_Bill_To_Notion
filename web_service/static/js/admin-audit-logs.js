@@ -381,18 +381,9 @@
         });
     }
 
-    // 格式化日期时间
+    // 使用 DateTimeUtils 进行时间格式化（北京时间）
     function formatDateTime(dateStr) {
-        if (!dateStr) return '-';
-        const date = new Date(dateStr);
-        return date.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
+        return window.DateTimeUtils ? window.DateTimeUtils.formatFullDateTime(dateStr) : dateStr || '-';
     }
 
     // 页面初始化

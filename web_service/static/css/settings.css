@@ -323,6 +323,54 @@
     border-color: rgba(239, 68, 68, 0.2);
 }
 
+/* ==================== 危险区域样式 ==================== */
+.danger-zone-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+}
+
+.danger-zone-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #dc2626;
+    margin: 0 0 8px 0;
+}
+
+.danger-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(239, 68, 68, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.danger-item-content {
+    flex: 1;
+}
+
+.danger-item-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 4px 0;
+}
+
+.danger-item-content p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.danger-item .btn {
+    margin-left: 16px;
+    flex-shrink: 0;
+}
+
 /* ==================== 响应式设计 ==================== */
 @media (max-width: 768px) {
     .settings-container {
@@ -353,6 +401,17 @@
     }
 
     .form-actions .btn {
+        width: 100%;
+    }
+
+    .danger-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .danger-item .btn {
+        margin-left: 0;
         width: 100%;
     }
 }

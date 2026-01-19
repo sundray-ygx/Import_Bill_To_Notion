@@ -77,7 +77,7 @@
             const guestNav = document.getElementById('guest-nav');
             const userMenu = document.getElementById('user-menu-container');
             const authButtons = document.getElementById('auth-buttons');
-            const adminNav = document.getElementById('admin-nav');
+            const adminMenu = document.getElementById('admin-menu');
 
             if (isLoggedIn) {
                 // 已登录状态
@@ -97,9 +97,9 @@
                     if (dropdownEmail) dropdownEmail.textContent = userInfo.email;
                 }
 
-                // 显示管理员入口
-                if (userInfo && userInfo.is_superuser && adminNav) {
-                    adminNav.style.display = 'block';
+                // 显示管理员菜单（超级管理员专属）
+                if (userInfo && userInfo.is_superuser && adminMenu) {
+                    adminMenu.style.display = 'block';
                 }
             } else {
                 // 未登录状态

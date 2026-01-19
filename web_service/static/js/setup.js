@@ -1,5 +1,6 @@
 /**
- * 配置向导逻辑
+ * 系统设置向导逻辑
+ * 包含管理员创建和Notion配置
  */
 
 (function() {
@@ -7,104 +8,58 @@
 
     // 当前步骤
     let currentStep = 1;
+    // 总步骤数
     const totalSteps = 4;
-
     // 管理员信息
-    let adminInfo = {
-        username: '',
-        email: '',
-        password: ''
-    };
+    let adminInfo = null;
+    // Notion配置信息
+    let notionConfigured = false;
 
-    // 系统设置
-    let systemSettings = {
-        allow_registration: true,
-        session_timeout: 15,
-        max_login_attempts: 5
-    };
+    // ==================== 工具函数 ====================
 
-    // 显示 Toast 消息
-    function showToast(message, type = 'success') {
+    function showToast(message, type) {
+        type = type || 'success';
         const container = document.getElementById('toast-container');
         if (!container) return;
 
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <div class="toast-content">
-                <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
-                <span class="toast-message">${message}</span>
-            </div>
-        `;
+        toast.className = 'toast ' + type;
 
+        const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+        toast.innerHTML = '<div class="toast-content"><span class="toast-icon">' + icon + '</span><span class="toast-message">' + message + '</span></div>';
         container.appendChild(toast);
 
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        setTimeout(function() { toast.remove(); }, 3000);
     }
 
-    // 切换步骤
+    function showAlert(message, type) {
+        type = type || 'info';
+        const container = document.getElementById('alert-container') || document.getElementById('alert-container-2');
+        if (!container) return;
+
+        container.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+        setTimeout(function() { container.innerHTML = ''; }, 5000);
+    }
+
     function goToStep(step) {
-        // 隐藏当前步骤
-        document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
-
-        // 显示新步骤
-        const stepElement = document.querySelector(`.setup-step[data-step="${step}"]`);
-        if (stepElement) {
-            stepElement.classList.add('active');
+        // 隐藏所有步骤
+        document.querySelectorAll('.setup-step').forEach(function(s) { s.classList.remove('active'); });
+        // 显示目标步骤
+        const targetStep = document.getElementById('step-' + step);
+        if (targetStep) {
+            targetStep.classList.add('active');
         }
 
-        const progressStep = document.querySelector(`.progress-step[data-step="${step}"]`);
-        if (progressStep) {
-            progressStep.classList.add('active');
-        }
-
-        // 标记之前的步骤为完成
-        for (let i = 1; i < step; i++) {
-            const completedStep = document.querySelector(`.progress-step[data-step="${i}"]`);
-            if (completedStep) {
-                completedStep.classList.add('completed');
+        // 更新进度指示器
+        document.querySelectorAll('.progress-step').forEach(function(s) { s.classList.remove('active'); });
+        for (let i = 1; i <= totalSteps; i++) {
+            const stepEl = document.querySelector('.progress-step[data-step="' + i + '"]');
+            if (stepEl) {
+                if (i <= step) stepEl.classList.add('active');
             }
         }
 
-        // 更新进度条
-        const progress = ((step - 1) / (totalSteps - 1)) * 100;
-        document.getElementById('progress-fill').style.width = `${progress}%`;
-
         currentStep = step;
-    }
-
-    // 验证用户名
-    function validateUsername(username) {
-        if (!username) return { valid: false, message: '请输入用户名' };
-        if (username.length < 3) return { valid: false, message: '用户名至少需要3个字符' };
-        if (username.length > 50) return { valid: false, message: '用户名不能超过50个字符' };
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            return { valid: false, message: '用户名只能包含字母、数字和下划线' };
-        }
-        return { valid: true };
-    }
-
-    // 验证邮箱
-    function validateEmail(email) {
-        if (!email) return { valid: false, message: '请输入邮箱地址' };
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) return { valid: false, message: '请输入有效的邮箱地址' };
-        return { valid: true };
-    }
-
-    // 验证密码
-    function validatePassword(password) {
-        if (!password) return { valid: false, message: '请输入密码' };
-        if (password.length < 8) return { valid: false, message: '密码至少需要8个字符' };
-        if (!/[a-z]/.test(password)) return { valid: false, message: '密码必须包含至少一个小写字母' };
-        if (!/[A-Z]/.test(password)) return { valid: false, message: '密码必须包含至少一个大写字母' };
-        if (!/[0-9]/.test(password)) return { valid: false, message: '密码必须包含至少一个数字' };
-        return { valid: true };
     }
 
     // 检查密码强度
@@ -119,48 +74,39 @@
         if (/[0-9]/.test(password)) score++;
         if (/[^a-zA-Z0-9]/.test(password)) score++;
 
-        if (score <= 2) return { score, level: 'weak', text: '弱' };
-        if (score <= 4) return { score, level: 'medium', text: '中等' };
-        return { score, level: 'strong', text: '强' };
+        if (score <= 2) return { score: score, level: 'weak', text: '弱' };
+        if (score <= 4) return { score: score, level: 'medium', text: '中等' };
+        return { score: score, level: 'strong', text: '强' };
     }
 
-    // 更新密码强度指示器
     function updateStrengthIndicator(strength) {
         const fill = document.getElementById('strength-fill');
         const text = document.getElementById('strength-text');
+        const indicator = document.getElementById('password-strength-indicator');
 
         if (!fill || !text) return;
 
+        if (indicator) indicator.style.display = 'block';
+
         fill.className = 'strength-fill';
-        text.textContent = `密码强度：${strength.text}`;
+        text.textContent = '密码强度：' + strength.text;
 
         if (strength.score > 0) {
             fill.classList.add(strength.level);
         }
     }
 
-    // 初始化第一步（欢迎）
-    function initStep1() {
-        const startBtn = document.getElementById('start-setup-btn');
-        if (startBtn) {
-            startBtn.addEventListener('click', () => {
-                goToStep(2);
-            });
-        }
-    }
+    // ==================== 管理员创建逻辑 ====================
 
-    // 初始化第二步（管理员账户）
-    function initStep2() {
-        const usernameInput = document.getElementById('admin-username');
-        const emailInput = document.getElementById('admin-email');
-        const passwordInput = document.getElementById('admin-password');
-        const confirmPasswordInput = document.getElementById('admin-confirm-password');
+    function initAdminForm() {
+        const form = document.getElementById('admin-setup-form');
+        if (!form) return;
+
+        // 密码切换
         const toggleBtn = document.getElementById('toggle-admin-password');
-        const form = document.getElementById('admin-form');
-
-        // 密码显示切换
+        const passwordInput = document.getElementById('admin-password');
         if (toggleBtn && passwordInput) {
-            toggleBtn.addEventListener('click', () => {
+            toggleBtn.addEventListener('click', function() {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
             });
@@ -168,164 +114,171 @@
 
         // 密码强度检测
         if (passwordInput) {
-            passwordInput.addEventListener('input', () => {
+            passwordInput.addEventListener('input', function() {
                 const strength = checkPasswordStrength(passwordInput.value);
                 updateStrengthIndicator(strength);
             });
         }
 
-        // 返回按钮
-        const backBtn = document.getElementById('back-to-welcome-btn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                goToStep(1);
+        // 表单提交 - 已废弃，请使用注册流程
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 引导用户使用注册页面
+            showAlert('请使用注册页面创建账户。首个注册用户将自动成为超级管理员。', 'info');
+
+            setTimeout(function() {
+                window.location.href = '/register';
+            }, 2000);
+        });
+    }
+
+    // ==================== Notion配置逻辑 ====================
+
+    function initNotionForm() {
+        const form = document.getElementById('notion-setup-form');
+        if (!form) return;
+
+        // API密钥切换
+        const toggleBtn = document.getElementById('toggle-api-key');
+        const apiKeyInput = document.getElementById('notion-api-key');
+        if (toggleBtn && apiKeyInput) {
+            toggleBtn.addEventListener('click', function() {
+                const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                apiKeyInput.setAttribute('type', type);
             });
         }
 
         // 表单提交
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-                // 验证表单
-                const username = usernameInput.value.trim();
-                const email = emailInput.value.trim();
-                const password = passwordInput.value;
-                const confirmPassword = confirmPasswordInput.value;
+            const payload = {
+                config_name: document.getElementById('config-name').value,
+                notion_api_key: document.getElementById('notion-api-key').value,
+                notion_income_database_id: document.getElementById('income-db-id').value,
+                notion_expense_database_id: document.getElementById('expense-db-id').value
+            };
 
-                // 验证用户名
-                const usernameResult = validateUsername(username);
-                if (!usernameResult.valid) {
-                    showToast(usernameResult.message, 'error');
-                    return;
+            const btn = document.getElementById('verify-config-btn');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+
+            try {
+                const response = await fetch('/api/user/notion-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    notionConfigured = true;
+                    showToast('配置保存成功！');
+                    updateSummary();
+                    goToStep(4);
+                } else {
+                    const data = await response.json();
+                    showAlert(data.detail || '配置保存失败', 'error');
                 }
+            } catch (err) {
+                console.error('Config save error:', err);
+                showAlert('网络错误，请重试', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '验证并保存';
+            }
+        });
+    }
 
-                // 验证邮箱
-                const emailResult = validateEmail(email);
-                if (!emailResult.valid) {
-                    showToast(emailResult.message, 'error');
-                    return;
-                }
+    // ==================== 完成页面逻辑 ====================
 
-                // 验证密码
-                const passwordResult = validatePassword(password);
-                if (!passwordResult.valid) {
-                    showToast(passwordResult.message, 'error');
-                    return;
-                }
+    function updateSummary() {
+        if (adminInfo) {
+            document.getElementById('summary-username').textContent = adminInfo.username;
+        }
+        document.getElementById('summary-notion').textContent = notionConfigured ? '已配置' : '稍后配置';
+    }
 
-                // 验证确认密码
-                if (password !== confirmPassword) {
-                    showToast('两次输入的密码不一致', 'error');
-                    return;
-                }
+    // ==================== 初始化 ====================
 
-                // 保存管理员信息
-                adminInfo = { username, email, password };
+    function bindEvents() {
+        // 步骤1 -> 步骤2
+        const startBtn = document.getElementById('start-setup-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', function() { goToStep(2); });
+        }
 
-                // 检查用户名是否已存在
-                try {
-                    const checkResponse = await fetch('/api/auth/check-username', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username })
-                    });
+        // 步骤2 -> 步骤1
+        const back1Btn = document.getElementById('back-step-1');
+        if (back1Btn) {
+            back1Btn.addEventListener('click', function() { goToStep(1); });
+        }
 
-                    if (checkResponse.ok) {
-                        const data = await checkResponse.json();
-                        if (data.exists) {
-                            showToast('用户名已存在，请选择其他用户名', 'error');
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Username check error:', error);
-                }
+        // 步骤3 -> 步骤2
+        const back2Btn = document.getElementById('back-step-2');
+        if (back2Btn) {
+            back2Btn.addEventListener('click', function() { goToStep(2); });
+        }
 
-                // 进入下一步
-                goToStep(3);
+        // 跳过Notion配置
+        const skipBtn = document.getElementById('skip-step-3');
+        if (skipBtn) {
+            skipBtn.addEventListener('click', function() {
+                notionConfigured = false;
+                updateSummary();
+                goToStep(4);
+            });
+        }
+
+        // 完成设置
+        const goDashboardBtn = document.getElementById('go-to-dashboard-btn');
+        if (goDashboardBtn) {
+            goDashboardBtn.addEventListener('click', function() {
+                window.location.href = '/bill-management';
             });
         }
     }
 
-    // 初始化第三步（系统设置）
-    function initStep3() {
-        const allowRegCheckbox = document.getElementById('allow-registration');
-        const sessionTimeoutInput = document.getElementById('session-timeout');
-        const maxAttemptsInput = document.getElementById('max-login-attempts');
-        const form = document.getElementById('settings-form');
+    async function checkSetupStatus() {
+        try {
+            const response = await fetch('/api/auth/setup/check');
+            if (response.ok) {
+                const data = await response.json();
+                // 检查用户是否已登录
+                const hasToken = localStorage.getItem('access_token');
 
-        // 返回按钮
-        const backBtn = document.getElementById('back-to-admin-btn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                goToStep(2);
-            });
-        }
-
-        // 表单提交
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                // 收集设置
-                systemSettings = {
-                    allow_registration: allowRegCheckbox.checked,
-                    session_timeout: parseInt(sessionTimeoutInput.value) || 15,
-                    max_login_attempts: parseInt(maxAttemptsInput.value) || 5
-                };
-
-                // 创建管理员账户
-                try {
-                    showToast('正在创建管理员账户...');
-
-                    const createResponse = await fetch('/api/setup/create-admin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: adminInfo.username,
-                            email: adminInfo.email,
-                            password: adminInfo.password,
-                            settings: systemSettings
-                        })
-                    });
-
-                    if (createResponse.ok) {
-                        showToast('管理员账户创建成功');
-                        // 显示完成页面
-                        document.getElementById('setup-admin-username').textContent = adminInfo.username;
-                        goToStep(4);
-                    } else {
-                        const data = await createResponse.json();
-                        showToast(data.detail || '创建失败，请重试', 'error');
-                    }
-                } catch (error) {
-                    console.error('Create admin error:', error);
-                    showToast('网络错误，请检查连接', 'error');
+                // 如果用户已登录，直接跳转到第3步
+                if (hasToken && data.setup_type !== 'first_user') {
+                    goToStep(3);
+                } else if (data.setup_type === 'promote_available') {
+                    // 有用户但没有超级管理员，跳过管理员创建步骤
+                    goToStep(3);
                 }
-            });
+                // 否则显示欢迎页（第1步）
+                return true;
+            }
+        } catch (err) {
+            console.error('Check setup status error:', err);
         }
+        return true;
     }
 
-    // 初始化第四步（完成）
-    function initStep4() {
-        const loginBtn = document.getElementById('go-to-login-btn');
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
-                window.location.href = '/login';
-            });
-        }
+    async function init() {
+        // 检查设置状态
+        const shouldContinue = await checkSetupStatus();
+        if (!shouldContinue) return;
+
+        // 绑定事件
+        bindEvents();
+
+        // 初始化表单
+        initAdminForm();
+        initNotionForm();
     }
 
-    // 页面初始化
-    function init() {
-        initStep1();
-        initStep2();
-        initStep3();
-        initStep4();
-    }
-
-    // DOM加载完成后初始化
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
