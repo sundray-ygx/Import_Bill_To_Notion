@@ -244,7 +244,7 @@ async def import_uploaded_bill(
             upload.platform = import_result['detected_platform']
 
         # 计算导入耗时
-        completed_at = datetime.now()
+        completed_at = datetime.utcnow()
         started_at = upload.created_at
         duration_seconds = int((completed_at - started_at).total_seconds())
 
@@ -323,7 +323,7 @@ async def import_uploaded_bill(
         upload.status = "failed"
         error_message = "Notion configuration not found. Please configure your Notion API settings."
 
-        completed_at = datetime.now()
+        completed_at = datetime.utcnow()
         started_at = upload.created_at
         duration_seconds = int((completed_at - started_at).total_seconds())
 
@@ -354,7 +354,7 @@ async def import_uploaded_bill(
         logger.error(f"Import failed: {e}")
         upload.status = "failed"
 
-        completed_at = datetime.now()
+        completed_at = datetime.utcnow()
         started_at = upload.created_at
         duration_seconds = int((completed_at - started_at).total_seconds())
 

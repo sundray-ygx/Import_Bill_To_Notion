@@ -94,6 +94,24 @@ class PasswordResetRequest(BaseModel):
 
 # ==================== Notion配置相关 ====================
 
+class NotionVerifyStepResponse(BaseModel):
+    """Notion配置验证步骤响应schema。"""
+    step: str = Field(..., description="当前步骤: api_key, income_db, expense_db")
+    status: str = Field(..., description="状态: pending, in_progress, success, error")
+    message: str = Field(..., description="步骤描述消息")
+    details: Optional[dict] = Field(None, description="详细信息（如数据库名称等）")
+    error: Optional[str] = Field(None, description="错误信息（如果失败）")
+
+
+class NotionVerifyProgressResponse(BaseModel):
+    """Notion配置验证进度响应schema。"""
+    current_step: int = Field(..., ge=1, le=3, description="当前步骤编号")
+    total_steps: int = Field(3, description="总步骤数")
+    steps: List[NotionVerifyStepResponse] = Field(..., description="所有步骤的状态")
+    is_complete: bool = Field(False, description="是否全部完成")
+    all_success: bool = Field(False, description="是否全部成功")
+
+
 class NotionConfigBase(BaseModel):
     """Notion配置基础schema。"""
     notion_api_key: Optional[str] = Field(None, min_length=10, description="Notion API密钥（更新时可选）")

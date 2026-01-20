@@ -8,7 +8,8 @@ from database import get_db
 from models import User, UserNotionConfig, UserUpload, ImportHistory
 from schemas import (
     UserUpdate, UserProfileResponse, NotionConfigCreate, NotionConfigUpdate,
-    NotionConfigResponse, MessageResponse
+    NotionConfigResponse, MessageResponse,
+    NotionVerifyStepResponse, NotionVerifyProgressResponse
 )
 from auth import get_password_hash, verify_password, validate_password_strength
 from dependencies import get_current_active_user, require_multi_tenant
@@ -278,6 +279,147 @@ async def verify_notion_config(
             "success": False,
             "message": f"Verification failed: {str(e)}"
         }
+
+
+@router.get("/notion-config/verify-step", response_model=NotionVerifyProgressResponse, tags=["User"])
+async def verify_notion_config_step(
+    step: str,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """分步验证Notion配置。
+
+    支持的步骤:
+    - api_key: 验证API密钥
+    - income_db: 验证收入数据库
+    - expense_db: 验证支出数据库
+
+    返回当前步骤和所有步骤的状态。
+    """
+    require_multi_tenant()
+
+    config = db.query(UserNotionConfig).filter(
+        UserNotionConfig.user_id == current_user.id
+    ).first()
+
+    if not config:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notion configuration not found"
+        )
+
+    # 初始化步骤状态
+    steps = [
+        NotionVerifyStepResponse(step="api_key", status="pending", message="验证API密钥"),
+        NotionVerifyStepResponse(step="income_db", status="pending", message="验证收入数据库"),
+        NotionVerifyStepResponse(step="expense_db", status="pending", message="验证支出数据库")
+    ]
+
+    current_step_index = {"api_key": 0, "income_db": 1, "expense_db": 2}.get(step, 0)
+
+    try:
+        client = NotionClient(user_id=current_user.id)
+        all_success = True
+
+        # 执行请求的步骤
+        if step == "api_key":
+            steps[0].status = "in_progress"
+            steps[0].message = "正在验证API密钥..."
+
+            try:
+                user_info = client.client.users.me()
+                user_name = user_info.get('name', 'unknown')
+                steps[0].status = "success"
+                steps[0].message = f"API密钥验证成功 (用户: {user_name})"
+                steps[0].details = {"user_name": user_name}
+            except Exception as e:
+                steps[0].status = "error"
+                steps[0].message = "API密钥验证失败"
+                steps[0].error = str(e)
+                all_success = False
+
+        elif step == "income_db":
+            # 前面的步骤标记为成功（假设已验证）
+            steps[0].status = "success"
+            steps[0].message = "API密钥已验证"
+
+            steps[1].status = "in_progress"
+            steps[1].message = "正在验证收入数据库..."
+
+            try:
+                income_db_info = client.client.databases.retrieve(database_id=client.income_db)
+                db_title = income_db_info.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
+                steps[1].status = "success"
+                steps[1].message = f"收入数据库验证成功"
+                steps[1].details = {"db_title": db_title, "db_id": client.income_db[:8] + "***"}
+            except Exception as e:
+                steps[1].status = "error"
+                steps[1].message = "收入数据库验证失败"
+                steps[1].error = str(e)
+                all_success = False
+
+        elif step == "expense_db":
+            # 前面的步骤标记为成功
+            steps[0].status = "success"
+            steps[0].message = "API密钥已验证"
+            steps[1].status = "success"
+            steps[1].message = "收入数据库已验证"
+
+            steps[2].status = "in_progress"
+            steps[2].message = "正在验证支出数据库..."
+
+            try:
+                expense_db_info = client.client.databases.retrieve(database_id=client.expense_db)
+                db_title = expense_db_info.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
+                steps[2].status = "success"
+                steps[2].message = f"支出数据库验证成功"
+                steps[2].details = {"db_title": db_title, "db_id": client.expense_db[:8] + "***"}
+
+                # 如果全部成功，更新配置状态
+                if all_success:
+                    config.is_verified = True
+                    config.last_verified_at = datetime.utcnow()
+                    db.commit()
+
+                    # 记录审计日志
+                    _create_audit_log(
+                        db=db,
+                        user_id=current_user.id,
+                        action="notion_config_verified",
+                        request=request
+                    )
+
+                    logger.info(f"Notion config fully verified for user: {current_user.username} (ID: {current_user.id})")
+
+            except Exception as e:
+                steps[2].status = "error"
+                steps[2].message = "支出数据库验证失败"
+                steps[2].error = str(e)
+                all_success = False
+
+        return NotionVerifyProgressResponse(
+            current_step=current_step_index + 1,
+            total_steps=3,
+            steps=steps,
+            is_complete=(step == "expense_db"),
+            all_success=all_success
+        )
+
+    except Exception as e:
+        logger.error(f"Notion step verification error for user {current_user.id}, step {step}: {e}")
+        # 标记当前步骤为错误
+        steps[current_step_index].status = "error"
+        steps[current_step_index].message = f"验证出错"
+        steps[current_step_index].error = str(e)
+
+        return NotionVerifyProgressResponse(
+            current_step=current_step_index + 1,
+            total_steps=3,
+            steps=steps,
+            is_complete=False,
+            all_success=False
+        )
 
 
 @router.delete("/notion-config", response_model=MessageResponse, tags=["User"])

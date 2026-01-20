@@ -109,6 +109,10 @@ The import flow follows this path: `file -> parser -> notion format -> NotionCli
    - Profile management and password change
    - Admin panel for user management
    - Audit log tracking
+   - **Notion Configuration Verification**: Step-by-step verification with real-time progress
+     - `GET /api/user/notion-config/verify-step?step={api_key|income_db|expense_db}` - Incremental verification
+     - Returns progress status for each step with detailed error messages
+     - Frontend displays progress bar and step-by-step status updates
 
 10. **Bill History** (`web_service/routes/bills.py`)
     - Track all bill import operations

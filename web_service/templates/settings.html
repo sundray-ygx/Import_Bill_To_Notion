@@ -387,6 +387,116 @@
             opacity: 1;
         }
     }
+
+    /* ==================== 验证进度样式 ==================== */
+
+    .verify-progress-container {
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+        margin-top: 20px;
+    }
+
+    .verify-progress-container h4 {
+        margin: 0 0 16px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .verify-progress-bar {
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .verify-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+    }
+
+    .verify-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .verify-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .verify-step.in-progress {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .verify-step.success {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .verify-step.error {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .step-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 14px;
+        flex-shrink: 0;
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .step-icon.spinning {
+        background: #667eea;
+        color: white;
+        animation: spin 1s linear infinite;
+    }
+
+    .step-icon.success {
+        background: #10b981;
+        color: white;
+    }
+
+    .step-icon.error {
+        background: #ef4444;
+        color: white;
+    }
+
+    .step-text {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+
+    .verify-step.error .step-text {
+        color: #dc2626;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
     </style>
 </body>
 </html>
