@@ -189,14 +189,14 @@
         bindHistoryItemEvents();
     }
 
-    // 绑定历史记录项事件
+    // 绑定历史记录项事件（使用事件委托优化性能）
     function bindHistoryItemEvents() {
         const container = document.getElementById('history-items');
         if (!container) return;
 
-        // 绑定复选框事件
-        container.querySelectorAll('.history-select-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
+        // 使用事件委托处理所有事件
+        container.addEventListener('change', (e) => {
+            if (e.target.classList.contains('history-select-checkbox')) {
                 const historyId = parseInt(e.target.dataset.historyId);
                 if (e.target.checked) {
                     selectedHistoryIds.add(historyId);
@@ -205,38 +205,38 @@
                 }
                 updateBulkActionsBar();
                 updateSelectAllCheckbox();
-            });
-
-            // 阻止复选框冒泡
-            checkbox.addEventListener('click', (e) => {
                 e.stopPropagation();
-            });
+            }
         });
 
-        // 绑定操作按钮事件
-        container.querySelectorAll('.history-item-actions .action-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        container.addEventListener('click', (e) => {
+            // 处理操作按钮
+            const actionBtn = e.target.closest('.action-btn');
+            if (actionBtn) {
                 e.stopPropagation();
-                const historyId = parseInt(btn.dataset.historyId);
-                const action = btn.dataset.action;
+                const historyId = parseInt(actionBtn.dataset.historyId);
+                const action = actionBtn.dataset.action;
 
                 if (action === 'view') {
                     showDetail(historyId);
                 } else if (action === 'delete') {
                     deleteHistoryItem(historyId);
                 }
-            });
-        });
+                return;
+            }
 
-        // 绑定点击查看详情事件（排除复选框和操作按钮）
-        container.querySelectorAll('.history-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (e.target.closest('.history-checkbox') || e.target.closest('.history-item-actions')) {
-                    return;
-                }
-                const historyId = parseInt(item.dataset.historyId);
+            // 处理复选框
+            if (e.target.classList.contains('history-select-checkbox')) {
+                e.stopPropagation();
+                return;
+            }
+
+            // 处理历史项点击（查看详情）
+            const historyItem = e.target.closest('.history-item');
+            if (historyItem && !e.target.closest('.history-checkbox') && !e.target.closest('.history-item-actions')) {
+                const historyId = parseInt(historyItem.dataset.historyId);
                 showDetail(historyId);
-            });
+            }
         });
     }
 
