@@ -5,6 +5,36 @@
 (function() {
     'use strict';
 
+    // DOM 元素缓存
+    const dom = {
+        historyItems: null,
+        toastContainer: null,
+        searchInput: null,
+        statusFilter: null,
+        platformFilter: null,
+        startDateInput: null,
+        endDateInput: null,
+        clearDateBtn: null,
+        clearAllBtn: null,
+        selectAllCheckbox: null,
+        bulkActionsBar: null,
+        selectedCount: null,
+        bulkDeleteBtn: null,
+        cancelSelectionBtn: null,
+        prevPageBtn: null,
+        nextPageBtn: null,
+        paginationPages: null,
+        detailModal: null,
+        modalBody: null,
+        modalClose: null,
+        modalOk: null,
+        modalBackdrop: null,
+        totalImports: null,
+        successfulImports: null,
+        totalRecords: null,
+        avgDuration: null
+    };
+
     // 当前状态
     let currentPage = 1;
     let pageSize = 10;
@@ -20,10 +50,40 @@
     let allHistory = [];
     let selectedHistoryIds = new Set();
 
+    // 初始化 DOM 元素缓存
+    function initDomCache() {
+        dom.historyItems = document.getElementById('history-items');
+        dom.toastContainer = document.getElementById('toast-container');
+        dom.searchInput = document.getElementById('search-input');
+        dom.statusFilter = document.getElementById('status-filter');
+        dom.platformFilter = document.getElementById('platform-filter');
+        dom.startDateInput = document.getElementById('start-date');
+        dom.endDateInput = document.getElementById('end-date');
+        dom.clearDateBtn = document.getElementById('clear-date-filter');
+        dom.clearAllBtn = document.getElementById('clear-all-filters');
+        dom.selectAllCheckbox = document.getElementById('select-all-checkbox');
+        dom.bulkActionsBar = document.getElementById('bulk-actions-bar');
+        dom.selectedCount = document.getElementById('selected-count');
+        dom.bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+        dom.cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+        dom.prevPageBtn = document.getElementById('prev-page');
+        dom.nextPageBtn = document.getElementById('next-page');
+        dom.paginationPages = document.getElementById('pagination-pages');
+        dom.detailModal = document.getElementById('detail-modal');
+        dom.modalBody = document.getElementById('modal-body-content');
+        dom.modalClose = document.getElementById('modal-close');
+        dom.modalOk = document.getElementById('modal-ok');
+        dom.modalBackdrop = document.getElementById('modal-backdrop');
+        dom.totalImports = document.getElementById('total-imports');
+        dom.successfulImports = document.getElementById('successful-imports');
+        dom.totalRecords = document.getElementById('total-records');
+        dom.avgDuration = document.getElementById('avg-duration');
+    }
+
     // 显示 Toast 消息
     function showToast(message, type = 'success') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
+        if (!dom.toastContainer) return;
+        const container = dom.toastContainer;
 
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -50,14 +110,14 @@
             if (response && response.ok) {
                 const stats = await response.json();
 
-                document.getElementById('total-imports').textContent = stats.total || 0;
-                document.getElementById('successful-imports').textContent = stats.successful || 0;
-                document.getElementById('total-records').textContent = stats.total_records || 0;
+                if (dom.totalImports) dom.totalImports.textContent = stats.total || 0;
+                if (dom.successfulImports) dom.successfulImports.textContent = stats.successful || 0;
+                if (dom.totalRecords) dom.totalRecords.textContent = stats.total_records || 0;
 
                 const avgDuration = stats.avg_duration
                     ? `${Math.round(stats.avg_duration)}秒`
                     : '-';
-                document.getElementById('avg-duration').textContent = avgDuration;
+                if (dom.avgDuration) dom.avgDuration.textContent = avgDuration;
             }
         } catch (error) {
             console.error('Failed to load stats:', error);
@@ -66,11 +126,10 @@
 
     // 加载导入历史
     async function loadHistory() {
-        const container = document.getElementById('history-items');
-        if (!container) return;
+        if (!dom.historyItems) return;
 
         // 显示加载中
-        container.innerHTML = `
+        dom.historyItems.innerHTML = `
             <div class="loading-state">
                 <div class="loading-spinner"></div>
                 <p>加载中...</p>
@@ -109,7 +168,7 @@
             }
         } catch (error) {
             console.error('Failed to load history:', error);
-            container.innerHTML = `
+            dom.historyItems.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">⚠️</div>
                     <p>加载失败，请刷新页面重试</p>
@@ -120,8 +179,7 @@
 
     // 渲染历史记录
     function renderHistory() {
-        const container = document.getElementById('history-items');
-        if (!container) return;
+        if (!dom.historyItems) return;
 
         // 应用筛选
         let filteredHistory = allHistory.filter(item => {
@@ -137,7 +195,7 @@
         });
 
         if (filteredHistory.length === 0) {
-            container.innerHTML = `
+            dom.historyItems.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📭</div>
                     <p>暂无导入记录</p>
@@ -147,7 +205,7 @@
             return;
         }
 
-        container.innerHTML = filteredHistory.map(item => `
+        dom.historyItems.innerHTML = filteredHistory.map(item => `
             <div class="history-item" data-history-id="${item.id}">
                 <div class="history-checkbox">
                     <input type="checkbox" class="history-select-checkbox" data-history-id="${item.id}">
@@ -191,11 +249,10 @@
 
     // 绑定历史记录项事件（使用事件委托优化性能）
     function bindHistoryItemEvents() {
-        const container = document.getElementById('history-items');
-        if (!container) return;
+        if (!dom.historyItems) return;
 
         // 使用事件委托处理所有事件
-        container.addEventListener('change', (e) => {
+        dom.historyItems.addEventListener('change', (e) => {
             if (e.target.classList.contains('history-select-checkbox')) {
                 const historyId = parseInt(e.target.dataset.historyId);
                 if (e.target.checked) {
@@ -209,7 +266,7 @@
             }
         });
 
-        container.addEventListener('click', (e) => {
+        dom.historyItems.addEventListener('click', (e) => {
             // 处理操作按钮
             const actionBtn = e.target.closest('.action-btn');
             if (actionBtn) {
@@ -243,12 +300,9 @@
     // 显示详情
     function showDetail(historyId) {
         const item = allHistory.find(h => h.id === historyId);
-        if (!item) return;
+        if (!item || !dom.detailModal || !dom.modalBody) return;
 
-        const modal = document.getElementById('detail-modal');
-        const modalBody = document.getElementById('modal-body-content');
-
-        modalBody.innerHTML = `
+        dom.modalBody.innerHTML = `
             <div class="detail-section">
                 <h3>基本信息</h3>
                 <div class="detail-row">
@@ -313,19 +367,18 @@
             ` : ''}
         `;
 
-        modal.style.display = 'flex';
+        dom.detailModal.style.display = 'flex';
 
         // 绑定关闭按钮
-        document.getElementById('modal-close').onclick = closeModal;
-        document.getElementById('modal-ok').onclick = closeModal;
-        document.getElementById('modal-backdrop').onclick = closeModal;
+        if (dom.modalClose) dom.modalClose.onclick = closeModal;
+        if (dom.modalOk) dom.modalOk.onclick = closeModal;
+        if (dom.modalBackdrop) dom.modalBackdrop.onclick = closeModal;
     }
 
     // 关闭模态框
     function closeModal() {
-        const modal = document.getElementById('detail-modal');
-        if (modal) {
-            modal.style.display = 'none';
+        if (dom.detailModal) {
+            dom.detailModal.style.display = 'none';
         }
     }
 
@@ -361,16 +414,16 @@
 
     // 更新分页
     function updatePagination() {
-        document.getElementById('prev-page').disabled = currentPage <= 1;
-        document.getElementById('next-page').disabled = currentPage >= totalPages;
+        if (dom.prevPageBtn) dom.prevPageBtn.disabled = currentPage <= 1;
+        if (dom.nextPageBtn) dom.nextPageBtn.disabled = currentPage >= totalPages;
 
         renderPaginationPages();
     }
 
     // 渲染页码
     function renderPaginationPages() {
-        const container = document.getElementById('pagination-pages');
-        if (!container) return;
+        if (!dom.paginationPages) return;
+        const container = dom.paginationPages;
 
         let pages = [];
 
@@ -420,75 +473,66 @@
 
     // 初始化搜索 - 使用 PerfUtils.debounce 优化性能
     function initSearch() {
-        const searchInput = document.getElementById('search-input');
-        if (!searchInput) return;
+        if (!dom.searchInput) return;
 
         const debouncedSearch = PerfUtils.debounce(() => {
-            currentFilters.search = searchInput.value;
+            currentFilters.search = dom.searchInput.value;
             renderHistory();
         }, 300);
 
-        searchInput.addEventListener('input', debouncedSearch);
+        dom.searchInput.addEventListener('input', debouncedSearch);
     }
 
     // 初始化筛选器
     function initFilters() {
-        const statusFilter = document.getElementById('status-filter');
-        const platformFilter = document.getElementById('platform-filter');
-        const startDateInput = document.getElementById('start-date');
-        const endDateInput = document.getElementById('end-date');
-        const clearDateBtn = document.getElementById('clear-date-filter');
-        const clearAllBtn = document.getElementById('clear-all-filters');
-
-        if (statusFilter) {
-            statusFilter.addEventListener('change', () => {
-                currentFilters.status = statusFilter.value;
+        if (dom.statusFilter) {
+            dom.statusFilter.addEventListener('change', () => {
+                currentFilters.status = dom.statusFilter.value;
                 renderHistory();
             });
         }
 
-        if (platformFilter) {
-            platformFilter.addEventListener('change', () => {
-                currentFilters.platform = platformFilter.value;
+        if (dom.platformFilter) {
+            dom.platformFilter.addEventListener('change', () => {
+                currentFilters.platform = dom.platformFilter.value;
                 renderHistory();
             });
         }
 
         // 清除所有筛选
-        if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', () => {
+        if (dom.clearAllBtn) {
+            dom.clearAllBtn.addEventListener('click', () => {
                 currentFilters.search = '';
                 currentFilters.status = '';
                 currentFilters.platform = '';
-                if (statusFilter) statusFilter.value = '';
-                if (platformFilter) platformFilter.value = '';
-                const searchInput = document.getElementById('search-input');
-                if (searchInput) searchInput.value = '';
+                if (dom.statusFilter) dom.statusFilter.value = '';
+                if (dom.platformFilter) dom.platformFilter.value = '';
+                if (dom.searchInput) dom.searchInput.value = '';
                 renderHistory();
             });
         }
 
         // 日期过滤需要重新加载数据（服务端过滤）
-        if (startDateInput) {
-            startDateInput.addEventListener('change', () => {
-                currentFilters.start_date = startDateInput.value || '';
+        if (dom.startDateInput) {
+            dom.startDateInput.addEventListener('change', () => {
+                currentFilters.start_date = dom.startDateInput.value || '';
                 currentPage = 1;  // 重置到第一页
                 loadHistory();
             });
         }
 
-        if (endDateInput) {
-            endDateInput.addEventListener('change', () => {
-                currentFilters.end_date = endDateInput.value || '';
+        if (dom.endDateInput) {
+            dom.endDateInput.addEventListener('change', () => {
+                currentFilters.end_date = dom.endDateInput.value || '';
                 currentPage = 1;  // 重置到第一页
                 loadHistory();
             });
         }
 
-        if (clearDateBtn) {
-            clearDateBtn.addEventListener('click', () => {
-                if (startDateInput) startDateInput.value = '';
-                if (endDateInput) endDateInput.value = '';
+        if (dom.clearDateBtn) {
+            dom.clearDateBtn.addEventListener('click', () => {
+                if (dom.startDateInput) dom.startDateInput.value = '';
+                if (dom.endDateInput) dom.endDateInput.value = '';
                 currentFilters.start_date = '';
                 currentFilters.end_date = '';
                 currentPage = 1;
@@ -501,36 +545,32 @@
 
     // 更新批量操作栏
     function updateBulkActionsBar() {
-        const bulkActionsBar = document.getElementById('bulk-actions-bar');
-        const selectedCount = document.getElementById('selected-count');
-
-        if (!bulkActionsBar) return;
+        if (!dom.bulkActionsBar) return;
 
         if (selectedHistoryIds.size > 0) {
-            bulkActionsBar.style.display = 'flex';
-            if (selectedCount) selectedCount.textContent = selectedHistoryIds.size;
+            dom.bulkActionsBar.style.display = 'flex';
+            if (dom.selectedCount) dom.selectedCount.textContent = selectedHistoryIds.size;
         } else {
-            bulkActionsBar.style.display = 'none';
+            dom.bulkActionsBar.style.display = 'none';
         }
     }
 
     // 更新全选复选框状态
     function updateSelectAllCheckbox() {
-        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (!dom.selectAllCheckbox) return;
+
         const visibleCheckboxes = document.querySelectorAll('.history-select-checkbox');
         const checkedCount = document.querySelectorAll('.history-select-checkbox:checked').length;
 
-        if (!selectAllCheckbox) return;
-
         if (visibleCheckboxes.length > 0 && checkedCount === visibleCheckboxes.length) {
-            selectAllCheckbox.checked = true;
-            selectAllCheckbox.indeterminate = false;
+            dom.selectAllCheckbox.checked = true;
+            dom.selectAllCheckbox.indeterminate = false;
         } else if (checkedCount > 0) {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = true;
+            dom.selectAllCheckbox.checked = false;
+            dom.selectAllCheckbox.indeterminate = true;
         } else {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = false;
+            dom.selectAllCheckbox.checked = false;
+            dom.selectAllCheckbox.indeterminate = false;
         }
     }
 
@@ -546,15 +586,14 @@
 
     // 全选/取消全选
     function toggleSelectAll() {
-        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (!dom.selectAllCheckbox) return;
+
         const visibleCheckboxes = document.querySelectorAll('.history-select-checkbox');
 
-        if (!selectAllCheckbox) return;
-
         visibleCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox.checked;
+            checkbox.checked = dom.selectAllCheckbox.checked;
             const historyId = parseInt(checkbox.dataset.historyId);
-            if (selectAllCheckbox.checked) {
+            if (dom.selectAllCheckbox.checked) {
                 selectedHistoryIds.add(historyId);
             } else {
                 selectedHistoryIds.delete(historyId);
@@ -625,38 +664,38 @@
 
     // 初始化批量操作
     function initBulkActions() {
-        const selectAllCheckbox = document.getElementById('select-all-checkbox');
-        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
-        const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
-
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', toggleSelectAll);
+        if (dom.selectAllCheckbox) {
+            dom.selectAllCheckbox.addEventListener('change', toggleSelectAll);
         }
 
-        if (bulkDeleteBtn) {
-            bulkDeleteBtn.addEventListener('click', bulkDeleteHistory);
+        if (dom.bulkDeleteBtn) {
+            dom.bulkDeleteBtn.addEventListener('click', bulkDeleteHistory);
         }
 
-        if (cancelSelectionBtn) {
-            cancelSelectionBtn.addEventListener('click', clearSelection);
+        if (dom.cancelSelectionBtn) {
+            dom.cancelSelectionBtn.addEventListener('click', clearSelection);
         }
     }
 
     // 初始化分页
     function initPagination() {
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                loadHistory();
-            }
-        });
+        if (dom.prevPageBtn) {
+            dom.prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadHistory();
+                }
+            });
+        }
 
-        document.getElementById('next-page').addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                loadHistory();
-            }
-        });
+        if (dom.nextPageBtn) {
+            dom.nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadHistory();
+                }
+            });
+        }
     }
 
     // HTML转义
@@ -684,6 +723,9 @@
             window.location.href = '/login';
             return;
         }
+
+        // 初始化 DOM 元素缓存
+        initDomCache();
 
         // 初始化各功能
         loadStats();

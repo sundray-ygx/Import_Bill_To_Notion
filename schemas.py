@@ -1,8 +1,29 @@
 """Pydantic schemas for API request/response validation."""
 
-from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Optional, List, Dict
 from datetime import datetime
+from typing import Optional, List, Dict
+
+from pydantic import BaseModel, EmailStr, Field, validator
+
+
+# ==================== 通用验证器 ====================
+
+
+def validate_password_strength(value: str) -> str:
+    """验证密码强度。
+
+    要求：
+    - 至少一个大写字母
+    - 至少一个小写字母
+    - 至少一个数字
+    """
+    if not any(c.isupper() for c in value):
+        raise ValueError('密码必须包含至少一个大写字母')
+    if not any(c.islower() for c in value):
+        raise ValueError('密码必须包含至少一个小写字母')
+    if not any(c.isdigit() for c in value):
+        raise ValueError('密码必须包含至少一个数字')
+    return value
 
 
 # ==================== 用户相关 ====================
@@ -20,13 +41,7 @@ class UserCreate(UserBase):
     @validator('password')
     def validate_password(cls, v):
         """验证密码强度。"""
-        if not any(c.isupper() for c in v):
-            raise ValueError('密码必须包含至少一个大写字母')
-        if not any(c.islower() for c in v):
-            raise ValueError('密码必须包含至少一个小写字母')
-        if not any(c.isdigit() for c in v):
-            raise ValueError('密码必须包含至少一个数字')
-        return v
+        return validate_password_strength(v)
 
 
 class UserUpdate(BaseModel):
@@ -78,13 +93,7 @@ class PasswordChangeRequest(BaseModel):
     @validator('new_password')
     def validate_password(cls, v):
         """验证密码强度。"""
-        if not any(c.isupper() for c in v):
-            raise ValueError('密码必须包含至少一个大写字母')
-        if not any(c.islower() for c in v):
-            raise ValueError('密码必须包含至少一个小写字母')
-        if not any(c.isdigit() for c in v):
-            raise ValueError('密码必须包含至少一个数字')
-        return v
+        return validate_password_strength(v)
 
 
 class PasswordResetRequest(BaseModel):
