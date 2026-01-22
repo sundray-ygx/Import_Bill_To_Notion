@@ -1,20 +1,24 @@
 """User management routes for profile and Notion configuration."""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
-from pydantic import BaseModel
+
+import logging
+
+from auth import get_password_hash, verify_password, validate_password_strength
 from database import get_db
-from models import User, UserNotionConfig, UserUpload, ImportHistory
+from dependencies import get_current_active_user, require_multi_tenant, get_client_ip, get_user_agent
+from models import User, UserNotionConfig, UserUpload, ImportHistory, AuditLog
+from notion_api import NotionClient
 from schemas import (
     UserUpdate, UserProfileResponse, NotionConfigCreate, NotionConfigUpdate,
     NotionConfigResponse, MessageResponse,
     NotionVerifyStepResponse, NotionVerifyProgressResponse
 )
-from auth import get_password_hash, verify_password, validate_password_strength
-from dependencies import get_current_active_user, require_multi_tenant
-from notion_api import NotionClient
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -556,10 +560,6 @@ async def delete_account(
 
 # ==================== 辅助函数 ====================
 
-from datetime import datetime
-from models import AuditLog
-from dependencies import get_client_ip, get_user_agent
-
 
 def _mask_api_key(api_key: str) -> str:
     """脱敏 API 密钥，只显示前4个和后4个字符。
@@ -593,6 +593,7 @@ def _create_audit_log(
     """
     try:
         import json
+
         audit_log = AuditLog(
             user_id=user_id,
             action=action,

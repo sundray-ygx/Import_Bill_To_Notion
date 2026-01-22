@@ -1,19 +1,22 @@
 """Bill management routes for upload, list, preview, and delete operations."""
 
+from datetime import datetime
+
+import json
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
-from database import get_db
-from models import User, UserUpload, ImportHistory
-from schemas import UploadResponse, FileUploadResponse, FileListResponse, ImportHistoryResponse
-from dependencies import get_current_active_user, get_pagination_params
-from web_service.services.user_file_service import UserFileService
-from importer import import_bill, parse_bill_only, parse_bill_raw
+
 from config import Config
-from datetime import datetime
-import logging
-import json
+from database import get_db
+from dependencies import get_current_active_user, get_pagination_params, get_client_ip, get_user_agent
+from importer import import_bill, parse_bill_only, parse_bill_raw
+from models import User, UserUpload, ImportHistory, AuditLog
+from schemas import UploadResponse, FileUploadResponse, FileListResponse, ImportHistoryResponse
+from web_service.services.user_file_service import UserFileService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -462,7 +465,6 @@ async def delete_upload_batch(
 ):
     """批量删除指定的上传记录和相关文件。"""
     # 从请求体中获取 upload_ids
-    import json
     body = await request.body()
     data = json.loads(body) if body else {}
     upload_ids = data.get('upload_ids', [])
@@ -725,7 +727,6 @@ async def delete_import_history_batch(
     db: Session = Depends(get_db)
 ):
     """批量删除导入历史记录。"""
-    import json
     body = await request.body()
     data = json.loads(body) if body else {}
     history_ids = data.get('history_ids', [])
@@ -773,6 +774,7 @@ async def delete_import_history_batch(
 
 # ==================== 辅助函数 ====================
 
+
 def _create_audit_log(
     db: Session,
     user_id: int,
@@ -782,9 +784,6 @@ def _create_audit_log(
 ):
     """创建审计日志记录。"""
     try:
-        from models import AuditLog
-        from dependencies import get_client_ip, get_user_agent
-
         audit_log = AuditLog(
             user_id=user_id,
             action=action,
