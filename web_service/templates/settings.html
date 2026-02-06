@@ -23,16 +23,33 @@
                     <h3>账户设置</h3>
                     <nav class="sidebar-nav">
                         <a href="#profile" class="sidebar-item active" data-section="profile">
-                            <span>👤</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
                             <span>个人资料</span>
                         </a>
                         <a href="#security" class="sidebar-item" data-section="security">
-                            <span>🔒</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
                             <span>安全设置</span>
                         </a>
                         <a href="#notion" class="sidebar-item" data-section="notion">
-                            <span>🔗</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                            </svg>
                             <span>Notion配置</span>
+                        </a>
+                        <a href="#review" class="sidebar-item" data-section="review">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            <span>复盘配置</span>
                         </a>
                     </nav>
                 </div>
@@ -46,7 +63,10 @@
 
                     <div class="profile-card">
                         <div class="profile-avatar-section">
-                            <div class="profile-avatar-large">👤</div>
+                            <svg class="profile-avatar-large" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
                             <div>
                                 <h3 id="profile-username" style="margin: 0 0 4px 0; font-size: 1.25rem;">加载中...</h3>
                                 <p id="profile-email" style="margin: 0; color: #6b7280;">加载中...</p>
@@ -111,7 +131,12 @@
                                 <label>新密码</label>
                                 <div class="input-with-icon">
                                     <input type="password" id="new-password" class="form-input" required minlength="8">
-                                    <button type="button" class="input-icon" id="toggle-new-password">👁️</button>
+                                    <button type="button" class="input-icon" id="toggle-new-password" aria-label="显示/隐藏密码">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
                                 </div>
 
                                 <!-- 密码强度指示器 -->
@@ -132,6 +157,43 @@
 
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">更新密码</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 会话超时设置 -->
+                    <div class="session-timeout-card">
+                        <h3>会话超时设置</h3>
+                        <p class="card-description">设置控制台会话的超时时间，超时后需要重新登录</p>
+
+                        <form id="session-timeout-form">
+                            <div class="form-group">
+                                <label for="session-timeout">控制台超时时间（分钟）</label>
+                                <div class="timeout-input-group">
+                                    <input type="number"
+                                           id="session-timeout"
+                                           class="form-input"
+                                           min="5"
+                                           max="1440"
+                                           step="5"
+                                           value="15"
+                                           required>
+                                    <div class="timeout-unit">分钟</div>
+                                </div>
+                                <div class="form-hint">
+                                    建议值：15-120 分钟。超时后需要重新登录以保护账户安全。
+                                </div>
+                            </div>
+
+                            <div class="timeout-presets">
+                                <button type="button" class="timeout-preset-btn" data-timeout="15">15分钟</button>
+                                <button type="button" class="timeout-preset-btn" data-timeout="30">30分钟</button>
+                                <button type="button" class="timeout-preset-btn" data-timeout="60">1小时</button>
+                                <button type="button" class="timeout-preset-btn" data-timeout="120">2小时</button>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">保存设置</button>
                             </div>
                         </form>
                     </div>
@@ -181,7 +243,13 @@
 
                         <!-- 配置状态 -->
                         <div class="config-status" id="config-status">
-                            <div class="config-status-icon" id="config-status-icon">❓</div>
+                            <div class="config-status-icon" id="config-status-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
                             <div class="config-status-text">
                                 <h4 id="config-status-title">未配置</h4>
                                 <p id="config-status-desc">您还没有配置Notion集成</p>
@@ -199,7 +267,12 @@
                                 <label>Notion API密钥</label>
                                 <div class="input-with-icon">
                                     <input type="password" id="notion-api-key" class="form-input" placeholder="secret_..." required>
-                                    <button type="button" class="input-icon" id="toggle-api-key">👁️</button>
+                                    <button type="button" class="input-icon" id="toggle-api-key" aria-label="显示/隐藏API密钥">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
                                 </div>
                                 <div class="form-hint">
                                     在<a href="https://www.notion.so/my-integrations" target="_blank" class="link">Notion集成页面</a>创建集成以获取API密钥
@@ -231,6 +304,113 @@
                         <!-- 验证结果 -->
                         <div class="verification-result" id="verification-result" style="display: none;">
                             <!-- 动态显示验证结果 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 复盘配置卡片 -->
+                <section class="settings-section" id="review-section" style="display: none;">
+                    <h2>复盘配置</h2>
+
+                    <div class="review-config-card">
+                        <div class="config-header">
+                            <h3>配置账单复盘功能</h3>
+                            <p>设置复盘数据库和模板，自动生成月度、季度、年度账单复盘报告</p>
+                        </div>
+
+                        <!-- 配置说明 -->
+                        <div class="info-banner" style="margin-bottom: 24px;">
+                            <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <div class="info-content">
+                                <h4>什么是复盘？</h4>
+                                <p>复盘功能会根据您的账单数据自动生成分析报告，帮助您了解收支情况、消费习惯和财务趋势。</p>
+                            </div>
+                        </div>
+
+                        <form id="review-config-form">
+                            <!-- 月度复盘配置 -->
+                            <div class="config-group">
+                                <h4>月度复盘</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>复盘数据库ID</label>
+                                        <input type="text" id="monthly-review-db" class="form-input" placeholder="abc123...">
+                                        <div class="form-hint">Notion复盘数据库ID（可选）</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>模板页面ID</label>
+                                        <input type="text" id="monthly-template-id" class="form-input" placeholder="template_id">
+                                        <div class="form-hint">复盘模板页面ID（可选）</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 季度复盘配置 -->
+                            <div class="config-group">
+                                <h4>季度复盘</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>复盘数据库ID</label>
+                                        <input type="text" id="quarterly-review-db" class="form-input" placeholder="abc123...">
+                                        <div class="form-hint">Notion复盘数据库ID（可选）</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>模板页面ID</label>
+                                        <input type="text" id="quarterly-template-id" class="form-input" placeholder="template_id">
+                                        <div class="form-hint">复盘模板页面ID（可选）</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 年度复盘配置 -->
+                            <div class="config-group">
+                                <h4>年度复盘</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>复盘数据库ID</label>
+                                        <input type="text" id="yearly-review-db" class="form-input" placeholder="abc123...">
+                                        <div class="form-hint">Notion复盘数据库ID（可选）</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>模板页面ID</label>
+                                        <input type="text" id="yearly-template-id" class="form-input" placeholder="template_id">
+                                        <div class="form-hint">复盘模板页面ID（可选）</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" id="load-review-config-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <polyline points="1 20 1 14 7 14"/>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                    </svg>
+                                    重新加载
+                                </button>
+                                <button type="submit" class="btn btn-primary">保存配置</button>
+                            </div>
+                        </form>
+
+                        <!-- 快速链接 -->
+                        <div class="quick-links">
+                            <h4>快速操作</h4>
+                            <a href="/review" class="quick-link">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"/>
+                                    <line x1="12" y1="20" x2="12" y2="4"/>
+                                    <line x1="6" y1="20" x2="6" y2="14"/>
+                                </svg>
+                                <span>前往复盘管理页面</span>
+                                <span class="arrow">→</span>
+                            </a>
                         </div>
                     </div>
                 </section>
@@ -496,6 +676,109 @@
         to {
             transform: rotate(360deg);
         }
+    }
+
+    /* ==================== 复盘配置样式 ==================== */
+
+    .review-config-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .config-header {
+        margin-bottom: 24px;
+    }
+
+    .config-header h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.25rem;
+        color: #1a1a2e;
+    }
+
+    .config-header p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .info-banner {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        background: rgba(102, 126, 234, 0.08);
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .info-content h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: #1a1a2e;
+    }
+
+    .info-content p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+    .config-group {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+    }
+
+    .config-group h4 {
+        margin: 0 0 16px 0;
+        font-size: 1rem;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .quick-links {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .quick-links h4 {
+        margin: 0 0 12px 0;
+        font-size: 0.95rem;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .quick-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #374151;
+        transition: all 0.2s ease;
+    }
+
+    .quick-link:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .quick-link .arrow {
+        margin-left: auto;
+        color: #667eea;
+        font-weight: 600;
     }
     </style>
 </body>

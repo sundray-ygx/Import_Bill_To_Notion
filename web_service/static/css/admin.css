@@ -61,6 +61,13 @@
     font-size: 1.5rem;
 }
 
+/* SVG图标在统计卡片中的样式 */
+.stat-icon svg {
+    width: 32px;
+    height: 32px;
+    color: inherit;
+}
+
 .stat-content {
     flex: 1;
 }
@@ -309,26 +316,37 @@
     color: #ef4444;
 }
 
-/* 保留旧的图标按钮样式作为备用 */
+/* 按钮内图标样式 - 支持SVG图标 */
+.btn .btn-icon,
 .btn-icon {
-    width: 36px;
-    height: 36px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn .btn-icon svg,
+.btn-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* 独立的图标按钮容器 */
+.btn-icon.standalone {
+    width: 36px;
+    height: 36px;
     border: 1px solid rgba(0, 0, 0, 0.1);
     background: white;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 1rem;
 }
 
-.btn-icon:hover {
+.btn-icon.standalone:hover {
     background: rgba(0, 0, 0, 0.04);
 }
 
-.btn-icon.danger:hover {
+.btn-icon.standalone.danger:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
 }

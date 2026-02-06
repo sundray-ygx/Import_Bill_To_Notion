@@ -43,6 +43,42 @@ html {
     scroll-behavior: smooth;
 }
 
+/* ========================================
+   ACCESSIBILITY - 跳转到主内容链接
+   ======================================== */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--accent-primary, #667eea);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+    z-index: 10000;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ========================================
+   ACCESSIBILITY - 减少动效偏好
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 body {
     font-family: var(--font-body);
     line-height: 1.7;
