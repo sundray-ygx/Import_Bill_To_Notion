@@ -1,0 +1,171 @@
+<!-- 账单复盘管理页面 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账单复盘 - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/review-new.css">
+</head>
+<body>
+    <div class="review-container">
+        <!-- 页面顶部区域 -->
+        <header class="review-header">
+            <span class="review-header__badge">财务洞察</span>
+            <h1 class="review-header__title">账单复盘</h1>
+            <p class="review-header__description">
+                自动生成您的月度、季度和年度财务复盘报告，洞察收支趋势，优化消费决策。
+            </p>
+        </header>
+
+        <!-- 快速生成区域 -->
+        <section class="review-quick-section">
+            <h2 class="review-section-title">
+                <span class="review-section-title__icon">⚡</span>
+                快速生成
+            </h2>
+            <div class="review-cards-grid">
+                <!-- 月度复盘卡片 -->
+                <div class="review-card">
+                    <div class="review-card__icon">📅</div>
+                    <h3 class="review-card__title">月度复盘</h3>
+                    <p class="review-card__description">
+                        分析本月收支情况，了解消费分类占比，识别异常支出。
+                    </p>
+                    <div class="review-card__action">
+                        <span class="review-card__period" id="monthly-period">2026年1月</span>
+                        <button class="review-card__button" onclick="generateReview('monthly')">
+                            生成复盘
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 季度复盘卡片 -->
+                <div class="review-card">
+                    <div class="review-card__icon">📊</div>
+                    <h3 class="review-card__title">季度复盘</h3>
+                    <p class="review-card__description">
+                        纵观季度财务趋势，对比季度差异，规划下一季度目标。
+                    </p>
+                    <div class="review-card__action">
+                        <span class="review-card__period" id="quarterly-period">2026年Q1</span>
+                        <button class="review-card__button" onclick="generateReview('quarterly')">
+                            生成复盘
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 年度复盘卡片 -->
+                <div class="review-card">
+                    <div class="review-card__icon">🎯</div>
+                    <h3 class="review-card__title">年度复盘</h3>
+                    <p class="review-card__description">
+                        全面回顾年度财务状况，总结年度收支，制定新年规划。
+                    </p>
+                    <div class="review-card__action">
+                        <span class="review-card__period" id="yearly-period">2025年度</span>
+                        <button class="review-card__button" onclick="generateReview('yearly')">
+                            生成复盘
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 自定义生成区域 -->
+        <section class="review-custom-section">
+            <h2 class="review-section-title">
+                <span class="review-section-title__icon">🎨</span>
+                自定义复盘
+            </h2>
+            <form class="review-custom-form" id="custom-form">
+                <div class="review-form-group">
+                    <label class="review-form-label">复盘类型</label>
+                    <select class="review-form-select" id="review-type">
+                        <option value="monthly">月度复盘</option>
+                        <option value="quarterly">季度复盘</option>
+                        <option value="yearly">年度复盘</option>
+                    </select>
+                </div>
+                <div class="review-form-group">
+                    <label class="review-form-label">年份</label>
+                    <input type="number" class="review-form-input" id="review-year" value="2026" min="2020" max="2030">
+                </div>
+                <div class="review-form-group" id="month-group">
+                    <label class="review-form-label">月份</label>
+                    <input type="number" class="review-form-input" id="review-month" value="1" min="1" max="12">
+                </div>
+                <div class="review-form-group" id="quarter-group" style="display: none;">
+                    <label class="review-form-label">季度</label>
+                    <select class="review-form-select" id="review-quarter">
+                        <option value="1">Q1 (1-3月)</option>
+                        <option value="2">Q2 (4-6月)</option>
+                        <option value="3">Q3 (7-9月)</option>
+                        <option value="4">Q4 (10-12月)</option>
+                    </select>
+                </div>
+                <button type="submit" class="review-form-button">
+                    生成自定义复盘
+                </button>
+            </form>
+        </section>
+
+        <!-- 最近复盘列表 -->
+        <section class="review-history-section">
+            <h2 class="review-section-title">
+                <span class="review-section-title__icon">📋</span>
+                最近复盘
+            </h2>
+            <div class="review-history-table-wrapper">
+                <table class="review-history-table">
+                    <thead>
+                        <tr>
+                            <th>复盘名称</th>
+                            <th>类型</th>
+                            <th>周期</th>
+                            <th>生成时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="review-list">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">
+                                暂无复盘记录，点击上方按钮生成您的第一个复盘报告
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 加载状态 -->
+        <div class="review-loading" id="loading-state" style="display: none;">
+            <div class="review-loading__spinner"></div>
+            <p class="review-loading__text">正在生成复盘报告，请稍候...</p>
+        </div>
+    </div>
+
+    <!-- 复盘预览模态框 -->
+    <div class="review-modal-overlay" id="preview-modal">
+        <div class="review-modal">
+            <div class="review-modal__header">
+                <h3 class="review-modal__title" id="modal-title">复盘预览</h3>
+                <button class="review-modal__close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="review-modal__content" id="modal-content">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示 -->
+    <div class="review-toast" id="toast">
+        <span class="review-toast__icon" id="toast-icon"></span>
+        <span class="review-toast__message" id="toast-message"></span>
+    </div>
+
+    <script src="/static/js/review-new.js"></script>
+</body>
+</html>

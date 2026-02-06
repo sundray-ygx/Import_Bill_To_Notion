@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务工作空间 - Notion账单管理系统</title>
+
+    <!-- Financial Command Tower 字体系统：Orbitron (显示) + Exo 2 (正文) + Rajdhani (辅助) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Exo+2:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/workspace.css">
+    <link rel="stylesheet" href="/static/css/workspace-views.css">
+    <link rel="stylesheet" href="/static/css/timeline.css">
+</head>
+<body>
+    <!-- 主应用容器 -->
+    <div id="app" class="workspace">
+        <!-- 侧边栏导航 -->
+        <aside class="workspace-sidebar" id="sidebar">
+            <!-- Logo区 -->
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <div class="logo-title">财务空间</div>
+                        <div class="logo-subtitle">Financial Workspace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户信息卡片 -->
+            <div class="user-card">
+                <div class="user-avatar">
+                    <span id="user-initial">U</span>
+                </div>
+                <div class="user-info">
+                    <div class="user-name" id="user-name-display">加载中...</div>
+                    <div class="user-status online">在线</div>
+                </div>
+            </div>
+
+            <!-- 导航菜单 -->
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">概览</div>
+                    <a href="#" class="nav-item active" data-view="dashboard">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                            </svg>
+                        </span>
+                        <span class="nav-label">仪表板</span>
+                        <span class="nav-badge" id="nav-badge-tasks">3</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">账单管理</div>
+                    <a href="#" class="nav-item" data-view="bills">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <path d="M14 2v6h6"/>
+                                <path d="M16 13H8"/>
+                                <path d="M16 17H8"/>
+                                <path d="M10 9H8"/>
+                            </svg>
+                        </span>
+                        <span class="nav-label">账单上传</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="history">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </span>
+                        <span class="nav-label">导入历史</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">财务分析</div>
+                    <a href="#" class="nav-item" data-view="review">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v18h18"/>
+                                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                            </svg>
+                        </span>
+                        <span class="nav-label">财务复盘</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">设置</div>
+                    <a href="#" class="nav-item" data-view="settings">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6"/>
+                                <path d="M1 12h6m6 0h6"/>
+                            </svg>
+                        </span>
+                        <span class="nav-label">系统设置</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- 底部操作区 -->
+            <div class="sidebar-footer">
+                <button class="quick-action-btn primary" id="quick-upload-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span>快速上传</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="workspace-main">
+            <!-- 顶部栏 -->
+            <header class="workspace-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="page-title">
+                        <h1 id="page-title">仪表板</h1>
+                        <p id="page-subtitle">您的财务概览</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-action-btn" id="refresh-btn" title="刷新数据">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
+                        </svg>
+                    </button>
+                    <button class="header-action-btn" id="notify-btn" title="通知">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <div class="header-divider"></div>
+                    <button class="header-action-btn" id="user-menu-btn" title="用户菜单">
+                        <div class="header-avatar">
+                            <span id="header-user-initial">U</span>
+                        </div>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 内容视图区域 -->
+            <div class="workspace-views" id="views-container">
+                <!-- 仪表板视图 -->
+                <div class="view active" id="view-dashboard">
+                    <!-- 动态加载仪表板内容 -->
+                </div>
+
+                <!-- 账单上传视图 -->
+                <div class="view" id="view-bills">
+                    <!-- 动态加载账单上传内容 -->
+                </div>
+
+                <!-- 导入历史视图 -->
+                <div class="view" id="view-history">
+                    <!-- 动态加载历史内容 -->
+                </div>
+
+                <!-- 财务复盘视图 -->
+                <div class="view" id="view-review">
+                    <!-- 动态加载复盘内容 -->
+                </div>
+
+                <!-- 设置视图 -->
+                <div class="view" id="view-settings">
+                    <!-- 动态加载设置内容 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast通知容器 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- 模态框容器 -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-container" id="modal-container">
+            <!-- 动态模态框内容 -->
+        </div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/dashboard-view.js"></script>
+    <script src="/static/js/workspace.js"></script>
+</body>
+</html>
