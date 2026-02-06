@@ -121,19 +121,22 @@ def generate_random_password(length: int = 16) -> str:
 
 # ==================== Token管理 ====================
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None, expires_minutes: Optional[int] = None) -> str:
     """创建访问token。
 
     Args:
         data: 要编码到token中的数据
-        expires_delta: 过期时间增量
+        expires_delta: 过期时间增量（与 expires_minutes 二选一）
+        expires_minutes: 过期分钟数（优先于 expires_delta）
 
     Returns:
         JWT token字符串
     """
     to_encode = data.copy()
 
-    if expires_delta:
+    if expires_minutes is not None:
+        expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    elif expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)

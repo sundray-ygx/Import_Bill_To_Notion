@@ -4,36 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注册 - Notion账单导入服务</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/auth.css">
-    <!-- 性能优化：CSS变量系统 -->
+    <!-- 设计系统 -->
     <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
     <!-- 资源预加载 -->
-    <link rel="preload" href="/static/js/perf-utils.js" as="script">
+    <link rel="preload" href="/static/js/form-validator.js" as="script">
+    <link rel="preload" href="/static/js/toast.js" as="script">
 </head>
 <body class="auth-page">
     <div class="auth-container">
         <!-- 左侧：品牌信息 -->
         <div class="auth-brand">
-            <div class="brand-logo">🚀</div>
+            <div class="brand-logo">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+            </div>
             <h1 class="brand-title">创建新账户</h1>
             <p class="brand-subtitle">开始使用Notion账单导入服务</p>
 
             <div class="brand-features">
                 <div class="feature-item">
-                    <i>✓</i>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     <span>完全免费使用</span>
                 </div>
                 <div class="feature-item">
-                    <i>✓</i>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     <span>数据安全隔离</span>
                 </div>
                 <div class="feature-item">
-                    <i>✓</i>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     <span>多平台支持</span>
                 </div>
                 <div class="feature-item">
-                    <i>✓</i>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     <span>快速导入同步</span>
                 </div>
             </div>
@@ -41,59 +56,66 @@
 
         <!-- 右侧：注册表单 -->
         <div class="auth-form-wrapper">
-            <form class="auth-form" id="register-form">
+            <form class="auth-form" id="register-form" novalidate>
                 <div class="form-header">
                     <h2>创建账户</h2>
                     <p>填写以下信息完成注册</p>
                 </div>
 
-                <!-- 消息提示 -->
-                <div id="alert-container"></div>
-
                 <div class="form-group">
-                    <label for="username">用户名</label>
+                    <label for="username" class="form-label required">用户名</label>
                     <input
                         type="text"
                         id="username"
                         name="username"
-                        class="form-input"
+                        class="input"
                         placeholder="3-50个字符"
                         required
                         minlength="3"
                         maxlength="50"
                         autocomplete="username"
+                        aria-label="用户名"
                     >
-                    <div class="form-hint">用户名必须3-50个字符</div>
+                    <div class="form-hint">用户名必须3-50个字符，支持字母、数字、下划线和连字符</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="email">电子邮箱</label>
+                    <label for="email" class="form-label required">电子邮箱</label>
                     <input
                         type="email"
                         id="email"
                         name="email"
-                        class="form-input"
+                        class="input"
                         placeholder="your@email.com"
                         required
                         autocomplete="email"
+                        aria-label="电子邮箱"
                     >
                 </div>
 
                 <div class="form-group">
-                    <label for="password">密码</label>
-                    <div class="input-with-icon">
+                    <label for="password" class="form-label required">密码</label>
+                    <div class="input-wrapper">
                         <input
                             type="password"
                             id="password"
                             name="password"
-                            class="form-input"
+                            class="input"
                             placeholder="至少8个字符"
                             required
                             minlength="8"
                             autocomplete="new-password"
+                            aria-label="密码"
                         >
-                        <button type="button" class="input-icon" id="toggle-password" title="显示/隐藏密码">
-                            👁️
+                        <button type="button" class="input-icon" id="toggle-password" aria-label="显示密码">
+                            <svg class="icon-show" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="icon-hide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
                         </button>
                     </div>
 
@@ -105,32 +127,35 @@
                         <div class="strength-text" id="strength-text">密码强度：未输入</div>
                     </div>
 
-                    <div class="form-hint" style="color: #6b7280;">至少8个字符，必须包含大小写字母和数字</div>
+                    <div class="form-hint">至少8个字符，必须包含大小写字母和数字</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="confirm-password">确认密码</label>
+                    <label for="confirm-password" class="form-label required">确认密码</label>
                     <input
                         type="password"
                         id="confirm-password"
                         name="confirm_password"
-                        class="form-input"
+                        class="input"
                         placeholder="再次输入密码"
                         required
                         autocomplete="new-password"
+                        aria-label="确认密码"
                     >
-                    <div class="form-hint" id="password-match-hint"></div>
                 </div>
 
                 <label class="checkbox-label">
-                    <input type="checkbox" name="terms" required>
+                    <input type="checkbox" name="terms" class="checkbox" required>
                     <span>我同意<a href="/terms" class="link" target="_blank">服务条款</a>和<a href="/privacy" class="link" target="_blank">隐私政策</a></span>
                 </label>
 
                 <button type="submit" class="btn btn-primary btn-block btn-large" id="register-btn">
                     <span class="btn-text">创建账户</span>
-                    <span class="btn-loading">
-                        <span class="icon-spinner">⏳</span> 创建中...
+                    <span class="btn-loading" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                        </svg>
+                        创建中...
                     </span>
                 </button>
 
@@ -141,8 +166,9 @@
         </div>
     </div>
 
-    <!-- 性能优化工具库 -->
-    <script src="/static/js/perf-utils.js"></script>
+    <!-- 工具脚本 -->
+    <script src="/static/js/form-validator.js"></script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/register.js"></script>
 </body>

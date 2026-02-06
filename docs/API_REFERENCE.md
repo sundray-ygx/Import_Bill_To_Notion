@@ -7,6 +7,7 @@
 - [认证接口](#认证接口)
 - [用户接口](#用户接口)
 - [账单接口](#账单接口)
+- [复盘接口](#复盘接口)
 - [管理员接口](#管理员接口)
 - [数据模型](#数据模型)
 - [错误码](#错误码)
@@ -556,6 +557,221 @@ Authorization: Bearer <access_token>
   "total_records": 4500,
   "imported_records": 4350,
   "avg_duration": 85
+}
+```
+
+---
+
+## 复盘接口
+
+### 1. 生成复盘报告
+
+生成指定周期的账单复盘报告。
+
+**端点**：`POST /api/review/generate`
+
+**请求头**：
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**请求体**：
+```json
+{
+  "review_type": "monthly",
+  "year": 2024,
+  "month": 1
+}
+```
+
+**参数说明**：
+- `review_type`: 复盘类型，可选值：`monthly`（月度）、`quarterly`（季度）、`yearly`（年度）
+- `year`: 年份
+- `month`: 月份（仅月度复盘需要，1-12）
+- `quarter`: 季度（仅季度复盘需要，1-4）
+
+**响应**：`200 OK`
+```json
+{
+  "success": true,
+  "period": "2024-01",
+  "page_id": "abc123...",
+  "url": "https://notion.so/abc123...",
+  "data": {
+    "summary": {
+      "total_income": 10000.00,
+      "total_expense": 5000.00,
+      "net_balance": 5000.00,
+      "transaction_count": 100
+    },
+    "categories": [
+      {
+        "category": "餐饮",
+        "total_expense": 1500.00,
+        "count": 30
+      }
+    ],
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-31"
+  }
+}
+```
+
+**错误**：`400 Bad Request`
+```json
+{
+  "detail": "Review database not configured"
+}
+```
+
+### 2. 预览复盘数据
+
+预览指定周期的复盘数据，不创建 Notion 页面。
+
+**端点**：`GET /api/review/preview`
+
+**请求头**：
+```
+Authorization: Bearer <access_token>
+```
+
+**查询参数**：
+- `review_type`: 复盘类型（monthly/quarterly/yearly）
+- `year`: 年份
+- `month`: 月份（仅月度复盘需要）
+- `quarter`: 季度（仅季度复盘需要）
+
+**示例请求**：
+```
+GET /api/review/preview?review_type=monthly&year=2024&month=1
+```
+
+**响应**：`200 OK`
+```json
+{
+  "period": "2024-01",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-31",
+  "summary": {
+    "total_income": 10000.00,
+    "total_expense": 5000.00,
+    "net_balance": 5000.00,
+    "transaction_count": 100
+  },
+  "categories": [
+    {
+      "category": "餐饮",
+      "total_income": 0,
+      "total_expense": 1500.00,
+      "count": 30
+    },
+    {
+      "category": "工资",
+      "total_income": 8000.00,
+      "total_expense": 0,
+      "count": 1
+    }
+  ],
+  "transaction_count": 100
+}
+```
+
+### 3. 获取复盘配置
+
+获取当前用户的复盘数据库配置。
+
+**端点**：`GET /api/review/config`
+
+**请求头**：
+```
+Authorization: Bearer <access_token>
+```
+
+**响应**：`200 OK`
+```json
+{
+  "monthly_review_db": "monthly_db_id",
+  "quarterly_review_db": "quarterly_db_id",
+  "yearly_review_db": "yearly_db_id",
+  "monthly_template_id": "monthly_template_id",
+  "quarterly_template_id": "quarterly_template_id",
+  "yearly_template_id": "yearly_template_id"
+}
+```
+
+### 4. 更新复盘配置
+
+更新当前用户的复盘数据库配置。
+
+**端点**：`POST /api/review/config`
+
+**请求头**：
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**请求体**：
+```json
+{
+  "notion_monthly_review_db": "monthly_db_id",
+  "notion_quarterly_review_db": "quarterly_db_id",
+  "notion_yearly_review_db": "yearly_db_id",
+  "notion_monthly_template_id": "monthly_template_id",
+  "notion_quarterly_template_id": "quarterly_template_id",
+  "notion_yearly_template_id": "yearly_template_id"
+}
+```
+
+**响应**：`200 OK`
+```json
+{
+  "success": true,
+  "message": "Review configuration updated successfully"
+}
+```
+
+### 5. 批量生成复盘
+
+批量生成多个周期的复盘报告。
+
+**端点**：`POST /api/review/batch`
+
+**请求头**：
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**请求体**：
+```json
+{
+  "review_type": "monthly",
+  "year": 2024,
+  "months": [1, 2, 3, 4, 5, 6]
+}
+```
+
+**响应**：`200 OK`
+```json
+{
+  "success": true,
+  "total": 6,
+  "successful": 6,
+  "failed": 0,
+  "results": [
+    {
+      "period": "2024-01",
+      "page_id": "page_id_1",
+      "success": true
+    },
+    {
+      "period": "2024-02",
+      "page_id": "page_id_2",
+      "success": true
+    }
+  ]
 }
 ```
 

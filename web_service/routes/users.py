@@ -81,6 +81,10 @@ async def update_user_profile(
             )
         current_user.email = profile_update.email
 
+    # 更新会话超时设置
+    if profile_update.session_timeout_minutes is not None:
+        current_user.session_timeout_minutes = profile_update.session_timeout_minutes
+
     current_user.updated_at = datetime.utcnow()
     db.commit()
 

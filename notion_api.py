@@ -8,7 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Notion API 超时配置（秒）
-NOTION_TIMEOUT = 30
+# 复盘查询可能需要更长时间，特别是有大量数据时
+# 设置为 180 秒（3分钟）以处理大型数据库
+NOTION_TIMEOUT = 180
 
 
 class NotionClient:
@@ -24,13 +26,34 @@ class NotionClient:
 
         Args:
             user_id: 用户ID（多租户模式必需）
+
+        Raises:
+            ValueError: 当必需的配置缺失时
         """
         self.user_id = user_id
 
         if Config.is_single_user_mode():
             # 单用户模式：使用全局配置
             logger.info(f"Initializing Notion client in single-user mode (API key: {'***' if Config.NOTION_API_KEY else 'not configured'})")
-            self.client = NotionApiClient(auth=Config.NOTION_API_KEY, timeout_ms=NOTION_TIMEOUT * 1000)
+
+            # 验证配置
+            if not Config.NOTION_API_KEY:
+                raise ValueError("NOTION_API_KEY is not configured in environment variables")
+
+            if not Config.NOTION_INCOME_DATABASE_ID or len(Config.NOTION_INCOME_DATABASE_ID) < 32:
+                raise ValueError("NOTION_INCOME_DATABASE_ID is invalid or not configured")
+
+            if not Config.NOTION_EXPENSE_DATABASE_ID or len(Config.NOTION_EXPENSE_DATABASE_ID) < 32:
+                raise ValueError("NOTION_EXPENSE_DATABASE_ID is invalid or not configured")
+
+            logger.info(f"Income DB: {Config.NOTION_INCOME_DATABASE_ID[:8]}***")
+            logger.info(f"Expense DB: {Config.NOTION_EXPENSE_DATABASE_ID[:8]}***")
+
+            self.client = NotionApiClient(
+                auth=Config.NOTION_API_KEY,
+                timeout_ms=NOTION_TIMEOUT * 1000,
+                notion_version="2022-06-28"  # 使用旧版 API 以支持 databases.query 端点
+            )
             self.income_db = Config.NOTION_INCOME_DATABASE_ID
             self.expense_db = Config.NOTION_EXPENSE_DATABASE_ID
         else:
@@ -41,11 +64,32 @@ class NotionClient:
             logger.info(f"Initializing Notion client for user {user_id}")
             config = self._get_user_notion_config(user_id)
 
+            # 验证 API key
+            if not config['api_key']:
+                raise ValueError(f"Notion API key is not configured for user {user_id}")
+
+            # 验证数据库 ID
+            if not config['income_db'] or len(config['income_db']) < 32:
+                raise ValueError(f"Income database ID is invalid or not configured for user {user_id}")
+
+            if not config['expense_db'] or len(config['expense_db']) < 32:
+                raise ValueError(f"Expense database ID is invalid or not configured for user {user_id}")
+
+            # 检查收入和支出数据库 ID 是否相同
+            if config['income_db'] == config['expense_db']:
+                logger.warning(f"User {user_id} has the same database ID for income and expense: {config['income_db'][:8]}***")
+
             # 脱敏日志
             masked_key = f"{config['api_key'][:8]}***" if config['api_key'] else "not configured"
             logger.info(f"User {user_id} Notion API key: {masked_key}")
+            logger.info(f"User {user_id} income DB: {config['income_db'][:8]}***")
+            logger.info(f"User {user_id} expense DB: {config['expense_db'][:8]}***")
 
-            self.client = NotionApiClient(auth=config['api_key'], timeout_ms=NOTION_TIMEOUT * 1000)
+            self.client = NotionApiClient(
+                auth=config['api_key'],
+                timeout_ms=NOTION_TIMEOUT * 1000,
+                notion_version="2022-06-28"  # 使用旧版 API 以支持 databases.query 端点
+            )
             self.income_db = config['income_db']
             self.expense_db = config['expense_db']
 

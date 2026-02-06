@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>账单管理 - Notion账单导入服务</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <!-- 性能优化：CSS变量系统 -->
+    <title>账单管理 - 个人财务管理平台</title>
+    <!-- 设计系统 -->
     <link rel="stylesheet" href="/static/css/variables.css">
-    <!-- 性能优化：性能优化样式 -->
-    <link rel="stylesheet" href="/static/css/performance.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/toast.js" as="script">
 </head>
 <body>
     <!-- 导航栏组件 -->
@@ -17,25 +18,56 @@
     <main class="upload-main">
         <div class="upload-container">
             <!-- 页面标题 -->
-            <div class="page-header-upload">
-                <div>
-                    <h1>账单管理</h1>
-                    <p class="page-description">上传您的账单文件，系统将自动识别并导入到Notion</p>
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 4L6 12V24C6 35.0457 14.1597 44.8617 24 47C33.8403 44.8617 42 35.0457 42 24V12L24 4Z" stroke="url(#gradient-icon)" stroke-width="3" fill="none"/>
+                            <path d="M21 15v4a2 2 0 0 0 2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V17" stroke="url(#gradient-icon)" stroke-width="2.5" fill="none"/>
+                            <path d="M16 24h16" stroke="url(#gradient-icon)" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M16 30h16" stroke="url(#gradient-icon)" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M16 36h10" stroke="url(#gradient-icon)" stroke-width="2.5" stroke-linecap="round"/>
+                            <circle cx="32" cy="30" r="6" stroke="url(#gradient-icon)" stroke-width="2.5" fill="none"/>
+                            <defs>
+                                <linearGradient id="gradient-icon" x1="6" y1="4" x2="42" y2="47" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h1>账单管理</h1>
+                        <p class="page-description">上传您的账单文件，系统将自动识别并导入到Notion</p>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             <!-- 上传区域 -->
             <div class="upload-section">
                 <div class="upload-card">
-                    <h2>📤 上传账单</h2>
-                    <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-card-header">
+                        <h2>上传账单</h2>
+                        <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <form id="upload-form" enctype="multipart/form-data" aria-label="上传账单表单">
                         <div class="upload-form-content">
                             <div class="form-group">
-                                <label for="file">选择账单文件</label>
+                                <label for="file" class="form-label required">选择账单文件</label>
                                 <div class="file-input-wrapper">
-                                    <input type="file" id="file" name="file" accept=".csv,.txt,.xls,.xlsx" required>
-                                    <div class="file-input-label" id="file-label">
-                                        <span class="file-icon">📄</span>
+                                    <input type="file" id="file" name="file" accept=".csv,.txt,.xls,.xlsx" required aria-label="选择账单文件">
+                                    <div class="file-input-label" id="file-label" tabindex="0" role="button" aria-label="点击选择文件">
+                                        <svg class="file-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/>
+                                            <line x1="16" y1="17" x2="8" y2="17"/>
+                                            <polyline points="10 9 9 9 8 9"/>
+                                        </svg>
                                         <span class="file-text">点击选择或拖拽文件到这里</span>
                                     </div>
                                 </div>
@@ -43,8 +75,8 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="platform">账单平台（可选）</label>
-                                <select id="platform" name="platform" class="form-select">
+                                <label for="platform" class="form-label">账单平台（可选）</label>
+                                <select id="platform" name="platform" class="input" aria-label="选择账单平台">
                                     <option value="">自动检测</option>
                                     <option value="alipay">支付宝</option>
                                     <option value="wechat">微信支付</option>
@@ -55,7 +87,10 @@
                             <button type="submit" class="btn btn-primary btn-large" id="upload-btn">
                                 <span class="btn-text">上传账单</span>
                                 <span class="btn-loading" style="display: none;">
-                                    <span class="icon-spinner">⏳</span> 上传中...
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                    </svg>
+                                    上传中...
                                 </span>
                             </button>
                         </div>
@@ -72,22 +107,61 @@
                 </div>
             </div>
 
+            <!-- 复盘提示Banner -->
+            <div id="review-banner" class="review-banner" style="display: none;" role="alert" aria-live="polite">
+                <div class="review-banner-content">
+                    <div class="review-banner-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                        </svg>
+                    </div>
+                    <div class="review-banner-text">
+                        <h4>账单导入成功！</h4>
+                        <p>是否要为本月生成复盘报告？</p>
+                    </div>
+                    <div class="review-banner-actions">
+                        <button class="btn btn-primary btn-sm" id="generate-review-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <path d="M3 3v18h18"/>
+                                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                            </svg>
+                            生成复盘
+                        </button>
+                        <button class="btn btn-outline btn-sm" id="close-review-banner-btn">
+                            稍后
+                        </button>
+                    </div>
+                    <button class="review-banner-close" id="dismiss-review-banner-btn" aria-label="关闭提示">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
             <!-- 文件列表 -->
             <div class="uploads-section">
                 <div class="section-header">
                     <h2>已上传账单</h2>
                     <div class="header-actions">
-                        <button class="btn btn-outline btn-sm" id="refresh-btn">
-                            <span>🔄</span> 刷新
+                        <button class="btn btn-outline btn-sm" id="refresh-btn" aria-label="刷新列表">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <path d="M23 4v6h-6"/>
+                                <path d="M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            刷新
                         </button>
                     </div>
                 </div>
 
                 <!-- 过滤器 -->
-                <div class="filters-bar">
+                <div class="filters-bar" role="search" aria-label="筛选账单">
                     <div class="filter-group">
                         <label for="status-filter-select">状态筛选：</label>
-                        <select id="status-filter-select" class="filter-select">
+                        <select id="status-filter-select" class="filter-select" aria-label="按状态筛选">
                             <option value="">全部</option>
                             <option value="pending">待处理</option>
                             <option value="processing">处理中</option>
@@ -97,7 +171,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="platform-filter-select">平台筛选：</label>
-                        <select id="platform-filter-select" class="filter-select">
+                        <select id="platform-filter-select" class="filter-select" aria-label="按平台筛选">
                             <option value="">全部</option>
                             <option value="alipay">支付宝</option>
                             <option value="wechat">微信支付</option>
@@ -106,26 +180,39 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <button class="btn btn-secondary btn-sm" id="clear-filters-btn">
-                            <span>✕</span> 清除筛选
+                        <button class="btn btn-secondary btn-sm" id="clear-filters-btn" aria-label="清除筛选条件">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            清除筛选
                         </button>
                     </div>
                 </div>
 
                 <!-- 批量操作栏 -->
-                <div class="bulk-actions-bar" id="bulk-actions-bar" style="display: none;">
+                <div class="bulk-actions-bar" id="bulk-actions-bar" style="display: none;" role="region" aria-live="polite">
                     <div class="bulk-actions-left">
-                        <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox">
+                        <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox" aria-label="全选所有文件">
                         <label for="select-all-checkbox" class="select-all-label">
                             已选择 <span id="selected-count">0</span> 项
                         </label>
                     </div>
                     <div class="bulk-actions-right">
-                        <button class="btn btn-primary btn-sm" id="bulk-import-btn">
-                            <span>📥</span> 批量导入
+                        <button class="btn btn-primary btn-sm" id="bulk-import-btn" aria-label="批量导入选中的文件">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            批量导入
                         </button>
-                        <button class="btn btn-danger btn-sm" id="bulk-delete-btn">
-                            <span>🗑</span> 批量删除
+                        <button class="btn btn-danger btn-sm" id="bulk-delete-btn" aria-label="批量删除选中的文件">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            批量删除
                         </button>
                         <button class="btn btn-secondary btn-sm" id="cancel-selection-btn">
                             取消选择
@@ -162,17 +249,21 @@
                 </div>
 
                 <!-- 文件详情模态框 -->
-                <div class="modal" id="detail-modal" style="display: none;">
-                    <div class="modal-backdrop" id="modal-backdrop"></div>
-                    <div class="modal-container">
-                        <div class="modal-header">
-                            <h2>账单详情</h2>
-                            <button class="modal-close" id="modal-close">✕</button>
+                <div class="detail-modal" id="detail-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                    <div class="detail-modal-container">
+                        <div class="detail-modal-header">
+                            <h2 id="modal-title">账单详情</h2>
+                            <button class="detail-modal-close" id="modal-close" aria-label="关闭模态框">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="modal-body" id="modal-body-content">
+                        <div class="detail-modal-body" id="modal-body-content">
                             <!-- 动态加载详情 -->
                         </div>
-                        <div class="modal-footer">
+                        <div class="detail-modal-footer">
                             <button class="btn btn-secondary" id="modal-ok">关闭</button>
                         </div>
                     </div>
@@ -182,10 +273,10 @@
     </main>
 
     <!-- Toast 容器 -->
-    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+    <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;" aria-live="polite" aria-atomic="true"></div>
 
     <script src="/static/js/auth.js"></script>
-    <script src="/static/js/perf-utils.js"></script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/navbar.js"></script>
     <script src="/static/js/datetime.js"></script>
     <script>
@@ -206,29 +297,6 @@
     (function() {
         'use strict';
 
-        // 显示 Toast 消息
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
-                    <span class="toast-message">${message}</span>
-                </div>
-            `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
         // 渲染文件列表为表格
         function renderFileList(files) {
             const tableBody = document.getElementById('file-list-body');
@@ -239,7 +307,12 @@
                     <tr>
                         <td colspan="8" class="table-empty">
                             <div class="empty-state">
-                                <div class="empty-state-icon">📭</div>
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="12" y1="18" x2="12" y2="12"/>
+                                    <line x1="9" y1="15" x2="15" y2="15"/>
+                                </svg>
                                 <p>还没有上传任何账单</p>
                                 <p class="empty-hint">上传您的第一个账单文件开始使用</p>
                             </div>
@@ -255,7 +328,11 @@
                 const isPendingOrFailed = file.status === 'pending' || file.status === 'failed';
                 const importButton = isPendingOrFailed ? `
                             <button class="btn-action btn-import" data-action="import" data-file-id="${file.id}" title="导入到Notion">
-                                <span class="action-icon">📥</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
                                 <span class="action-text">导入</span>
                             </button>
                 ` : '';
@@ -296,15 +373,27 @@
                         <div class="action-buttons">
                             ${importButton}
                             <button class="btn-action btn-view" data-action="view" data-file-id="${file.id}" title="查看详情">
-                                <span class="action-icon">👁</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
                                 <span class="action-text">查看</span>
                             </button>
                             <button class="btn-action btn-content" data-action="content" data-file-id="${file.id}" title="查看内容">
-                                <span class="action-icon">📋</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
                                 <span class="action-text">内容</span>
                             </button>
                             <button class="btn-action btn-delete" data-action="delete" data-file-id="${file.id}" title="删除">
-                                <span class="action-icon">🗑️</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
                                 <span class="action-text">删除</span>
                             </button>
                         </div>
@@ -379,7 +468,6 @@
                     // 绑定关闭按钮
                     document.getElementById('modal-close').onclick = closeModal;
                     document.getElementById('modal-ok').onclick = closeModal;
-                    document.getElementById('modal-backdrop').onclick = closeModal;
                 }
             } catch (error) {
                 console.error('Failed to load file detail:', error);
@@ -408,11 +496,18 @@
                             <div class="preview-header">
                                 <div class="preview-stats">
                                     <span class="stat-item">
-                                        <span class="stat-icon">📊</span>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="stat-icon">
+                                            <path d="M3 3v18h18"/>
+                                            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                                        </svg>
                                         <span class="stat-text">共 ${data.total_records} 条记录</span>
                                     </span>
                                     <span class="stat-item">
-                                        <span class="stat-icon">🔍</span>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="stat-icon">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                            <path d="M11 8v6M8 11h6"/>
+                                        </svg>
                                         <span class="stat-text">显示前 ${data.preview_records} 条</span>
                                     </span>
                                     <span class="stat-item">
@@ -445,7 +540,12 @@
                     } else {
                         tableHtml = `
                             <div class="empty-state">
-                                <div class="empty-state-icon">📭</div>
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="12" y1="18" x2="12" y2="12"/>
+                                    <line x1="9" y1="15" x2="15" y2="15"/>
+                                </svg>
                                 <p>暂无账单数据</p>
                             </div>
                         `;
@@ -470,7 +570,6 @@
                     };
                     document.getElementById('modal-close').onclick = closeHandler;
                     document.getElementById('modal-ok').onclick = closeHandler;
-                    document.getElementById('modal-backdrop').onclick = closeHandler;
                 }
             } catch (error) {
                 console.error('Failed to load file content:', error);
@@ -494,6 +593,8 @@
                         showToast('此文件已经导入过了', 'warning');
                     } else if (data.success) {
                         showToast(`导入成功！共导入 ${data.imported || 0} 条记录`);
+                        // 显示复盘Banner
+                        showReviewBanner();
                     } else {
                         showToast(data.message || '导入失败', 'error');
                     }
@@ -640,11 +741,25 @@
         // 工具函数
         function getPlatformIcon(platform) {
             const icons = {
-                'alipay': '💰',
-                'wechat': '💚',
-                'unionpay': '💳'
+                'alipay': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>`,
+                'wechat': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>`,
+                'unionpay': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>`
             };
-            return icons[platform] || '📄';
+            return icons[platform] || `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>`;
         }
 
         function getPlatformLabel(platform) {
@@ -671,6 +786,22 @@
             if (bytes < 1024) return bytes + ' B';
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 使用全局Toast系统
+        function showToast(message, type = 'success') {
+            if (window.toast) {
+                const typeMap = {
+                    'success': 'success',
+                    'error': 'error',
+                    'warning': 'warning',
+                    'info': 'info'
+                };
+                window.toast[typeMap[type] || 'info'](message);
+            } else {
+                // 后备方案
+                console.log(`[${type}] ${message}`);
+            }
         }
 
         // 使用 DateTimeUtils 进行时间格式化（北京时间）
@@ -713,13 +844,18 @@
             const banner = document.createElement('div');
             banner.id = 'notion-config-banner';
             banner.className = 'notion-config-banner';
+            banner.setAttribute('role', 'alert');
+            banner.setAttribute('aria-live', 'polite');
 
             const content = document.createElement('div');
             content.className = 'banner-content';
 
             const icon = document.createElement('div');
             icon.className = 'banner-icon';
-            icon.textContent = '🔗';
+            icon.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>`;
 
             const text = document.createElement('div');
             text.className = 'banner-text';
@@ -1057,7 +1193,11 @@
                     <tr>
                         <td colspan="9" class="table-empty">
                             <div class="empty-state">
-                                <div class="empty-state-icon">⚠️</div>
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
                                 <p>认证模块未加载，请刷新页面重试</p>
                             </div>
                         </td>
@@ -1071,7 +1211,10 @@
                     <tr>
                         <td colspan="9" class="table-empty">
                             <div class="empty-state">
-                                <div class="empty-state-icon">🔒</div>
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
                                 <p>请先登录查看上传记录</p>
                                 <a href="/login" class="btn btn-primary">立即登录</a>
                             </div>
@@ -1116,13 +1259,64 @@
                     <tr>
                         <td colspan="9" class="table-empty">
                             <div class="empty-state">
-                                <div class="empty-state-icon">⚠️</div>
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
                                 <p>加载失败：${escapeHtml(error.message)}</p>
                                 <p class="empty-hint">请检查网络连接或刷新页面重试</p>
                             </div>
                         </td>
                     </tr>
                 `;
+            }
+        }
+
+        // 显示复盘Banner
+        function showReviewBanner() {
+            const banner = document.getElementById('review-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                // 滚动到Banner位置
+                banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // 隐藏复盘Banner
+        function hideReviewBanner() {
+            const banner = document.getElementById('review-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        }
+
+        // 初始化复盘Banner事件
+        function initReviewBanner() {
+            // 生成复盘按钮
+            const generateBtn = document.getElementById('generate-review-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', () => {
+                    // 获取当前月份
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = now.getMonth() + 1;
+
+                    // 跳转到复盘页面并带上参数
+                    window.location.href = `/review?year=${year}&month=${month}&type=monthly`;
+                });
+            }
+
+            // 关闭按钮（稍后）
+            const closeBtn = document.getElementById('close-review-banner-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', hideReviewBanner);
+            }
+
+            // 关闭按钮（×）
+            const dismissBtn = document.getElementById('dismiss-review-banner-btn');
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', hideReviewBanner);
             }
         }
 
@@ -1140,6 +1334,7 @@
             checkNotionConfig();
             initFilters();
             initBulkActions();
+            initReviewBanner();
         }
 
         // 等待所有资源加载完成后再初始化
@@ -1156,15 +1351,42 @@
     </script>
 
     <style>
+    /* ==================== 主容器布局 ==================== */
     .upload-main {
         min-height: calc(100vh - 64px);
-        background: #f9fafb;
+        background: var(--bg-secondary);
+        padding-top: var(--spacing-8);
     }
 
     .upload-container {
         max-width: 1600px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: 0 var(--spacing-6);
+    }
+
+    /* 确保page-header不会被容器padding影响 */
+    .upload-container > .page-header:first-child {
+        margin-top: 0;
+    }
+
+    /* 上传卡片标题 */
+    .upload-card-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-3);
+        margin-bottom: var(--spacing-6);
+    }
+
+    .upload-card-header h2 {
+        margin: 0;
+        font-size: var(--font-2xl);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        font-family: var(--font-display);
+    }
+
+    .upload-icon {
+        color: var(--color-primary-600);
     }
 
     /* 表格包装器 - 支持水平滚动 */
@@ -1346,58 +1568,141 @@
         padding: 60px 20px;
     }
 
-    .page-header-upload {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 32px;
+    /* ==================== 页面头部 - 与复盘管理一致的设计 ==================== */
+    .page-header {
+        background: var(--gradient-primary);
+        border-radius: var(--radius-2xl);
+        padding: var(--spacing-12) var(--spacing-10);
+        margin-bottom: var(--spacing-10);
+        box-shadow: var(--shadow-primary);
+        position: relative;
+        overflow: hidden;
     }
 
-    .page-header-upload h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        margin-bottom: 4px;
+    /* 背景装饰 */
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-8);
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-icon {
+        width: 88px;
+        height: 88px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        border-radius: var(--radius-2xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        flex-shrink: 0;
+    }
+
+    .header-text {
+        flex: 1;
+        color: white;
+    }
+
+    .header-text h1 {
+        font-size: var(--font-5xl);
+        font-weight: var(--font-extrabold);
+        margin: 0 0 var(--spacing-3) 0;
+        font-family: var(--font-display);
+        line-height: 1.1;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
     }
 
     .page-description {
-        color: #6b7280;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: var(--font-lg);
+        margin: 0;
+        font-weight: 400;
+        line-height: var(--leading-relaxed);
+    }
+
+    /* 保留旧的.page-header-upload类名，映射到新样式 */
+    .page-header-upload {
+        display: none; /* 已被新的.page-header替代 */
+    }
+
+    .page-header-upload h1 {
+        font-size: var(--font-4xl);
+        font-weight: var(--font-bold);
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-1);
+        font-family: var(--font-display);
     }
 
     .upload-section {
-        margin-bottom: 32px;
+        margin-bottom: var(--spacing-8);
     }
 
     .upload-card {
-        background: white;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+        background: var(--bg-primary);
+        border-radius: var(--radius-2xl);
+        padding: var(--spacing-8);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-light);
     }
 
     .upload-card h2 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 24px;
-        color: #1a1a2e;
+        font-size: var(--font-xl);
+        font-weight: var(--font-semibold);
+        margin-bottom: var(--spacing-6);
+        color: var(--text-primary);
+        font-family: var(--font-display);
     }
 
     .upload-form-content {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: var(--spacing-5);
     }
 
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: var(--spacing-2);
     }
 
     .form-group label {
-        font-weight: 600;
-        color: #374151;
-        font-size: 0.9rem;
+        font-weight: var(--font-semibold);
+        color: var(--text-secondary);
+        font-size: var(--font-sm);
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: var(--color-error-500);
     }
 
     .form-row {
@@ -1453,16 +1758,33 @@
     }
 
     .file-icon {
-        font-size: 2rem;
+        color: var(--color-primary-600);
+        flex-shrink: 0;
     }
 
     .file-text {
-        color: #6b7280;
+        color: var(--text-secondary);
     }
 
     .form-hint {
-        font-size: 0.85rem;
-        color: #9ca3af;
+        font-size: var(--font-xs);
+        color: var(--text-muted);
+    }
+
+    .input {
+        padding: var(--spacing-3) var(--spacing-4);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        font-size: var(--font-base);
+        font-family: inherit;
+        background: var(--bg-primary);
+        transition: var(--transition-fast);
+    }
+
+    .input:focus {
+        outline: none;
+        border-color: var(--color-primary-500);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
     }
 
     .upload-progress {
@@ -1866,18 +2188,26 @@
 
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: #9ca3af;
+        padding: var(--spacing-16) var(--spacing-6);
+        color: var(--text-muted);
     }
 
     .empty-state-icon {
-        font-size: 4rem;
-        margin-bottom: 16px;
+        margin-bottom: var(--spacing-4);
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    .empty-state p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: var(--font-lg);
     }
 
     .empty-hint {
-        margin-top: 8px;
-        font-size: 0.9rem;
+        margin-top: var(--spacing-2);
+        font-size: var(--font-sm);
+        color: var(--text-muted);
     }
 
     .loading-state {
@@ -1900,7 +2230,7 @@
         to { transform: rotate(360deg); }
     }
 
-    .modal {
+    .detail-modal {
         position: fixed;
         top: 0;
         left: 0;
@@ -1912,16 +2242,7 @@
         z-index: 500;
     }
 
-    .modal-backdrop {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-container {
+    .detail-modal-container {
         position: relative;
         background: white;
         border-radius: 16px;
@@ -1933,20 +2254,20 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
-    .modal-header {
+    .detail-modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
     }
 
-    .modal-header h2 {
+    .detail-modal-header h2 {
         font-size: 1.25rem;
         font-weight: 600;
         color: #1a1a2e;
     }
 
-    .modal-close {
+    .detail-modal-close {
         width: 32px;
         height: 32px;
         border: none;
@@ -1959,11 +2280,11 @@
         justify-content: center;
     }
 
-    .modal-close:hover {
+    .detail-modal-close:hover {
         background: #f3f4f6;
     }
 
-    .modal-footer {
+    .detail-modal-footer {
         margin-top: 24px;
         text-align: right;
     }
@@ -2008,7 +2329,37 @@
 
     @media (max-width: 768px) {
         .upload-container {
-            padding: 20px 16px;
+            padding: 0 var(--spacing-4);
+        }
+
+        /* 新page-header的响应式样式 */
+        .page-header {
+            padding: var(--spacing-10) var(--spacing-6);
+            margin-bottom: var(--spacing-8);
+        }
+
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+            gap: var(--spacing-6);
+        }
+
+        .header-icon {
+            width: 72px;
+            height: 72px;
+        }
+
+        .header-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .header-text h1 {
+            font-size: var(--font-4xl);
+        }
+
+        .page-description {
+            font-size: var(--font-base);
         }
 
         .page-header-upload {
@@ -2086,7 +2437,7 @@
             flex: 1;
         }
 
-        .modal.content-preview-modal .modal-container {
+        .detail-modal.content-preview-modal .detail-modal-container {
             width: 100vw;
             max-width: 100vw;
             max-height: 100vh;
@@ -2124,6 +2475,32 @@
         }
     }
 
+    /* 小屏幕优化（<480px） */
+    @media (max-width: 480px) {
+        .page-header {
+            padding: var(--spacing-8) var(--spacing-5);
+            margin-bottom: var(--spacing-6);
+        }
+
+        .header-icon {
+            width: 64px;
+            height: 64px;
+        }
+
+        .header-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-text h1 {
+            font-size: var(--font-3xl);
+        }
+
+        .page-description {
+            font-size: var(--font-sm);
+        }
+    }
+
     /* Notion 配置横幅 */
     .notion-config-banner {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -2154,15 +2531,15 @@
     }
 
     .banner-icon {
-        font-size: 1.5rem;
         flex-shrink: 0;
+        color: var(--color-warning-600);
     }
 
     .banner-text {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: var(--spacing-1);
     }
 
     .banner-text strong {
@@ -2181,30 +2558,39 @@
         flex-shrink: 0;
     }
 
-    /* 内容预览弹窗样式 - 更宽的弹窗 */
-    .modal.content-preview-modal .modal-container {
-        max-width: 95vw;
-        width: 95vw;
-        max-height: 90vh;
+    /* 内容预览弹窗样式 - 全屏显示，最大化内容空间 */
+    .detail-modal.content-preview-modal .detail-modal-container {
+        width: 100vw;
+        height: 100vh;
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
     }
 
-    .modal.content-preview-modal .modal-header {
-        padding: 20px 24px;
+    .detail-modal.content-preview-modal .detail-modal-header {
+        padding: 12px 20px;
         border-bottom: 1px solid #e5e7eb;
         margin-bottom: 0;
+        flex-shrink: 0;
+        background: white;
     }
 
-    .modal.content-preview-modal .modal-body {
+    .detail-modal.content-preview-modal .detail-modal-body {
         padding: 0;
-        max-height: calc(90vh - 140px);
+        flex: 1;
         overflow: auto;
+        min-height: 0;
     }
 
-    .modal.content-preview-modal .modal-footer {
-        padding: 16px 24px;
+    .detail-modal.content-preview-modal .detail-modal-footer {
+        padding: 12px 20px;
         border-top: 1px solid #e5e7eb;
         margin-top: 0;
+        flex-shrink: 0;
+        background: white;
     }
 
     /* 账单预览内容样式 */
@@ -2249,17 +2635,18 @@
     .stat-item {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.9rem;
-        color: #4b5563;
+        gap: var(--spacing-2);
+        font-size: var(--font-sm);
+        color: var(--text-secondary);
     }
 
     .stat-icon {
-        font-size: 1.1rem;
+        color: var(--color-primary-600);
+        flex-shrink: 0;
     }
 
     .stat-text {
-        font-weight: 500;
+        font-weight: var(--font-medium);
     }
 
     /* 表格容器 */
@@ -2342,7 +2729,7 @@
         }
 
         /* 移动端预览弹窗样式 */
-        .modal.content-preview-modal .modal-container {
+        .detail-modal.content-preview-modal .detail-modal-container {
             width: 100vw;
             max-width: 100vw;
             max-height: 100vh;
@@ -2379,6 +2766,98 @@
         .bill-table {
             /* 确保表格在移动端可滚动 */
             min-width: 600px;
+        }
+    }
+
+    /* 复盘Banner样式 */
+    .review-banner {
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        border-left: 4px solid #667eea;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        animation: slideDown 0.3s ease;
+    }
+
+    .review-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        position: relative;
+    }
+
+    .review-banner-icon {
+        flex-shrink: 0;
+        color: var(--color-primary-600);
+    }
+
+    .review-banner-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+    }
+
+    .review-banner-text h4 {
+        margin: 0;
+        color: #4338ca;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .review-banner-text p {
+        margin: 0;
+        color: #6366f1;
+        font-size: 0.875rem;
+    }
+
+    .review-banner-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .review-banner-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6366f1;
+        transition: all 0.2s ease;
+    }
+
+    .review-banner-close:hover {
+        background: rgba(99, 102, 241, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .review-banner-content {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 16px;
+        }
+
+        .review-banner-actions {
+            width: 100%;
+        }
+
+        .review-banner-actions .btn {
+            flex: 1;
+        }
+
+        .review-banner-close {
+            position: static;
+            margin-left: auto;
         }
     }
     </style>

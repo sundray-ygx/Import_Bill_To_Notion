@@ -27,6 +27,17 @@ class Config:
     # Log Configuration
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+    # ==================== 账单复盘配置 ====================
+    # 复盘数据库 ID
+    NOTION_MONTHLY_REVIEW_DB = os.getenv("NOTION_MONTHLY_REVIEW_DB", "")
+    NOTION_QUARTERLY_REVIEW_DB = os.getenv("NOTION_QUARTERLY_REVIEW_DB", "")
+    NOTION_YEARLY_REVIEW_DB = os.getenv("NOTION_YEARLY_REVIEW_DB", "")
+
+    # 复盘模板 ID
+    NOTION_MONTHLY_TEMPLATE_ID = os.getenv("NOTION_MONTHLY_TEMPLATE_ID", "")
+    NOTION_QUARTERLY_TEMPLATE_ID = os.getenv("NOTION_QUARTERLY_TEMPLATE_ID", "")
+    NOTION_YEARLY_TEMPLATE_ID = os.getenv("NOTION_YEARLY_TEMPLATE_ID", "")
+
     # ==================== 多租户配置 ====================
 
     # 多租户模式开关 (true/false/auto)

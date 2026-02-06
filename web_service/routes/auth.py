@@ -92,7 +92,7 @@ async def register(
         logger.info(f"User {new_user.username} automatically promoted to superuser (first user or no superuser exists)")
 
     # 注册成功后自动登录：生成 tokens
-    access_token = create_access_token(data={"sub": str(new_user.id)})
+    access_token = create_access_token(data={"sub": str(new_user.id)}, expires_minutes=new_user.session_timeout_minutes)
     refresh_token = create_refresh_token(data={"sub": str(new_user.id)})
 
     # 保存 session
@@ -100,7 +100,7 @@ async def register(
         user_id=new_user.id,
         token=access_token,
         refresh_token=refresh_token,
-        expires_at=datetime.utcnow() + timedelta(minutes=Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+        expires_at=datetime.utcnow() + timedelta(minutes=new_user.session_timeout_minutes),
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request)
     )
@@ -128,7 +128,7 @@ async def register(
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "expires_in": Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "expires_in": new_user.session_timeout_minutes * 60,
         "user": new_user
     }
 
@@ -201,8 +201,8 @@ async def login(
             detail="User account is inactive"
         )
 
-    # 生成 tokens
-    access_token = create_access_token(data={"sub": str(user.id)})
+    # 生成 tokens（使用用户自定义超时）
+    access_token = create_access_token(data={"sub": str(user.id)}, expires_minutes=user.session_timeout_minutes)
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
     # 保存 session
@@ -210,7 +210,7 @@ async def login(
         user_id=user.id,
         token=access_token,
         refresh_token=refresh_token,
-        expires_at=datetime.utcnow() + timedelta(minutes=Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+        expires_at=datetime.utcnow() + timedelta(minutes=user.session_timeout_minutes),
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request)
     )
@@ -235,7 +235,7 @@ async def login(
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "expires_in": Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "expires_in": user.session_timeout_minutes * 60,
         "user": user
     }
 
@@ -312,13 +312,13 @@ async def refresh_token(
     )
 
     # 生成新的 tokens
-    new_access_token = create_access_token(data={"sub": str(user_id)})
+    new_access_token = create_access_token(data={"sub": str(user_id)}, expires_minutes=user.session_timeout_minutes)
     new_refresh_token = create_refresh_token(data={"sub": str(user_id)})
 
     # 更新 session
     session.token = new_access_token
     session.refresh_token = new_refresh_token
-    session.expires_at = datetime.utcnow() + timedelta(minutes=Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    session.expires_at = datetime.utcnow() + timedelta(minutes=user.session_timeout_minutes)
     db.commit()
 
     logger.info(f"Token refreshed for user: {user.username} (ID: {user_id})")
@@ -326,7 +326,7 @@ async def refresh_token(
         "access_token": new_access_token,
         "refresh_token": new_refresh_token,
         "token_type": "bearer",
-        "expires_in": Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "expires_in": user.session_timeout_minutes * 60,
         "user": user
     }
 

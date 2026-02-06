@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>导入历史 - 账单导入服务</title>
+    <title>导入记录 - 个人财务管理平台</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/history.css">
     <!-- 性能优化：CSS变量系统 -->
@@ -18,16 +18,41 @@
     <main class="main-content">
         <div class="container">
             <!-- 页面标题 -->
-            <div class="page-header">
-                <h1>导入历史</h1>
-                <p class="page-description">查看您的账单导入记录和详细结果</p>
-            </div>
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 时钟图标 -->
+                            <circle cx="24" cy="24" r="18" stroke="url(#gradient-icon-history)" stroke-width="3" fill="none"/>
+                            <path d="M24 12v14l8 6" stroke="url(#gradient-icon-history)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <!-- 文档装饰 -->
+                            <path d="M34 14v4a2 2 0 0 0 2 2h4" stroke="url(#gradient-icon-history)" stroke-width="2" fill="none"/>
+                            <path d="M34 14v4a2 2 0 0 0 2 2h4" stroke="url(#gradient-icon-history)" stroke-width="2" fill="none" transform="translate(-4, 20)"/>
+                            <circle cx="36" cy="40" r="3" stroke="url(#gradient-icon-history)" stroke-width="2" fill="none"/>
+                            <defs>
+                                <linearGradient id="gradient-icon-history" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h1>导入记录</h1>
+                        <p class="page-description">查看您的账单导入记录和详细结果</p>
+                    </div>
+                </div>
+            </header>
 
             <!-- 统计卡片 -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
-                        📊
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="total-imports">0</div>
@@ -37,7 +62,9 @@
 
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">
-                        ✓
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="successful-imports">0</div>
@@ -47,7 +74,13 @@
 
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(240, 147, 251, 0.1);">
-                        📝
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="total-records">0</div>
@@ -57,7 +90,10 @@
 
                 <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(250, 112, 154, 0.1);">
-                        ⏱
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="avg-duration">-</div>
@@ -90,7 +126,11 @@
                     </select>
 
                     <button class="btn btn-secondary btn-sm" id="clear-all-filters">
-                        <span>✕</span> 清除筛选
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        清除筛选
                     </button>
                 </div>
 
@@ -112,7 +152,13 @@
                 </div>
                 <div class="bulk-actions-right">
                     <button class="btn btn-danger btn-sm" id="bulk-delete-btn">
-                        <span>🗑</span> 批量删除
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                        批量删除
                     </button>
                     <button class="btn btn-secondary btn-sm" id="cancel-selection-btn">
                         取消选择
@@ -153,7 +199,12 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h2>导入详情</h2>
-                <button class="modal-close" id="modal-close">✕</button>
+                <button class="modal-close" id="modal-close" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="modal-body" id="modal-body-content">
@@ -168,6 +219,136 @@
 
     <!-- Toast 容器 -->
     <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 3000;"></div>
+
+    <style>
+    /* ==================== 页面头部 - 与复盘管理一致的设计 ==================== */
+    .page-header {
+        background: var(--gradient-primary);
+        border-radius: var(--radius-2xl);
+        padding: var(--spacing-12) var(--spacing-10);
+        margin-bottom: var(--spacing-10);
+        box-shadow: var(--shadow-primary);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 背景装饰 */
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-8);
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-icon {
+        width: 88px;
+        height: 88px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        border-radius: var(--radius-2xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        flex-shrink: 0;
+    }
+
+    .header-text {
+        flex: 1;
+        color: white;
+    }
+
+    .header-text h1 {
+        font-size: var(--font-5xl);
+        font-weight: var(--font-extrabold);
+        margin: 0 0 var(--spacing-3) 0;
+        font-family: var(--font-display);
+        line-height: 1.1;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .page-description {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: var(--font-lg);
+        margin: 0;
+        font-weight: 400;
+        line-height: var(--leading-relaxed);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: var(--spacing-10) var(--spacing-6);
+        }
+
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+            gap: var(--spacing-6);
+        }
+
+        .header-icon {
+            width: 72px;
+            height: 72px;
+        }
+
+        .header-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .header-text h1 {
+            font-size: var(--font-4xl);
+        }
+
+        .page-description {
+            font-size: var(--font-base);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .header-icon {
+            width: 64px;
+            height: 64px;
+        }
+
+        .header-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-text h1 {
+            font-size: var(--font-3xl);
+        }
+    }
+    </style>
 
     <!-- 性能优化工具库 -->
     <script src="/static/js/perf-utils.js"></script>

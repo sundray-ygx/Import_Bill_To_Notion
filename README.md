@@ -1,43 +1,44 @@
-# Notion账单导入服务
+# 个人财务管理平台
 
-一个功能完善的账单导入服务，支持多用户认证、管理后台和账单历史记录。自动将支付宝、微信支付和银联账单导入到Notion数据库。
+一站式个人财务管理平台：支持支付宝、微信、银联账单自动导入，智能分类统计，月度/季度/年度财务复盘，让理财更简单。
 
 ## 功能特性
 
 ### 核心功能
-- ✅ 支持多种支付平台账单导入
-  - 支付宝账单
-  - 微信支付账单
-  - 银联账单
-- ✅ 自动检测账单格式，无需手动选择平台
-- ✅ 支持立即导入和定时自动导入两种模式
-- ✅ **根据收/支分类自动导入到不同数据库**
-  - 收入记录导入到收入数据库
-  - 支出记录导入到支出数据库
-  - 支持自定义数据库ID配置
-- ✅ **智能过滤"不计收支"记录**，只同步有效交易
-- ✅ **用户认证系统**
-  - 用户注册和登录
-  - 密码加密存储
-  - JWT会话管理
-  - 密码找回功能
-- ✅ **多用户支持**
-  - 每个用户独立的数据隔离
-  - 个性化的Notion配置
-  - 用户级别的文件管理
-- ✅ **管理后台**
-  - 用户管理（查看、编辑、删除用户）
-  - 系统设置管理
-  - 审计日志查看
-  - 角色权限控制（管理员/普通用户）
-- ✅ **账单历史记录**
-  - 完整的导入操作记录
-  - 详细的导入状态和结果
-  - 按用户和时间过滤
-- ✅ Web服务界面，方便管理和操作
-- ✅ 实时日志记录和查看
-- ✅ 支持文件管理，可查看和删除已上传的账单文件
-- ✅ 服务状态监控
+
+#### 1. 多平台账单导入
+- 支持支付宝、微信支付、银联账单一键导入
+- 自动识别账单格式和编码
+- 智能检测平台，无需手动选择
+
+#### 2. 智能分类统计
+- 根据收/支自动路由到不同数据库
+- 智能过滤"不计收支"记录
+- 自动识别交易类别
+
+#### 3. 财务复盘分析
+- 月度、季度、年度财务复盘报告
+- 账单导入后智能提示生成复盘
+- 自定义周期复盘生成
+- 复盘数据预览功能
+- 洞察消费趋势，优化财务决策
+
+#### 4. 数据安全可靠
+- 多租户数据隔离
+- 企业级安全标准
+- JWT会话管理
+- 密码加密存储
+
+#### 5. 导入历史追踪
+- 完整的导入记录和历史查询
+- 详细的导入状态和结果
+- 按用户和时间过滤
+
+#### 6. 多用户支持
+- 多租户架构
+- 每个用户数据独立隔离
+- 个性化的Notion配置
+- 支持团队协作
 
 ### Web服务功能
 
@@ -67,6 +68,14 @@
 - 👤 管理个人信息
 - 📊 查看使用统计
 - ✓ **分步验证Notion配置** - 实时显示验证进度，快速定位问题
+- 📊 **复盘配置** - 配置复盘数据库和模板
+
+#### 账单复盘
+- 📅 快速生成月度/季度/年度复盘
+- 🔧 自定义生成指定周期复盘
+- 👁️ 复盘数据预览
+- 📊 复盘配置管理
+- 🔗 直接跳转到Notion查看复盘
 
 #### 管理后台（仅管理员）
 - 👥 用户管理
@@ -208,6 +217,20 @@ python3 main.py --file <bill-file-path> [--platform <alipay/wechat/unionpay>]
 3. 修改密码
 4. 查看个人使用统计
 
+#### 账单复盘
+1. 访问 `http://0.0.0.0:8000/review`
+2. 快速生成：点击月度/季度/年度卡片一键生成
+3. 自定义生成：选择复盘类型和周期，点击生成
+4. 预览数据：生成前可预览即将创建的复盘内容
+5. 查看复盘：生成后点击链接跳转到Notion查看
+
+#### 复盘配置
+1. 进入设置页面 → 复盘配置
+2. 填写月度/季度/年度复盘数据库ID
+3. （可选）填写复盘模板ID
+4. 点击验证配置确认正确
+5. 保存配置
+
 #### 管理后台（仅管理员）
 1. 访问 `http://0.0.0.0:8000/admin/users`
 2. 管理用户账号
@@ -252,6 +275,7 @@ python3 main.py --schedule
 ├── notion_api.py              # Notion API客户端
 ├── utils.py                   # 共享工具（日志、编码检测）
 ├── scheduler.py               # 定时任务调度器
+├── review_service.py          # 复盘服务
 ├── auth.py                    # 认证工具（密码、JWT）
 ├── database.py                # 数据库连接管理
 ├── models.py                  # SQLAlchemy ORM模型
@@ -271,6 +295,7 @@ python3 main.py --schedule
 │   ├── test_import.py
 │   ├── test_multi_tenant.py
 │   ├── test_notion_connection.py
+│   ├── test_review_service.py # 复盘服务测试
 │   └── test_wechat_parser.py
 ├── web_service/               # Web服务目录
 │   ├── __init__.py            # Web服务包
@@ -281,6 +306,7 @@ python3 main.py --schedule
 │   │   ├── auth.py            # 认证路由
 │   │   ├── users.py           # 用户路由
 │   │   ├── bills.py           # 账单历史路由
+│   │   ├── review.py          # 复盘功能路由
 │   │   └── admin.py           # 管理后台路由
 │   ├── services/              # 业务服务
 │   │   ├── __init__.py        # 服务入口
@@ -288,13 +314,25 @@ python3 main.py --schedule
 │   │   └── user_file_service.py  # 用户文件服务
 │   ├── static/                # 静态资源
 │   │   ├── css/               # CSS样式
+│   │   │   ├── style.css
+│   │   │   ├── variables.css  # CSS变量系统
+│   │   │   ├── components.css # 组件库
+│   │   │   ├── review.css     # 复盘页面样式
+│   │   │   └── icons.css      # 图标系统
 │   │   └── js/                # JavaScript文件
+│   │       ├── auth.js
+│   │       ├── navbar.js
+│   │       ├── settings.js
+│   │       ├── review.js      # 复盘页面逻辑
+│   │       ├── toast.js       # Toast通知系统
+│   │       └── form-validator.js  # 表单验证器
 │   ├── templates/             # HTML模板
 │   │   ├── index.html         # 首页
 │   │   ├── login.html         # 登录页面
 │   │   ├── register.html      # 注册页面
 │   │   ├── settings.html      # 设置页面
 │   │   ├── history.html       # 账单历史页面
+│   │   ├── review.html        # 复盘管理页面
 │   │   ├── bill_management.html    # 账单管理
 │   │   ├── service_management.html # 服务管理
 │   │   ├── log_management.html     # 日志管理
@@ -305,6 +343,9 @@ python3 main.py --schedule
 │   ├── uploads/               # 上传文件存储目录
 │   └── logs/                  # Web服务日志目录
 ├── data/                      # 数据目录（.gitignore）
+├── docs/                      # 文档目录
+│   ├── prompt/                # 提示词文档
+│   └── *.md                   # 项目文档
 ├── .env                       # 环境变量配置
 ├── .env.example               # 环境变量示例
 ├── .gitignore                 # Git忽略文件
@@ -322,6 +363,12 @@ python3 main.py --schedule
 | NOTION_API_KEY | Notion API密钥（全局默认值） | secret_xxxxxxxxxxxx | 否 |
 | NOTION_INCOME_DATABASE_ID | 收入数据库ID（全局默认值） | 1234567890abcdef | 否 |
 | NOTION_EXPENSE_DATABASE_ID | 支出数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| NOTION_MONTHLY_REVIEW_DB | 月度复盘数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| NOTION_QUARTERLY_REVIEW_DB | 季度复盘数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| NOTION_YEARLY_REVIEW_DB | 年度复盘数据库ID（全局默认值） | 1234567890abcdef | 否 |
+| NOTION_MONTHLY_TEMPLATE_ID | 月度复盘模板ID（可选） | 1234567890abcdef | 否 |
+| NOTION_QUARTERLY_TEMPLATE_ID | 季度复盘模板ID（可选） | 1234567890abcdef | 否 |
+| NOTION_YEARLY_TEMPLATE_ID | 年度复盘模板ID（可选） | 1234567890abcdef | 否 |
 | DATABASE_URL | 数据库连接字符串 | sqlite:///./data/users.db | 否 |
 | SECRET_KEY | JWT密钥，用于加密会话token | your-secret-key-here | 是 |
 | ALGORITHM | JWT加密算法 | HS256 | 否 |
@@ -352,6 +399,21 @@ python3 main.py --schedule
 
 #### 支出数据库
 与收入数据库属性相同，用于存储支出记录
+
+#### 复盘数据库（可选）
+用于存储账单复盘报告，需要以下属性：
+- **Name** (标题) - 复盘报告名称（如"2024-01 账单复盘"）
+- **Period** (富文本) - 复盘周期（如"2024-01"）
+- **Total Income** (数字) - 总收入
+- **Total Expense** (数字) - 总支出
+- **Net Balance** (数字) - 净收入
+- **Transaction Count** (数字) - 交易笔数
+- **Start Date** (日期) - 开始日期
+- **End Date** (日期) - 结束日期
+- **Summary** (富文本) - 汇总信息
+- **Categories** (富文本) - 分类统计
+
+支持月度、季度、年度三种复盘类型，可分别配置不同的数据库
 
 ## 核心实现
 
@@ -458,6 +520,20 @@ MIT License
 欢迎提交Issue和Pull Request！
 
 ## 更新日志
+
+- **v2.2.0** (2026-02-03)
+  - ✨ 新增账单复盘功能
+    - 支持月度、季度、年度三种复盘类型
+    - 账单导入后智能提示生成复盘
+    - 自定义生成指定周期的复盘
+    - 数据预览功能
+    - 复盘配置管理（设置页面）
+    - 独立的复盘管理页面
+  - 🔧 注册复盘API路由
+  - 📝 补充复盘服务单元测试
+  - 📝 为关键JavaScript函数添加JSDoc注释
+  - 📝 完善项目文档和提示词
+  - 📁 新增docs目录，存储阶段性文档
 
 - **v2.1.0** (2026-01-19)
   - ✨ 新增分步验证Notion配置

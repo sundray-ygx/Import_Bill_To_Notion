@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账单复盘 - Notion账单导入服务</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- 设计系统 -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/review.css">
+    <!-- 资源预加载 -->
+    <link rel="preload" href="/static/js/toast.js" as="script">
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <main class="review-main">
+        <div class="review-container">
+            <!-- 页面标题 -->
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 4L6 12V24C6 35.0457 14.1597 44.8617 24 47C33.8403 44.8617 42 35.0457 42 24V12L24 4Z" stroke="url(#gradient-icon)" stroke-width="3" fill="none"/>
+                            <path d="M24 14L14 18V26C14 33.8 18.9 40.6 24 42C29.1 40.6 34 33.8 34 26V18L24 14Z" stroke="url(#gradient-icon)" stroke-width="2" fill="none"/>
+                            <circle cx="24" cy="28" r="6" stroke="url(#gradient-icon)" stroke-width="2" fill="none"/>
+                            <defs>
+                                <linearGradient id="gradient-icon" x1="6" y1="4" x2="42" y2="47" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h1>账单复盘</h1>
+                        <p class="page-description">智能分析您的财务数据，生成专业的复盘报告</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Notion 连接状态仪表板 -->
+            <div class="connection-dashboard" id="connection-dashboard">
+                <!-- 左侧：核心状态面板 -->
+                <div class="status-core-panel">
+                    <div class="status-indicator-wrapper" id="status-indicator-wrapper">
+                        <div class="status-ring">
+                            <svg class="status-pulse" id="status-pulse" width="80" height="80" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="36" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                                <circle class="pulse-ring" cx="40" cy="40" r="36" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <circle class="status-dot" cx="40" cy="40" r="8" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="status-core-info">
+                        <h2 class="status-core-title">Notion 连接</h2>
+                        <p class="status-core-status" id="status-core-status">检查中...</p>
+                    </div>
+                </div>
+
+                <!-- 中间：数据库配置网格 -->
+                <div class="databases-grid">
+                    <div class="database-section">
+                        <div class="database-section-header">
+                            <svg class="database-section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            <h3 class="database-section-title">账单数据库</h3>
+                        </div>
+                        <div class="database-items" id="income-database-status">
+                            <div class="database-item">
+                                <span class="database-label">收入数据库</span>
+                                <span class="database-status-badge checking">检查中...</span>
+                            </div>
+                            <div class="database-item">
+                                <span class="database-label">支出数据库</span>
+                                <span class="database-status-badge checking">检查中...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="database-section">
+                        <div class="database-section-header">
+                            <svg class="database-section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v18h18"/>
+                                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                            </svg>
+                            <h3 class="database-section-title">复盘数据库</h3>
+                        </div>
+                        <div class="database-items" id="review-databases-status">
+                            <div class="database-item">
+                                <span class="database-label">月度复盘</span>
+                                <span class="database-status-badge checking">检查中...</span>
+                            </div>
+                            <div class="database-item">
+                                <span class="database-label">季度复盘</span>
+                                <span class="database-status-badge checking">检查中...</span>
+                            </div>
+                            <div class="database-item">
+                                <span class="database-label">年度复盘</span>
+                                <span class="database-status-badge checking">检查中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：操作面板 -->
+                <div class="status-actions-panel">
+                    <div class="action-card">
+                        <div class="action-info">
+                            <svg class="action-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6"/>
+                                <path d="M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            <div class="action-text">
+                                <span class="action-title">连接测试</span>
+                                <span class="action-desc">验证 Notion API</span>
+                            </div>
+                        </div>
+                        <button class="action-btn" id="test-connection-btn" disabled>
+                            <span>测试</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 复盘创建区域 -->
+            <div class="create-review-section">
+                <div class="section-header">
+                    <h2 class="section-title">创建复盘报告</h2>
+                    <p class="section-subtitle">选择时间周期和复盘类型，智能生成分析报告</p>
+                </div>
+
+                <div class="create-form-card">
+                    <div class="form-grid">
+                        <!-- 复盘类型 -->
+                        <div class="form-field-group">
+                            <label class="form-label">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    <path d="M5 7h6M5 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                复盘类型
+                                <span class="required">*</span>
+                            </label>
+                            <div class="type-selector" id="review-type-selector">
+                                <button class="type-option active" data-type="monthly">
+                                    <svg class="type-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    <span class="type-name">月度复盘</span>
+                                </button>
+                                <button class="type-option" data-type="quarterly">
+                                    <svg class="type-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 3v18h18"/>
+                                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                                    </svg>
+                                    <span class="type-name">季度复盘</span>
+                                </button>
+                                <button class="type-option" data-type="yearly">
+                                    <svg class="type-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="20" x2="12" y2="10"/>
+                                        <line x1="18" y1="20" x2="18" y2="4"/>
+                                        <line x1="6" y1="20" x2="6" y2="16"/>
+                                    </svg>
+                                    <span class="type-name">年度复盘</span>
+                                </button>
+                                <button class="type-option" data-type="custom">
+                                    <svg class="type-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    </svg>
+                                    <span class="type-name">自定义</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="review-type" value="monthly">
+                        </div>
+
+                        <!-- 复盘标题和状态 - 同一行 -->
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label class="form-label" for="review-title">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                        <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                                    </svg>
+                                    复盘标题
+                                    <span class="optional">(可选)</span>
+                                </label>
+                                <input type="text" id="review-title" class="form-input" placeholder="留空自动生成">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="review-status">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                        <path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    状态
+                                </label>
+                                <select id="review-status" class="form-select">
+                                    <option value="计划中">计划中</option>
+                                    <option value="进行中">进行中</option>
+                                    <option value="完成">完成</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 日期范围 -->
+                        <div class="form-field-group date-range-group">
+                            <label class="form-label">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <rect x="2" y="4" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    <path d="M5 2v2M11 2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <path d="M2 7h12" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                                时间周期
+                                <span class="required">*</span>
+                            </label>
+                            <div class="date-range-inputs">
+                                <div class="date-field">
+                                    <label class="date-label">开始日期</label>
+                                    <input type="date" id="start-date" class="form-input date-input" required>
+                                </div>
+                                <div class="date-separator">→</div>
+                                <div class="date-field">
+                                    <label class="date-label">结束日期</label>
+                                    <input type="date" id="end-date" class="form-input date-input" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 生成按钮 -->
+                        <div class="form-actions">
+                            <button class="btn-generate" id="generate-preview-btn">
+                                <span class="btn-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </span>
+                                <span class="btn-text">生成预览</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 进度条模态框 -->
+            <div class="progress-modal" id="progress-modal" style="display: none;">
+                <div class="progress-backdrop"></div>
+                <div class="progress-container">
+                    <div class="progress-content">
+                        <div class="progress-spinner">
+                            <svg class="spinner" width="48" height="48" viewBox="0 0 48 48">
+                                <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3" opacity="0.2"/>
+                                <circle cx="24" cy="24" r="20" fill="none" stroke="url(#spinner-gradient)" stroke-width="3" stroke-dasharray="125.6" stroke-dashoffset="31.4">
+                                    <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1.5s" repeatCount="indefinite"/>
+                                </circle>
+                                <defs>
+                                    <linearGradient id="spinner-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#667eea"/>
+                                        <stop offset="100%" stop-color="#764ba2"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h3 class="progress-title" id="progress-title">正在生成预览...</h3>
+                        <p class="progress-description" id="progress-description">请稍候，正在处理您的数据</p>
+
+                        <!-- 进度步骤 -->
+                        <div class="progress-steps">
+                            <div class="progress-step" id="step-fetch">
+                                <div class="step-indicator">
+                                    <div class="step-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="9" cy="9" r="7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-title">查询交易数据</span>
+                                    <span class="step-status">等待中...</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-step" id="step-calculate">
+                                <div class="step-indicator">
+                                    <div class="step-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="2" y="2" width="14" height="14" rx="2"/>
+                                            <path d="M6 9h6M6 6h6M6 12h3"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-title">计算统计分析</span>
+                                    <span class="step-status">等待中...</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-step" id="step-generate">
+                                <div class="step-indicator">
+                                    <div class="step-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-title">生成复盘内容</span>
+                                    <span class="step-status">等待中...</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-step" id="step-complete">
+                                <div class="step-indicator">
+                                    <div class="step-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-title">完成</span>
+                                    <span class="step-status">等待中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 预览编辑区域 -->
+            <div class="preview-section" id="preview-section" style="display: none;">
+                <div class="preview-header">
+                    <div class="preview-header-left">
+                        <h2 class="preview-title">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            复盘预览
+                        </h2>
+                        <p class="preview-subtitle">您可以在提交前编辑以下内容</p>
+                    </div>
+                    <button class="btn-close-preview" id="close-preview-btn">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="1" y1="1" x2="17" y2="17"/>
+                            <line x1="17" y1="1" x2="1" y2="17"/>
+                        </svg>
+                        关闭预览
+                    </button>
+                </div>
+
+                <div class="preview-layout">
+                    <!-- 左侧：属性编辑面板 -->
+                    <div class="attributes-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">页面属性</h3>
+                            <span class="panel-badge">可编辑</span>
+                        </div>
+
+                        <div class="attributes-list">
+                            <!-- 基本属性 -->
+                            <div class="attributes-section">
+                                <div class="attributes-section-title">基本信息</div>
+
+                                <div class="attribute-group">
+                                    <label class="attribute-label">标题 *</label>
+                                    <input type="text" id="attr-title" class="attribute-input" placeholder="复盘报告标题">
+                                </div>
+
+                                <div class="attribute-row">
+                                    <div class="attribute-group half">
+                                        <label class="attribute-label">开始日期 *</label>
+                                        <input type="date" id="attr-start-date" class="attribute-input">
+                                    </div>
+                                    <div class="attribute-group half">
+                                        <label class="attribute-label">结束日期 *</label>
+                                        <input type="date" id="attr-end-date" class="attribute-input">
+                                    </div>
+                                </div>
+
+                                <div class="attribute-group">
+                                    <label class="attribute-label">状态</label>
+                                    <select id="attr-status" class="attribute-select">
+                                        <option value="计划中">计划中</option>
+                                        <option value="进行中">进行中</option>
+                                        <option value="完成">完成</option>
+                                    </select>
+                                </div>
+
+                                <div class="attribute-group">
+                                    <label class="attribute-label">周期 (Period)</label>
+                                    <input type="text" id="attr-period" class="attribute-input" placeholder="如：2026-01">
+                                </div>
+                            </div>
+
+                            <!-- 财务数据卡片 -->
+                            <div class="attributes-section">
+                                <div class="attributes-section-title">财务数据</div>
+
+                                <div class="finance-summary">
+                                    <div class="finance-item income">
+                                        <div class="finance-label">总收入</div>
+                                        <div class="finance-value">¥<span id="attr-total-income">0.00</span></div>
+                                    </div>
+
+                                    <div class="finance-item expense">
+                                        <div class="finance-label">总支出</div>
+                                        <div class="finance-value">¥<span id="attr-total-expense">0.00</span></div>
+                                    </div>
+
+                                    <div class="finance-item" id="net-balance-item">
+                                        <div class="finance-label">净收益</div>
+                                        <div class="finance-value">¥<span id="attr-net-balance">0.00</span></div>
+                                    </div>
+
+                                    <div class="finance-item transactions">
+                                        <div class="finance-label">交易笔数</div>
+                                        <div class="finance-value"><span id="attr-transaction-count">0</span> 笔</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 可选属性 -->
+                            <div class="attributes-section">
+                                <div class="attributes-section-title">附加信息（可选）</div>
+
+                                <div class="attribute-group">
+                                    <label class="attribute-label">摘要 (Summary)</label>
+                                    <textarea id="attr-summary" class="attribute-textarea" rows="2" placeholder="复盘摘要..."></textarea>
+                                </div>
+
+                                <div class="attribute-group">
+                                    <label class="attribute-label">分类 (Categories)</label>
+                                    <textarea id="attr-categories" class="attribute-textarea" rows="2" placeholder="分类信息..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：Markdown 编辑器 -->
+                    <div class="markdown-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">复盘内容</h3>
+                            <span class="panel-hint">Markdown 格式</span>
+                        </div>
+                        <div class="markdown-editor-wrapper">
+                            <div class="line-numbers" id="line-numbers"></div>
+                            <textarea id="markdown-editor" class="markdown-editor" spellcheck="false"
+                                placeholder="复盘内容将在此处显示..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-actions">
+                    <button class="btn btn-secondary" id="preview-cancel-btn">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                        </svg>
+                        取消
+                    </button>
+                    <button class="btn btn-success" id="submit-to-notion-btn">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        提交到 Notion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 提交进度模态框 -->
+    <div class="modal" id="submitting-modal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container modal-medium">
+            <div class="submit-progress-header">
+                <div class="submit-progress-title">
+                    <h3>正在提交到 Notion</h3>
+                    <p>正在创建复盘页面，请稍候...</p>
+                </div>
+                <button class="modal-close-btn" id="submit-modal-close-btn" title="关闭（后台继续提交）">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="submit-progress-steps">
+                <div class="progress-step" id="submit-step-validate">
+                    <div class="step-indicator">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">验证数据</div>
+                        <div class="step-status">等待中...</div>
+                    </div>
+                </div>
+                <div class="progress-step" id="submit-step-create">
+                    <div class="step-indicator">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">创建页面</div>
+                        <div class="step-status">等待中...</div>
+                    </div>
+                </div>
+                <div class="progress-step" id="submit-step-content">
+                    <div class="step-indicator">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">添加内容</div>
+                        <div class="step-status">等待中...</div>
+                    </div>
+                </div>
+                <div class="progress-step" id="submit-step-finalize">
+                    <div class="step-indicator">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">完成</div>
+                        <div class="step-status">等待中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功结果模态框 -->
+    <div class="modal" id="success-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container modal-small">
+            <div class="success-content">
+                <svg class="success-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <h3 id="success-title">复盘创建成功！</h3>
+                <p>复盘页面已成功创建到 Notion</p>
+                <div class="success-details" id="success-details"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="success-close-btn">关闭</button>
+                    <button class="btn btn-primary" id="success-view-btn">
+                        在 Notion 中查看
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M6 12.796V3.204L11.481 8 6 12.796zm.659.753 5.48-4.796a1 1 0 0 0 0-1.506L6.66 2.451C6.011 1.885 5 2.345 5 3.204v9.592a1 1 0 0 0 1.659.753z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示容器 -->
+    <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/review.js"></script>
+</body>
+</html>
