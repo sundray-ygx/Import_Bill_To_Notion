@@ -60,14 +60,13 @@ app.mount("/static", StaticFiles(directory=os.path.join(web_service_dir, "static
 templates = Jinja2Templates(directory=os.path.join(web_service_dir, "templates"))
 
 # Routes
-from .routes import upload, auth, users, bills, admin, review, dashboard
+from .routes import upload, auth, users, bills, admin, review
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/user", tags=["User"])
 app.include_router(bills.router, prefix="/api/bills", tags=["Bills"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(upload.router, prefix="/api", tags=["Upload"])
 app.include_router(review.router, prefix="/api/review", tags=["Review"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 
 
 # ==================== 页面鉴权辅助函数 ====================
