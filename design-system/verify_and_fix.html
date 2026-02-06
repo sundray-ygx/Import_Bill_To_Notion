@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI质量验证页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 40px;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .test-section h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .test-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .test-item.pass {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .test-item.fail {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        /* 测试按钮样式 */
+        .test-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .test-btn:hover {
+            background: #f8fafc;
+        }
+
+        .test-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .test-btn.primary:hover {
+            opacity: 0.9;
+        }
+
+        /* 统计卡片 */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .stat-icon svg {
+            width: 32px;
+            height: 32px;
+            color: inherit;
+        }
+
+        .stat-content h3 {
+            font-size: 24px;
+            color: #1a1a2e;
+        }
+
+        .stat-content p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .checklist input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.pass {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .status.fail {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 UI质量验证页面</h1>
+        <p class="subtitle">用于验证SVG图标和CSS样式是否正确加载</p>
+
+        <!-- SVG图标测试 -->
+        <div class="test-section">
+            <h2>1. SVG图标显示测试</h2>
+            <div class="test-grid">
+                <div class="test-item">
+                    <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1); margin: 0 auto 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <p><strong>Users图标</strong></p>
+                    <p style="font-size: 12px; color: #666;">应显示用户组图标</p>
+                </div>
+
+                <div class="test-item">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); margin: 0 auto 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <p><strong>Check图标</strong></p>
+                    <p style="font-size: 12px; color: #666;">应显示勾选图标</p>
+                </div>
+
+                <div class="test-item">
+                    <div class="stat-icon" style="background: rgba(240, 147, 251, 0.1); margin: 0 auto 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M23 6l-9.5 9.5-5-5L1 18"/>
+                            <path d="M17 6h6v6"/>
+                        </svg>
+                    </div>
+                    <p><strong>Trending图标</strong></p>
+                    <p style="font-size: 12px; color: #666;">应显示趋势图标</p>
+                </div>
+
+                <div class="test-item">
+                    <div class="stat-icon" style="background: rgba(250, 112, 154, 0.1); margin: 0 auto 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 20V10"/>
+                            <path d="M18 20V4"/>
+                            <path d="M6 20v-4"/>
+                        </svg>
+                    </div>
+                    <p><strong>Chart图标</strong></p>
+                    <p style="font-size: 12px; color: #666;">应显示图表图标</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 按钮测试 -->
+        <div class="test-section">
+            <h2>2. 按钮图标测试</h2>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <button class="test-btn primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    添加用户
+                </button>
+
+                <button class="test-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    编辑
+                </button>
+
+                <button class="test-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    重置密码
+                </button>
+
+                <button class="test-btn" style="color: #ef4444; border-color: #ef4444;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    删除
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片测试 -->
+        <div class="test-section">
+            <h2>3. 统计卡片布局测试</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>128</h3>
+                        <p>总用户数</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>96</h3>
+                        <p>活跃用户</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(240, 147, 251, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M23 6l-9.5 9.5-5-5L1 18"/>
+                            <path d="M17 6h6v6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>+12</h3>
+                        <p>今日新增</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(250, 112, 154, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 20V10"/>
+                            <path d="M18 20V4"/>
+                            <path d="M6 20v-4"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1,280</h3>
+                        <p>总上传数</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 验证清单 -->
+        <div class="test-section">
+            <h2>4. 质量验证清单</h2>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" id="check1">
+                    <label for="check1">所有SVG图标正确显示</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="check2">
+                    <label for="check2">图标在按钮中正确对齐</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="check3">
+                    <label for="check3">统计卡片布局整齐无挤压</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="check4">
+                    <label for="check4">按钮悬停效果正常</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="check5">
+                    <label for="check5">页面在不同屏幕尺寸下正常</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="check6">
+                    <label for="check6">浏览器控制台无CSS错误</label>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 诊断信息 -->
+        <div class="test-section">
+            <h2>5. 诊断信息</h2>
+            <div id="diagnostics">
+                <p><strong>浏览器:</strong> <span id="browser"></span></p>
+                <p><strong>屏幕尺寸:</strong> <span id="screen"></span></p>
+                <p><strong>窗口尺寸:</strong> <span id="window"></span></p>
+                <p><strong>设备像素比:</strong> <span id="dpr"></span></p>
+            </div>
+        </div>
+
+        <!-- 快速修复按钮 -->
+        <div class="test-section">
+            <h2>6. 快速操作</h2>
+            <div style="display: flex; gap: 12px;">
+                <button class="test-btn" onclick="location.reload()">
+                    🔄 刷新页面
+                </button>
+                <button class="test-btn" onclick="clearCache()">
+                    🗑️ 清除缓存并刷新
+                </button>
+                <button class="test-btn" onclick="checkConsole()">
+                    🔍 检查控制台
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示诊断信息
+        document.getElementById('browser').textContent = navigator.userAgent;
+        document.getElementById('screen').textContent = `${screen.width} x ${screen.height}`;
+        document.getElementById('window').textContent = `${window.innerWidth} x ${window.innerHeight}`;
+        document.getElementById('dpr').textContent = window.devicePixelRatio;
+
+        // 清除缓存
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+            location.reload(true);
+        }
+
+        // 检查控制台
+        function checkConsole() {
+            alert('请按F12打开开发者工具，查看Console标签是否有CSS错误信息。\\n\\n常见问题：\\n1. CSS变量未定义 - 检查variables.css是否加载\\n2. SVG图标不显示 - 检查icons.css是否加载\\n3. 布局错位 - 检查admin.css是否加载');
+        }
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', () => {
+            document.getElementById('window').textContent = `${window.innerWidth} x ${window.innerHeight}`;
+        });
+    </script>
+</body>
+</html>
