@@ -218,3 +218,14 @@ def parse_bill_raw(file_path: str, platform: Optional[str] = None, max_rows: int
     except Exception as e:
         logger.error(f"Parse raw failed: {e}", exc_info=True)
         return None
+
+def generate_review(review_type, year, month=None, quarter=None, user_id=None):
+    """Generate bill review report"""
+    from review_service import ReviewService
+    service = ReviewService(user_id)
+    if review_type == "monthly":
+        return service.generate_monthly_review(year, month)
+    elif review_type == "quarterly":
+        return service.generate_quarterly_review(year, quarter)
+    else:
+        return service.generate_yearly_review(year)

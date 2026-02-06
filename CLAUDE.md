@@ -13,6 +13,10 @@ A Python-based bill import service with multi-user authentication and management
 - **Bill History**: Track all import operations with detailed status
 - **Personal Settings**: Customizable Notion configuration per user
 - **Role-Based Access**: Admin and regular user roles with different permissions
+- **Bill Review**: Generate monthly, quarterly, and yearly financial reviews
+  - Automatic review suggestions after bill import
+  - Customizable review generation with preview
+  - Review configuration management per user
 
 ## Development Commands
 
@@ -119,6 +123,22 @@ The import flow follows this path: `file -> parser -> notion format -> NotionCli
     - Store import status and results
     - Per-user bill history with filtering
 
+11. **Bill Review System** (`review_service.py`, `web_service/routes/review.py`)
+    - `review_service.py` - Core review generation service
+      - `ReviewService` class manages review creation
+      - `generate_monthly_review(year, month)` - Generate monthly financial review
+      - `generate_quarterly_review(year, quarter)` - Generate quarterly financial review
+      - `generate_yearly_review(year)` - Generate yearly financial review
+      - `calculate_summary(transactions)` - Calculate income/expense summary
+      - `aggregate_by_category(transactions)` - Aggregate by category
+      - Supports both single-user and multi-tenant modes
+    - `web_service/routes/review.py` - Review API endpoints
+      - `POST /api/review/generate` - Generate a review report
+      - `GET /api/review/preview` - Preview review data without creating
+      - `GET /api/review/config` - Get review configuration
+      - `POST /api/review/config` - Update review configuration
+    - Frontend: `web_service/templates/review.html`, `static/js/review.js`, `static/css/review.css`
+
 ### Web Service Structure
 
 ```
@@ -130,6 +150,7 @@ web_service/
 │   ├── auth.py          # Authentication endpoints (login, register)
 │   ├── users.py         # User profile and settings endpoints
 │   ├── bills.py         # Bill history and management endpoints
+│   ├── review.py        # Bill review endpoints
 │   └── admin.py         # Admin panel endpoints (user management, audit logs)
 ├── services/
 │   ├── __init__.py      # Service package initialization
@@ -140,8 +161,9 @@ web_service/
 │   ├── login.html       # Login page
 │   ├── register.html    # Registration page
 │   ├── setup.html       # Initial setup page
-│   ├── settings.html    # User settings page
+│   ├── settings.html    # User settings page (includes review config)
 │   ├── history.html     # Bill history page
+│   ├── review.html      # Bill review management page
 │   ├── bill_management.html   # Bill upload and management
 │   ├── service_management.html # Service status
 │   ├── log_management.html     # Log viewer
@@ -157,11 +179,13 @@ web_service/
 │   │   ├── auth.css         # Authentication pages
 │   │   ├── admin.css        # Admin panel
 │   │   ├── settings.css     # Settings page
-│   │   └── history.css      # History page
+│   │   ├── history.css      # History page
+│   │   └── review.css       # Review page
 │   └── js/
 │       ├── auth.js          # Authentication logic
 │       ├── settings.js      # Settings page logic
 │       ├── history.js       # History page logic
+│       ├── review.js        # Review page logic
 │       └── admin-*.js       # Admin panel scripts
 ├── uploads/            # User-uploaded bill files
 └── logs/               # Web service logs
@@ -190,6 +214,22 @@ Both income and expense databases require these properties:
 - **Transaction Number** (rich_text) - Transaction ID
 - **Payment Method** (select) - Payment method
 - **From** (select) - Payment platform (Alipay/WeChat/UnionPay)
+
+### Review Database Schema Requirements (Optional)
+
+Review databases store financial review reports. Support monthly, quarterly, and yearly reviews with separate databases:
+
+Required properties:
+- **Name** (title) - Review report name (e.g., "2024-01 账单复盘")
+- **Period** (rich_text) - Review period (e.g., "2024-01", "2024-Q1", "2024")
+- **Total Income** (number) - Total income amount
+- **Total Expense** (number) - Total expense amount
+- **Net Balance** (number) - Net balance (income - expense)
+- **Transaction Count** (number) - Number of transactions
+- **Start Date** (date) - Period start date
+- **End Date** (date) - Period end date
+- **Summary** (rich_text) - Summary information
+- **Categories** (rich_text) - Category breakdown
 
 ### Key Implementation Details
 
@@ -223,12 +263,20 @@ DEFAULT_BILL_PLATFORM=alipay
 SCHEDULER_ENABLED=false
 SCHEDULER_CRON="0 0 1 * *"  # Monthly on 1st at 00:00
 
+# Review Configuration (Optional)
+NOTION_MONTHLY_REVIEW_DB=monthly_review_db_id
+NOTION_QUARTERLY_REVIEW_DB=quarterly_review_db_id
+NOTION_YEARLY_REVIEW_DB=yearly_review_db_id
+NOTION_MONTHLY_TEMPLATE_ID=monthly_template_id
+NOTION_QUARTERLY_TEMPLATE_ID=quarterly_template_id
+NOTION_YEARLY_TEMPLATE_ID=yearly_template_id
+
 # Log Configuration
 LOG_LEVEL=INFO
 
 # Application Configuration
 APP_NAME=Notion Bill Importer
-APP_VERSION=2.0.0
+APP_VERSION=2.2.0
 ```
 
 ## Code Style Guidelines
@@ -339,6 +387,13 @@ from parsers.base_parser import BaseBillParser
 - Verify platform auto-detection
 - Test import status tracking
 - Validate file list and delete operations
+
+### Review Testing
+- Test review generation for different periods (monthly, quarterly, yearly)
+- Verify review data preview functionality
+- Test review configuration update
+- Validate review summary calculations
+- Test category aggregation logic
 
 ## Common Tasks
 

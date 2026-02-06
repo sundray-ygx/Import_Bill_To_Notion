@@ -38,7 +38,12 @@
                     <div class="form-section">
                         <div class="form-section-header">
                             <h2 class="form-section-title">
-                                <span class="section-icon">👤</span>
+                                <span class="section-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </span>
                                 <span>基本信息</span>
                             </h2>
                             <p class="form-section-desc">填写用户的基本账户信息</p>
@@ -167,7 +172,11 @@
                             取消
                         </button>
                         <button type="submit" class="btn btn-primary" id="submit-btn">
-                            <span class="btn-icon">💾</span>
+                            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
                             <span class="btn-text">{% if mode == 'edit' %}保存更改{% else %}创建用户{% endif %}</span>
                         </button>
                     </div>

@@ -10,5 +10,8 @@ venv/
 logs/
 *.log
 error.txt
-data/
+data/*
 web_service/uploads/
+monthly-review-2026-01.zip
+.claude/
+.specify/
