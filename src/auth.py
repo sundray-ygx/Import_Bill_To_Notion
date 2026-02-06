@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Tuple
 from jose import JWTError, jwt
 import bcrypt
-from config import Config
+from src.config import Config
 import secrets
 import logging
 
@@ -294,7 +294,7 @@ class SessionManager:
             撤销的会话数量
         """
         try:
-            from models import UserSession
+            from src.models import UserSession
 
             count = db.query(UserSession).filter(
                 UserSession.user_id == user_id,
@@ -321,7 +321,7 @@ class SessionManager:
             删除的记录数
         """
         try:
-            from models import UserSession
+            from src.models import UserSession
             from sqlalchemy import and_
 
             cutoff_date = datetime.utcnow() - timedelta(days=days)

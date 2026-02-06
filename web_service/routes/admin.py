@@ -1,4 +1,7 @@
 """Admin routes for user management, system settings, and audit logs."""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import os
 import re
@@ -8,15 +11,15 @@ from sqlalchemy import func, or_
 from typing import Optional, List
 from datetime import datetime, timedelta
 from pydantic import BaseModel
-from database import get_db
-from models import User, UserUpload, ImportHistory, AuditLog
-from schemas import (
+from src.services.database import get_db
+from src.models import User, UserUpload, ImportHistory, AuditLog
+from src.schemas import (
     AdminUserCreate, AdminUserUpdate, AdminUserListResponse, UserResponse,
     SystemStatsResponse, AuditLogResponse, AuditLogListResponse,
     SystemSettingsResponse, SystemSettingsUpdate, MessageResponse
 )
-from auth import get_password_hash
-from dependencies import get_current_superuser, get_client_ip, get_user_agent
+from src.auth import get_password_hash
+from src.services.dependencies import get_current_superuser, get_client_ip, get_user_agent
 import logging
 import json
 
@@ -264,7 +267,7 @@ async def reset_user_password(
     db.commit()
 
     # 撤销用户所有会话
-    from auth import SessionManager
+    from src.auth import SessionManager
     SessionManager.revoke_all_user_sessions(user_id, db)
 
     # 记录审计日志
@@ -306,7 +309,7 @@ async def get_user_detail(
 
     # 获取Notion配置状态
     notion_configured = False
-    from models import UserNotionConfig
+    from src.models import UserNotionConfig
     notion_config = db.query(UserNotionConfig).filter(UserNotionConfig.user_id == user_id).first()
     if notion_config:
         notion_configured = True
@@ -428,7 +431,7 @@ async def get_system_settings(
     db: Session = Depends(get_db)
 ):
     """获取系统设置（超级管理员）。"""
-    from models import SystemSettings
+    from src.models import SystemSettings
 
     settings = {
         "registration_enabled": True,
@@ -466,7 +469,7 @@ async def update_system_settings(
     db: Session = Depends(get_db)
 ):
     """更新系统设置（超级管理员）。"""
-    from models import SystemSettings
+    from src.models import SystemSettings
 
     # 更新设置
     for key, value in settings_update.dict(exclude_unset=True).items():

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """
 测试代码完整性，确保所有模块都能正常导入和初始化
 """
@@ -24,7 +27,7 @@ def test_module_imports():
     
     # 测试配置模块
     try:
-        from config import Config
+        from src.config import Config
         logger.info("✓ config.Config 导入成功")
     except Exception as e:
         logger.error(f"✗ config.Config 导入失败: {e}")
@@ -43,7 +46,7 @@ def test_module_imports():
     
     # 测试 Notion API 模块
     try:
-        from notion_api import NotionClient
+        from src.notion_api import NotionClient
         logger.info("✓ notion_api.NotionClient 导入成功")
     except Exception as e:
         logger.error(f"✗ notion_api.NotionClient 导入失败: {e}")
@@ -51,7 +54,7 @@ def test_module_imports():
     
     # 测试 importer 模块
     try:
-        from importer import import_bill
+        from src.importer import import_bill
         logger.info("✓ importer.import_bill 导入成功")
     except Exception as e:
         logger.error(f"✗ importer.import_bill 导入失败: {e}")
@@ -110,7 +113,7 @@ def test_notion_client_initialization():
     logger.info("开始测试 NotionClient 初始化...")
     
     try:
-        from notion_api import NotionClient
+        from src.notion_api import NotionClient
         client = NotionClient()
         logger.info("✓ NotionClient 初始化成功")
         return True

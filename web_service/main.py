@@ -8,8 +8,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
-from utils import setup_logging
-from config import Config
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from src.utils import setup_logging
+from src.config import Config
 
 
 # Setup
@@ -31,7 +33,7 @@ logging.getLogger('watchfiles.main').setLevel(logging.WARNING)
 # 初始化数据库（多租户模式）
 if Config.is_multi_tenant_mode():
     try:
-        from database import init_db
+        from src.services.database import init_db
         init_db()
         logger.info(f"Multi-tenant mode: Database initialized at {Config.DATABASE_URL}")
     except Exception as e:
@@ -103,7 +105,7 @@ def verify_page_auth(request: Request) -> Tuple[bool, Optional[dict]]:
         return False, None
 
     try:
-        from auth import verify_access_token
+        from src.auth import verify_access_token
         payload = verify_access_token(token)
         if payload:
             return True, payload

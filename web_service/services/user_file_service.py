@@ -1,4 +1,7 @@
 """User file service for multi-tenant file management."""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import os
 import shutil
@@ -6,7 +9,7 @@ import logging
 from datetime import datetime
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -252,7 +255,7 @@ class UserFileService:
             return 0
 
         try:
-            from models import UserUpload
+            from src.models import UserUpload
             cutoff_date = datetime.now() - timedelta(days=days)
 
             # 查询过期上传记录

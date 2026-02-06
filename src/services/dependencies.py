@@ -4,9 +4,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional, Tuple
-from database import get_db
-from models import User, UserSession
-from auth import verify_access_token, LoginSecurity
+from src.services.database import get_db
+from src.models import User, UserSession
+from src.auth import verify_access_token, LoginSecurity
 import logging
 
 logger = logging.getLogger(__name__)
@@ -235,7 +235,7 @@ def get_valid_session(
         )
 
     # 检查是否过期
-    from auth import SessionManager
+    from src.auth import SessionManager
     if not SessionManager.is_session_valid(session.expires_at):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -255,7 +255,7 @@ def require_multi_tenant():
     Raises:
         HTTPException: 单用户模式下抛出403错误
     """
-    from config import Config
+    from src.config import Config
 
     if Config.is_single_user_mode():
         raise HTTPException(
@@ -282,7 +282,7 @@ def require_notion_configured(
     Raises:
         HTTPException: 未配置Notion时抛出400错误
     """
-    from models import UserNotionConfig
+    from src.models import UserNotionConfig
 
     config = db.query(UserNotionConfig).filter(
         UserNotionConfig.user_id == current_user.id

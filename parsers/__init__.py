@@ -1,5 +1,9 @@
 """Parser factory with auto-detection."""
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from .base_parser import BaseBillParser
 from .alipay_parser import AlipayParser
 from .wechat_parser import WeChatParser
@@ -51,7 +55,7 @@ def get_parser(file_path):
             return None
     else:
         # For CSV/TXT files, use the original method
-        from utils import read_file_lines
+        from src.utils import read_file_lines
         lines = read_file_lines(file_path, 20)
         if not lines:
             logger.error(f"Cannot read file: {file_path}")

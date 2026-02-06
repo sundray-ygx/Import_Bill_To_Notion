@@ -1,4 +1,7 @@
 """Upload and bill management routes."""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -19,7 +22,7 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 
-from importer import import_bill
+from src.importer import import_bill
 
 
 router = APIRouter()

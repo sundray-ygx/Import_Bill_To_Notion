@@ -1,4 +1,7 @@
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 Multi-tenant functionality tests.
 
 测试内容：
@@ -22,9 +25,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import Base, User, UserSession, UserNotionConfig, UserUpload, ImportHistory
-from auth import get_password_hash
-from config import Config
+from src.models import Base, User, UserSession, UserNotionConfig, UserUpload, ImportHistory
+from src.auth import get_password_hash
+from src.config import Config
 
 
 # 测试数据库配置

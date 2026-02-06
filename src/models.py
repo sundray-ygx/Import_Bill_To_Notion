@@ -6,7 +6,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from database import Base
+from src.services.database import Base
 
 
 class User(Base):

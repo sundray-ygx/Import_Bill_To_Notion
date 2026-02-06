@@ -4,9 +4,9 @@ import argparse
 import logging
 import os
 import sys
-from config import Config
-from utils import setup_logging
-from importer import import_bill, generate_review
+from src.config import Config
+from src.utils import setup_logging
+from src.importer import import_bill, generate_review
 
 setup_logging(Config.LOG_LEVEL, "bill_import.log")
 logger = logging.getLogger(__name__)

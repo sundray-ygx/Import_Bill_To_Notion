@@ -32,7 +32,7 @@ def init_db():
     os.makedirs("data", exist_ok=True)
 
     # 导入所有模型以确保表被注册
-    from models import (
+    from src.models import (
         User, UserSession, UserNotionConfig,
         UserUpload, ImportHistory, SystemSettings, AuditLog
     )
@@ -89,7 +89,7 @@ class DBManager:
 
         警告：此操作会删除所有数据！
         """
-        from models import (
+        from src.models import (
             User, UserSession, UserNotionConfig,
             UserUpload, ImportHistory, SystemSettings, AuditLog
         )
@@ -105,7 +105,7 @@ class DBManager:
     @staticmethod
     def get_database_info() -> dict:
         """获取数据库信息。"""
-        from models import (
+        from src.models import (
             User, UserSession, UserNotionConfig,
             UserUpload, ImportHistory, SystemSettings, AuditLog
         )

@@ -2,8 +2,8 @@
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from config import Config
-from importer import import_bill
+from src.config import Config
+from src.importer import import_bill
 import logging
 import os
 import glob

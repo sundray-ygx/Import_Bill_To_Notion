@@ -1,4 +1,7 @@
 """Bill management routes for upload, list, preview, and delete operations."""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from datetime import datetime
 
@@ -10,12 +13,12 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from config import Config
-from database import get_db
-from dependencies import get_current_active_user, get_pagination_params, get_client_ip, get_user_agent
-from importer import import_bill, parse_bill_only, parse_bill_raw
-from models import User, UserUpload, ImportHistory, AuditLog
-from schemas import UploadResponse, FileUploadResponse, FileListResponse, ImportHistoryResponse
+from src.config import Config
+from src.services.database import get_db
+from src.services.dependencies import get_current_active_user, get_pagination_params, get_client_ip, get_user_agent
+from src.importer import import_bill, parse_bill_only, parse_bill_raw
+from src.models import User, UserUpload, ImportHistory, AuditLog
+from src.schemas import UploadResponse, FileUploadResponse, FileListResponse, ImportHistoryResponse
 from web_service.services.user_file_service import UserFileService
 
 logger = logging.getLogger(__name__)

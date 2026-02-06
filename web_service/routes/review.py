@@ -1,4 +1,7 @@
 """
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 复盘功能 API 路由
 提供账单复盘的生成、查询和配置接口
 """
@@ -11,8 +14,8 @@ from dateutil.relativedelta import relativedelta
 import time
 import logging
 
-from dependencies import get_current_user
-from review_service import ReviewService
+from src.services.dependencies import get_current_user
+from src.review_service import ReviewService
 
 
 router = APIRouter()
@@ -160,7 +163,7 @@ async def get_review_config(current_user = Depends(get_current_user)):
 
     返回当前用户的复盘数据库和模板配置
     """
-    from config import Config
+    from src.config import Config
     import os
 
     user_id = current_user.id if hasattr(current_user, 'id') else None
@@ -177,8 +180,8 @@ async def get_review_config(current_user = Depends(get_current_user)):
 
     # 多租户模式：从用户配置获取
     if user_id and Config.is_multi_tenant_mode():
-        from database import get_db_context
-        from models import UserNotionConfig
+        from src.services.database import get_db_context
+        from src.models import UserNotionConfig
 
         with get_db_context() as db:
             user_config = db.query(UserNotionConfig).filter(
@@ -207,15 +210,15 @@ async def update_review_config(
     - 多租户模式：保存到用户配置
     - 单用户模式：更新环境变量（仅限当前进程，需要手动更新 .env 文件持久化）
     """
-    from config import Config
+    from src.config import Config
     import os
 
     user_id = current_user.id if hasattr(current_user, 'id') else None
 
     if user_id and Config.is_multi_tenant_mode():
         # 多租户模式：保存到数据库
-        from database import get_db_context
-        from models import UserNotionConfig
+        from src.services.database import get_db_context
+        from src.models import UserNotionConfig
 
         with get_db_context() as db:
             user_config = db.query(UserNotionConfig).filter(

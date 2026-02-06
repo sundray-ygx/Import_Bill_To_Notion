@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 from dateutil.relativedelta import relativedelta
-from notion_api import NotionClient
+from src.notion_api import NotionClient
 
 
 logger = logging.getLogger(__name__)
@@ -416,7 +416,7 @@ class ReviewService:
         Returns:
             数据库ID，未配置返回None
         """
-        from config import Config
+        from src.config import Config
         import os
 
         # 从环境变量获取
@@ -429,8 +429,8 @@ class ReviewService:
 
         # 从用户配置获取（多租户模式）
         if self.user_id and Config.is_multi_tenant_mode():
-            from database import get_db_context
-            from models import UserNotionConfig
+            from src.services.database import get_db_context
+            from src.models import UserNotionConfig
 
             with get_db_context() as db:
                 config = db.query(UserNotionConfig).filter(
@@ -471,7 +471,7 @@ class ReviewService:
         Returns:
             创建的页面ID，失败返回None
         """
-        from config import Config
+        from src.config import Config
         import os
 
         # 获取复盘数据库ID

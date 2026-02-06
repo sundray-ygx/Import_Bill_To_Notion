@@ -1,4 +1,7 @@
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 API endpoint tests.
 
 测试内容：
@@ -20,9 +23,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from web_service.main import app
-from database import get_db
-from models import Base, User, UserSession
-from auth import get_password_hash, create_access_token, create_refresh_token
+from src.services.database import get_db
+from src.models import Base, User, UserSession
+from src.auth import get_password_hash, create_access_token, create_refresh_token
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 

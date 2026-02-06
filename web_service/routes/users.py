@@ -1,4 +1,7 @@
 """User management routes for profile and Notion configuration."""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from datetime import datetime
 
@@ -9,12 +12,12 @@ from typing import Optional
 
 import logging
 
-from auth import get_password_hash, verify_password, validate_password_strength
-from database import get_db
-from dependencies import get_current_active_user, require_multi_tenant, get_client_ip, get_user_agent
-from models import User, UserNotionConfig, UserUpload, ImportHistory, AuditLog
-from notion_api import NotionClient
-from schemas import (
+from src.auth import get_password_hash, verify_password, validate_password_strength
+from src.services.database import get_db
+from src.services.dependencies import get_current_active_user, require_multi_tenant, get_client_ip, get_user_agent
+from src.models import User, UserNotionConfig, UserUpload, ImportHistory, AuditLog
+from src.notion_api import NotionClient
+from src.schemas import (
     UserUpdate, UserProfileResponse, NotionConfigCreate, NotionConfigUpdate,
     NotionConfigResponse, MessageResponse,
     NotionVerifyStepResponse, NotionVerifyProgressResponse
@@ -535,7 +538,7 @@ async def delete_account(
         db.query(UserNotionConfig).filter(UserNotionConfig.user_id == user_id).delete()
 
         # 5. 删除会话信息（UserSession表）
-        from models import UserSession
+        from src.models import UserSession
         db.query(UserSession).filter(UserSession.user_id == user_id).delete()
 
         # 6. 删除审计日志（AuditLog表）

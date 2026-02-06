@@ -1,7 +1,7 @@
 """Notion API client for bill management."""
 
 from notion_client import Client as NotionApiClient, APIResponseError
-from config import Config
+from src.config import Config
 import logging
 
 
@@ -105,8 +105,8 @@ class NotionClient:
         Raises:
             ValueError: 配置不存在时
         """
-        from database import get_db_context
-        from models import UserNotionConfig
+        from src.services.database import get_db_context
+        from src.models import UserNotionConfig
 
         with get_db_context() as db:
             config = db.query(UserNotionConfig).filter(

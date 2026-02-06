@@ -5,19 +5,22 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict
-from database import get_db
-from models import User, UserSession, AuditLog
-from schemas import (
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+from src.services.database import get_db
+from src.models import User, UserSession, AuditLog
+from src.schemas import (
     UserCreate, UserResponse, TokenResponse, RefreshTokenRequest,
     PasswordChangeRequest, MessageResponse
 )
-from auth import (
+from src.auth import (
     get_password_hash, verify_password,
     create_access_token, create_refresh_token, verify_refresh_token,
     validate_password_strength, LoginSecurity, SessionManager
 )
-from dependencies import get_current_user, get_current_active_user, get_client_ip, get_user_agent
-from config import Config
+from src.services.dependencies import get_current_user, get_current_active_user, get_client_ip, get_user_agent
+from src.config import Config
 from datetime import datetime, timedelta
 import logging
 

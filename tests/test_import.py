@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """
 测试微信支付账单导入功能
 """
@@ -21,7 +24,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-from importer import import_bill
+from src.importer import import_bill
 
 def test_import(file_path, platform=None):
     """测试账单导入功能"""

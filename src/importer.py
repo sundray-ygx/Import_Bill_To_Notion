@@ -1,7 +1,7 @@
 import logging
-from config import Config
+from src.config import Config
 from parsers import get_parser, get_parser_by_platform
-from notion_api import NotionClient
+from src.notion_api import NotionClient
 from typing import Optional
 import os
 import pandas as pd
@@ -221,7 +221,7 @@ def parse_bill_raw(file_path: str, platform: Optional[str] = None, max_rows: int
 
 def generate_review(review_type, year, month=None, quarter=None, user_id=None):
     """Generate bill review report"""
-    from review_service import ReviewService
+    from src.review_service import ReviewService
     service = ReviewService(user_id)
     if review_type == "monthly":
         return service.generate_monthly_review(year, month)

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """
 测试Notion API连接
 """
@@ -21,7 +24,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-from config import Config
+from src.config import Config
 from notion_client import Client as NotionApiClient
 
 def test_notion_connection():

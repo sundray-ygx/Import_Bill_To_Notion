@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """
 测试首个用户注册流程
 验证：1. 首个用户自动成为超级管理员
@@ -12,8 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import User, Base
-from auth import get_password_hash
+from src.models import User, Base
+from src.auth import get_password_hash
 import json
 
 # 数据库配置

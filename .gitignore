@@ -1,17 +1,67 @@
+# Python缓存
 __pycache__/
 *.py[cod]
 *$py.class
-.env
-.bak_env
-.env.local
-.env.*.local
+*.so
+.Python
+
+# 虚拟环境
 venv/
 .venv/
+env/
+ENV/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+.bak_env
+
+# 日志文件
 logs/
 *.log
 error.txt
-data/*
+
+# 数据文件
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# 上传文件
 web_service/uploads/
-monthly-review-2026-01.zip
+
+# 临时文件
+*.zip
+*.tmp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+
+# IDE配置
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# AI工具配置
 .claude/
 .specify/
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

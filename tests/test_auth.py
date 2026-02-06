@@ -1,4 +1,7 @@
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 Authentication system tests.
 
 测试内容：
@@ -21,14 +24,14 @@ import os
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from auth import (
+from src.auth import (
     get_password_hash, verify_password,
     create_access_token, create_refresh_token, verify_refresh_token,
     validate_password_strength, LoginSecurity, SessionManager
 )
-from models import Base, User, UserSession
-from schemas import UserCreate
-from config import Config
+from src.models import Base, User, UserSession
+from src.schemas import UserCreate
+from src.config import Config
 
 
 # 测试数据库配置
