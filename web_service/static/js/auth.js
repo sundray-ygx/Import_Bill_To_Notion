@@ -76,6 +76,9 @@ function clearAuth() {
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER_INFO);
+
+    // 同时清除 Cookie 中的 access_token
+    document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';
 }
 
 /**
@@ -121,9 +124,42 @@ function setButtonLoading(btn, loading) {
 }
 
 /**
- * API 请求封装
+ * 带超时的 Fetch 封装
+ * @param {string} url - 请求 URL
+ * @param {object} options - fetch 选项
+ * @param {number} timeout - 超时时间（毫秒），默认 30000（30秒）
  */
-async function apiRequest(url, options = {}) {
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+    const controller = new AbortController();
+
+    // 设置超时定时器
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, timeout);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error(`请求超时（${timeout / 1000}秒）`);
+        }
+        throw error;
+    }
+}
+
+/**
+ * API 请求封装
+ * @param {string} url - 请求 URL
+ * @param {object} options - 请求选项
+ * @param {number} timeout - 超时时间（毫秒），可选
+ */
+async function apiRequest(url, options = {}, timeout = null) {
     const token = getAccessToken();
 
     // 构建请求头
@@ -142,10 +178,14 @@ async function apiRequest(url, options = {}) {
         headers['Content-Type'] = options.headers?.['Content-Type'] || 'application/json';
     }
 
-    const response = await fetch(url, {
+    // 默认超时时间：普通请求 30 秒，文件上传 60 秒
+    const defaultTimeout = options.method === 'GET' ? 30000 : 45000;
+    const requestTimeout = timeout !== null ? timeout : defaultTimeout;
+
+    const response = await fetchWithTimeout(url, {
         ...options,
         headers
-    });
+    }, requestTimeout);
 
     // 处理 401 未授权
     if (response.status === 401) {
@@ -243,3 +283,12 @@ window.Auth = {
     logout,
     apiRequest
 };
+
+// 同时导出为全局函数（向后兼容）
+window.saveAuth = saveAuth;
+window.clearAuth = clearAuth;
+window.getAccessToken = getAccessToken;
+window.getRefreshToken = getRefreshToken;
+window.getUserInfo = getUserInfo;
+window.isLoggedIn = isLoggedIn;
+window.logout = logout;

@@ -47,6 +47,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """用户更新schema。"""
     email: Optional[EmailStr] = None
+    session_timeout_minutes: Optional[int] = Field(None, ge=5, le=1440, description="会话超时时间（分钟）")
 
 
 class UserResponse(UserBase):
@@ -67,6 +68,7 @@ class UserProfileResponse(UserResponse):
     total_uploads: int = 0
     total_imports: int = 0
     notion_configured: bool = False
+    session_timeout_minutes: int = 15
 
 
 # ==================== 认证相关 ====================

@@ -206,6 +206,91 @@
         }
     }
 
+    // 初始化复盘配置
+    async function initReviewConfig() {
+        // 加载复盘配置
+        try {
+            const response = await window.Auth.apiRequest('/api/review/config');
+            if (response && response.ok) {
+                const config = await response.json();
+
+                // 填充表单
+                document.getElementById('monthly-review-db').value = config.monthly_review_db || '';
+                document.getElementById('monthly-template-id').value = config.monthly_template_id || '';
+                document.getElementById('quarterly-review-db').value = config.quarterly_review_db || '';
+                document.getElementById('quarterly-template-id').value = config.quarterly_template_id || '';
+                document.getElementById('yearly-review-db').value = config.yearly_review_db || '';
+                document.getElementById('yearly-template-id').value = config.yearly_template_id || '';
+            }
+        } catch (error) {
+            console.error('Failed to load review config:', error);
+        }
+
+        // 表单提交
+        const form = document.getElementById('review-config-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const configData = {
+                notion_monthly_review_db: document.getElementById('monthly-review-db').value,
+                notion_monthly_template_id: document.getElementById('monthly-template-id').value,
+                notion_quarterly_review_db: document.getElementById('quarterly-review-db').value,
+                notion_quarterly_template_id: document.getElementById('quarterly-template-id').value,
+                notion_yearly_review_db: document.getElementById('yearly-review-db').value,
+                notion_yearly_template_id: document.getElementById('yearly-template-id').value
+            };
+
+            try {
+                const response = await window.Auth.apiRequest('/api/review/config', {
+                    method: 'POST',
+                    body: JSON.stringify(configData)
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    // 显示后端返回的消息（包含单用户模式提示）
+                    showToast(data.message || '复盘配置已保存');
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || '保存失败', 'error');
+                }
+            } catch (error) {
+                console.error('Review config save error:', error);
+                showToast('网络错误，请稍后重试', 'error');
+            }
+        });
+
+        // 重新加载按钮
+        const reloadBtn = document.getElementById('load-review-config-btn');
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', async () => {
+                reloadBtn.disabled = true;
+                reloadBtn.textContent = '加载中...';
+                try {
+                    const response = await window.Auth.apiRequest('/api/review/config');
+                    if (response && response.ok) {
+                        const config = await response.json();
+                        document.getElementById('monthly-review-db').value = config.monthly_review_db || '';
+                        document.getElementById('monthly-template-id').value = config.monthly_template_id || '';
+                        document.getElementById('quarterly-review-db').value = config.quarterly_review_db || '';
+                        document.getElementById('quarterly-template-id').value = config.quarterly_template_id || '';
+                        document.getElementById('yearly-review-db').value = config.yearly_review_db || '';
+                        document.getElementById('yearly-template-id').value = config.yearly_template_id || '';
+                        showToast('配置已重新加载');
+                    }
+                } catch (error) {
+                    console.error('Failed to reload review config:', error);
+                    showToast('加载失败', 'error');
+                } finally {
+                    reloadBtn.disabled = false;
+                    reloadBtn.textContent = '🔄 重新加载';
+                }
+            });
+        }
+    }
+
     // 初始化Notion配置
     // 存储当前配置状态，用于判断是否需要更新API密钥
     let currentConfig = {
@@ -376,6 +461,98 @@
         });
     }
 
+    // 初始化会话超时表单
+    function initSessionTimeoutForm() {
+        const form = document.getElementById('session-timeout-form');
+        const timeoutInput = document.getElementById('session-timeout');
+        const presetButtons = document.querySelectorAll('.timeout-preset-btn');
+
+        if (!form || !timeoutInput) return;
+
+        // 加载当前设置
+        loadSessionTimeout();
+
+        // 预设按钮点击事件
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const timeout = parseInt(btn.dataset.timeout);
+                timeoutInput.value = timeout;
+
+                // 更新按钮激活状态
+                presetButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // 输入框变化时更新按钮状态
+        timeoutInput.addEventListener('input', () => {
+            presetButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.timeout) === parseInt(timeoutInput.value)) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+
+        // 表单提交
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const timeoutMinutes = parseInt(timeoutInput.value);
+
+            // 验证
+            if (timeoutMinutes < 5 || timeoutMinutes > 1440) {
+                showToast('超时时间必须在 5-1440 分钟之间', 'error');
+                return;
+            }
+
+            try {
+                const response = await window.Auth.apiRequest('/api/user/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_timeout_minutes: timeoutMinutes
+                    })
+                });
+
+                if (response && response.ok) {
+                    showToast('会话超时设置已保存，下次登录生效');
+                } else {
+                    showToast('保存失败', 'error');
+                }
+            } catch (error) {
+                console.error('Session timeout update error:', error);
+                showToast('保存失败', 'error');
+            }
+        });
+    }
+
+    // 加载会话超时设置
+    async function loadSessionTimeout() {
+        try {
+            const response = await window.Auth.apiRequest('/api/user/profile');
+            if (response && response.ok) {
+                const profile = await response.json();
+                const timeoutInput = document.getElementById('session-timeout');
+                const presetButtons = document.querySelectorAll('.timeout-preset-btn');
+
+                if (timeoutInput && profile.session_timeout_minutes !== undefined) {
+                    timeoutInput.value = profile.session_timeout_minutes;
+
+                    // 更新预设按钮状态
+                    presetButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        if (parseInt(btn.dataset.timeout) === profile.session_timeout_minutes) {
+                            btn.classList.add('active');
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load session timeout:', error);
+        }
+    }
+
     // 撤销所有会话
     function initRevokeSessions() {
         const btn = document.getElementById('revoke-all-sessions-btn');
@@ -487,6 +664,7 @@
         initSidebarNav();
         initProfileForm();
         initPasswordForm();
+        initSessionTimeoutForm();
         initRevokeSessions();
         initDeleteAccount();
 
@@ -498,6 +676,14 @@
         if (notionSection) {
             notionSection.addEventListener('click', () => {
                 setTimeout(initNotionConfig, 100);
+            });
+        }
+
+        // 初始化复盘配置（当切换到该部分时）
+        const reviewSection = document.querySelector('.sidebar-item[data-section="review"]');
+        if (reviewSection) {
+            reviewSection.addEventListener('click', () => {
+                setTimeout(initReviewConfig, 100);
             });
         }
     }

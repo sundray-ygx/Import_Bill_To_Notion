@@ -32,6 +32,7 @@ class User(Base):
     # 安全相关
     login_attempts = Column(Integer, default=0)
     locked_until = Column(DateTime(timezone=True))
+    session_timeout_minutes = Column(Integer, default=15, nullable=False)
 
     # 关系
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
@@ -82,6 +83,14 @@ class UserNotionConfig(Base):
 
     is_verified = Column(Boolean, default=False, nullable=False)
     last_verified_at = Column(DateTime(timezone=True))
+
+    # 复盘数据库配置
+    notion_monthly_review_db = Column(String(100), nullable=True)
+    notion_quarterly_review_db = Column(String(100), nullable=True)
+    notion_yearly_review_db = Column(String(100), nullable=True)
+    notion_monthly_template_id = Column(String(100), nullable=True)
+    notion_quarterly_template_id = Column(String(100), nullable=True)
+    notion_yearly_template_id = Column(String(100), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

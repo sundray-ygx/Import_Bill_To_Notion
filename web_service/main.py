@@ -1,10 +1,12 @@
 """FastAPI web service for bill import."""
 
 import os
-from fastapi import FastAPI, Request
+from typing import Optional, Tuple
+from fastapi import FastAPI, Request, Response, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from utils import setup_logging
 from config import Config
@@ -58,32 +60,89 @@ app.mount("/static", StaticFiles(directory=os.path.join(web_service_dir, "static
 templates = Jinja2Templates(directory=os.path.join(web_service_dir, "templates"))
 
 # Routes
-from .routes import upload, auth, users, bills, admin
+from .routes import upload, auth, users, bills, admin, review, dashboard
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/user", tags=["User"])
 app.include_router(bills.router, prefix="/api/bills", tags=["Bills"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(upload.router, prefix="/api", tags=["Upload"])
+app.include_router(review.router, prefix="/api/review", tags=["Review"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 
+
+# ==================== 页面鉴权辅助函数 ====================
+
+def get_access_token_from_cookie(request: Request) -> Optional[str]:
+    """从Cookie中获取access token。
+
+    Args:
+        request: FastAPI请求对象
+
+    Returns:
+        access token字符串，如果不存在返回None
+    """
+    return request.cookies.get("access_token")
+
+
+def verify_page_auth(request: Request) -> Tuple[bool, Optional[dict]]:
+    """验证页面的认证状态。
+
+    检查Cookie中的access_token是否有效。
+
+    Args:
+        request: FastAPI请求对象
+
+    Returns:
+        (是否已认证, 用户信息字典)
+    """
+    if not Config.is_multi_tenant_mode():
+        # 单用户模式不需要认证
+        return True, None
+
+    token = get_access_token_from_cookie(request)
+    if not token:
+        return False, None
+
+    try:
+        from auth import verify_access_token
+        payload = verify_access_token(token)
+        if payload:
+            return True, payload
+        return False, None
+    except Exception as e:
+        logger.error(f"Page auth verification error: {e}")
+        return False, None
+
+
+def require_page_auth(request: Request) -> Optional[dict]:
+    """要求页面认证的依赖函数。
+
+    如果未认证，抛出HTTPException重定向到登录页。
+
+    Args:
+        request: FastAPI请求对象
+
+    Returns:
+        用户信息payload
+
+    Raises:
+        HTTPException: 未认证时抛出302重定向
+    """
+    is_authenticated, payload = verify_page_auth(request)
+    if not is_authenticated:
+        raise HTTPException(
+            status_code=status.HTTP_302_FOUND,
+            headers={"Location": "/login"}
+        )
+    return payload
+
+
+# ==================== 公开页面路由（无需认证）====================
 
 @app.get("/")
 def home(request: Request):
+    """首页"""
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.get("/bill-management")
-def bill_management(request: Request):
-    return templates.TemplateResponse("bill_management.html", {"request": request})
-
-
-@app.get("/service-management")
-def service_management(request: Request):
-    return templates.TemplateResponse("service_management.html", {"request": request})
-
-
-@app.get("/log-management")
-def log_management(request: Request):
-    return templates.TemplateResponse("log_management.html", {"request": request})
 
 
 @app.get("/login")
@@ -98,44 +157,10 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
-@app.get("/settings")
-def settings_page(request: Request):
-    """用户设置页面"""
-    return templates.TemplateResponse("settings.html", {"request": request})
-
-
-@app.get("/history")
-def history_page(request: Request):
-    """导入历史页面"""
-    return templates.TemplateResponse("history.html", {"request": request})
-
-
-@app.get("/admin/users")
-def admin_users_page(request: Request):
-    """后台用户管理页面"""
-    return templates.TemplateResponse("admin/users.html", {"request": request})
-
-
-@app.get("/admin/users/form")
-def admin_user_form_page(request: Request, mode: str = "create", user_id: int = None):
-    """后台用户表单页面（创建/编辑用户）"""
-    return templates.TemplateResponse("admin/user-form.html", {
-        "request": request,
-        "mode": mode,
-        "user_id": user_id
-    })
-
-
-@app.get("/admin/settings")
-def admin_settings_page(request: Request):
-    """后台系统设置页面"""
-    return templates.TemplateResponse("admin/settings.html", {"request": request})
-
-
-@app.get("/admin/audit-logs")
-def admin_audit_logs_page(request: Request):
-    """后台审计日志页面"""
-    return templates.TemplateResponse("admin/audit_logs.html", {"request": request})
+@app.get("/forgot-password")
+def forgot_password_page(request: Request):
+    """忘记密码页面"""
+    return templates.TemplateResponse("forgot-password.html", {"request": request})
 
 
 @app.get("/setup")
@@ -168,10 +193,146 @@ def privacy_page(request: Request):
     return templates.TemplateResponse("privacy.html", {"request": request})
 
 
-@app.get("/forgot-password")
-def forgot_password_page(request: Request):
-    """忘记密码页面"""
-    return templates.TemplateResponse("forgot-password.html", {"request": request})
+# ==================== 需要认证的页面路由 ====================
+
+@app.get("/bill-management")
+def bill_management(request: Request):
+    """账单管理页面 - 需要认证"""
+    try:
+        require_page_auth(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("bill_management.html", {"request": request})
+
+
+@app.get("/history")
+def history_page(request: Request):
+    """导入历史页面 - 需要认证"""
+    try:
+        require_page_auth(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("history.html", {"request": request})
+
+
+@app.get("/settings")
+def settings_page(request: Request):
+    """用户设置页面 - 需要认证"""
+    try:
+        require_page_auth(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("settings.html", {"request": request})
+
+
+@app.get("/review")
+def review_page(request: Request):
+    """复盘管理页面 - 需要认证"""
+    try:
+        require_page_auth(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("review.html", {"request": request})
+
+
+# ==================== 管理员页面路由（需要管理员权限）====================
+
+@app.get("/service-management")
+def service_management(request: Request):
+    """服务管理页面 - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("service_management.html", {"request": request})
+
+
+@app.get("/log-management")
+def log_management(request: Request):
+    """日志管理页面 - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("log_management.html", {"request": request})
+
+
+@app.get("/admin/users")
+def admin_users_page(request: Request):
+    """后台用户管理页面 - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("admin/users.html", {"request": request})
+
+
+@app.get("/admin/users/form")
+def admin_user_form_page(request: Request, mode: str = "create", user_id: int = None):
+    """后台用户表单页面（创建/编辑用户） - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("admin/user-form.html", {
+        "request": request,
+        "mode": mode,
+        "user_id": user_id
+    })
+
+
+@app.get("/admin/settings")
+def admin_settings_page(request: Request):
+    """后台系统设置页面 - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("admin/settings.html", {"request": request})
+
+
+@app.get("/admin/audit-logs")
+def admin_audit_logs_page(request: Request):
+    """后台审计日志页面 - 需要管理员认证"""
+    try:
+        payload = require_page_auth(request)
+        # TODO: 添加管理员权限检查
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("admin/audit_logs.html", {"request": request})
+
+
+# ==================== 废弃的页面路由 ====================
+
+@app.get("/workspace")
+def workspace(request: Request):
+    """财务工作空间 - 已废弃，重定向到首页"""
+    return RedirectResponse(url="/")
 
 
 if __name__ == "__main__":
