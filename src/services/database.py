@@ -9,8 +9,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# 数据库配置
-DATABASE_URL = "sqlite:///data/database.sqlite"
+# 数据库配置 - 从Config读取，支持环境变量覆盖
+from src.config import Config
+DATABASE_URL = Config.DATABASE_URL
+
+# 将相对路径转换为绝对路径
+if DATABASE_URL.startswith("sqlite:///"):
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    if not os.path.isabs(db_path):
+        # 转换为绝对路径（相对于项目根目录）
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        abs_path = os.path.join(project_root, db_path)
+        DATABASE_URL = f"sqlite:///{abs_path}"
 
 # 创建引擎
 engine = create_engine(
