@@ -43,7 +43,7 @@ def main():
 
     # 定时任务
     if args.schedule:
-        from scheduler import BillScheduler
+        from src.scheduler import BillScheduler
         BillScheduler().start()
         return
 

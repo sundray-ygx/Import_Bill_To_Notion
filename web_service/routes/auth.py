@@ -426,7 +426,7 @@ async def check_setup_needed(
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
-            from auth import verify_access_token
+            from src.auth import verify_access_token
             payload = verify_access_token(token)
             if payload:
                 user_id = int(payload.get("sub"))
