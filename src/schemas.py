@@ -323,3 +323,125 @@ class ErrorResponse(BaseModel):
     """错误响应schema。"""
     detail: str
     error_code: Optional[str] = None
+
+
+# ==================== 邮箱配置相关 ====================
+
+class EmailConfigBase(BaseModel):
+    """邮箱配置基础schema。"""
+    email_address: EmailStr = Field(..., description="邮箱地址")
+    imap_server: str = Field(..., min_length=1, max_length=255, description="IMAP服务器地址")
+    imap_port: int = Field(993, ge=1, le=65535, description="IMAP端口")
+    use_ssl: bool = Field(True, description="是否使用SSL")
+    provider: Optional[str] = Field(None, max_length=50, description="邮箱服务商")
+    config_name: str = Field("默认邮箱", max_length=100, description="配置名称")
+    check_frequency: str = Field("hourly", description="检查频率: hourly, daily, weekly")
+
+
+class EmailConfigCreate(EmailConfigBase):
+    """创建邮箱配置schema。"""
+    password: str = Field(..., min_length=1, max_length=100, description="邮箱密码或授权码")
+
+
+class EmailConfigUpdate(BaseModel):
+    """更新邮箱配置schema。"""
+    email_address: Optional[EmailStr] = None
+    password: Optional[str] = Field(None, min_length=1, max_length=100)
+    imap_server: Optional[str] = Field(None, min_length=1, max_length=255)
+    imap_port: Optional[int] = Field(None, ge=1, le=65535)
+    use_ssl: Optional[bool] = None
+    provider: Optional[str] = Field(None, max_length=50)
+    config_name: Optional[str] = Field(None, max_length=100)
+    check_frequency: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class EmailConfigResponse(EmailConfigBase):
+    """邮箱配置响应schema。"""
+    id: int
+    user_id: int
+    is_active: bool
+    is_verified: bool
+    last_check_at: Optional[datetime]
+    last_check_status: Optional[str]
+    next_check_at: Optional[datetime]
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class EmailConfigListResponse(BaseModel):
+    """邮箱配置列表响应schema。"""
+    configs: List[EmailConfigResponse]
+    total: int
+
+
+class EmailConfigVerifyRequest(BaseModel):
+    """验证邮箱配置请求schema。"""
+    email_address: EmailStr
+    password: str
+    imap_server: str
+    imap_port: int = 993
+    use_ssl: bool = True
+
+
+class EmailConfigVerifyResponse(BaseModel):
+    """验证邮箱配置响应schema。"""
+    success: bool
+    message: str
+
+
+class EmailCheckRequest(BaseModel):
+    """手动触发邮箱检查请求schema。"""
+    config_id: Optional[int] = None  # None表示检查所有配置
+
+
+class EmailCheckResponse(BaseModel):
+    """邮箱检查响应schema。"""
+    success: bool
+    message: str
+    checked_configs: int
+    total_imported: int
+    total_failed: int
+    details: List[Dict] = []
+
+
+class ProcessedEmailResponse(BaseModel):
+    """已处理邮件响应schema。"""
+    id: int
+    email_config_id: int
+    message_id: str
+    message_date: Optional[datetime]
+    platform: Optional[str]
+    attachment_name: Optional[str]
+    status: str
+    error_message: Optional[str]
+    processed_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ProcessedEmailListResponse(BaseModel):
+    """已处理邮件列表响应schema。"""
+    emails: List[ProcessedEmailResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class EmailProviderTemplate(BaseModel):
+    """邮箱服务商模板schema。"""
+    provider: str
+    name: str
+    imap_server: str
+    imap_port: int
+    use_ssl: bool
+    description: Optional[str] = None
+
+
+class EmailProvidersResponse(BaseModel):
+    """邮箱服务商列表响应schema。"""
+    providers: List[EmailProviderTemplate]
