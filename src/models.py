@@ -40,6 +40,7 @@ class User(Base):
     uploads = relationship("UserUpload", back_populates="user", cascade="all, delete-orphan")
     import_history = relationship("ImportHistory", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
+    email_configs = relationship("EmailConfig", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', is_superuser={self.is_superuser})>"
@@ -199,3 +200,78 @@ class AuditLog(Base):
 
     def __repr__(self):
         return f"<AuditLog(id={self.id}, user_id={self.user_id}, action='{self.action}', created_at={self.created_at})>"
+
+
+class EmailConfig(Base):
+    """用户邮箱配置表。"""
+
+    __tablename__ = "user_email_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # 邮箱连接配置
+    email_address = Column(String(255), nullable=False)
+    password_encrypted = Column(String(500), nullable=False)
+    imap_server = Column(String(255), nullable=False)
+    imap_port = Column(Integer, default=993, nullable=False)
+    use_ssl = Column(Boolean, default=True, nullable=False)
+    provider = Column(String(50))  # gmail, qq, 163, etc.
+
+    # 配置信息
+    config_name = Column(String(100), default="默认邮箱")
+
+    # 状态
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+
+    # 自动检查配置
+    last_check_at = Column(DateTime(timezone=True))
+    last_check_status = Column(String(20))
+    check_frequency = Column(String(20), default="hourly")  # hourly, daily, weekly
+    next_check_at = Column(DateTime(timezone=True))
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 关系
+    user = relationship("User", back_populates="email_configs")
+    processed_emails = relationship("ProcessedEmail", back_populates="email_config", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<EmailConfig(id={self.id}, user_id={self.user_id}, email_address='{self.email_address}', is_active={self.is_active})>"
+
+
+class ProcessedEmail(Base):
+    """邮件处理历史表。"""
+
+    __tablename__ = "email_processing_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email_config_id = Column(Integer, ForeignKey("user_email_configs.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # 邮件信息
+    message_id = Column(String(500), nullable=False, unique=True, index=True)
+    message_date = Column(DateTime(timezone=True))
+
+    # 解析结果
+    platform = Column(String(20))  # alipay, wechat, unionpay
+    attachment_name = Column(String(255))
+
+    # 处理状态
+    status = Column(String(20), nullable=False)  # success, failed, partial
+    error_message = Column(Text)
+
+    # 关联导入历史
+    import_history_id = Column(Integer, ForeignKey("import_history.id", ondelete="SET NULL"))
+
+    # 时间戳
+    processed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # 关系
+    email_config = relationship("EmailConfig", back_populates="processed_emails")
+
+    def __repr__(self):
+        return f"<ProcessedEmail(id={self.id}, message_id='{self.message_id}', status='{self.status}', platform='{self.platform}')>"

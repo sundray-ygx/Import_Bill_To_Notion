@@ -21,6 +21,7 @@ ENV/
 logs/
 *.log
 error.txt
+service_run.txt
 
 # 数据文件
 data/

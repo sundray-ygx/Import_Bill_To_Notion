@@ -482,7 +482,7 @@ class TestCascadeDelete:
             UserUpload.user_id == user1.id
         ).count()
 
-        assert remaining_configs = 0
+        assert remaining_configs == 0
 
 
 if __name__ == "__main__":

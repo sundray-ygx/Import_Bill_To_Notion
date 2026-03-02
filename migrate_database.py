@@ -135,6 +135,110 @@ def migrate_to_v2(db_path: str):
     conn.close()
 
 
+def migrate_to_v3(db_path: str):
+    """迁移到版本 3 - 添加邮箱配置表。
+
+    添加以下表:
+    - user_email_configs: 用户邮箱配置表
+    - email_processing_history: 邮件处理历史表
+
+    Args:
+        db_path: 数据库文件路径
+    """
+    print("执行迁移 v3: 添加邮箱配置表...")
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # 检查表是否已存在
+    cursor.execute("""
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name='user_email_configs'
+    """)
+
+    if cursor.fetchone():
+        print("  ⏭️  user_email_configs 表已存在，跳过")
+        conn.close()
+        return
+
+    # 创建 user_email_configs 表
+    cursor.execute("""
+        CREATE TABLE user_email_configs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            email_address VARCHAR(255) NOT NULL,
+            password_encrypted VARCHAR(500) NOT NULL,
+            imap_server VARCHAR(255) NOT NULL,
+            imap_port INTEGER DEFAULT 993,
+            use_ssl BOOLEAN DEFAULT TRUE,
+            provider VARCHAR(50),
+            config_name VARCHAR(100) DEFAULT '默认邮箱',
+            is_active BOOLEAN DEFAULT TRUE,
+            is_verified BOOLEAN DEFAULT FALSE,
+            last_check_at DATETIME,
+            last_check_status VARCHAR(20),
+            check_frequency VARCHAR(20) DEFAULT 'hourly',
+            next_check_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    print("  ✅ 创建 user_email_configs 表")
+
+    # 创建 email_processing_history 表
+    cursor.execute("""
+        CREATE TABLE email_processing_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email_config_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            message_id VARCHAR(500) NOT NULL UNIQUE,
+            message_date DATETIME,
+            platform VARCHAR(20),
+            attachment_name VARCHAR(255),
+            status VARCHAR(20) NOT NULL,
+            error_message TEXT,
+            import_history_id INTEGER,
+            processed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (email_config_id) REFERENCES user_email_configs(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (import_history_id) REFERENCES import_history(id) ON DELETE SET NULL
+        )
+    """)
+    print("  ✅ 创建 email_processing_history 表")
+
+    # 创建索引
+    # user_email_configs 索引
+    cursor.execute("""
+        CREATE INDEX idx_email_configs_user_id ON user_email_configs(user_id)
+    """)
+    print("  ✅ 创建 idx_email_configs_user_id 索引")
+
+    cursor.execute("""
+        CREATE INDEX idx_email_configs_is_active ON user_email_configs(is_active)
+    """)
+    print("  ✅ 创建 idx_email_configs_is_active 索引")
+
+    # email_processing_history 索引
+    cursor.execute("""
+        CREATE INDEX idx_email_history_user_id ON email_processing_history(user_id)
+    """)
+    print("  ✅ 创建 idx_email_history_user_id 索引")
+
+    cursor.execute("""
+        CREATE INDEX idx_email_history_message_id ON email_processing_history(message_id)
+    """)
+    print("  ✅ 创建 idx_email_history_message_id 索引")
+
+    cursor.execute("""
+        CREATE INDEX idx_email_history_config_id ON email_processing_history(email_config_id)
+    """)
+    print("  ✅ 创建 idx_email_history_config_id 索引")
+
+    conn.commit()
+    conn.close()
+
+
 def run_migrations():
     """运行所有待执行的迁移。"""
     db_path = DB_PATH
@@ -154,6 +258,7 @@ def run_migrations():
     migrations = [
         (1, migrate_to_v1),
         (2, migrate_to_v2),
+        (3, migrate_to_v3),
     ]
 
     # 执行待执行的迁移
