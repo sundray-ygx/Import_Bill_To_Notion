@@ -51,6 +51,13 @@
                             </svg>
                             <span>复盘配置</span>
                         </a>
+                        <a href="#email" class="sidebar-item" data-section="email">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <span>邮箱配置</span>
+                        </a>
                     </nav>
                 </div>
             </aside>
@@ -414,9 +421,168 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- 邮箱配置卡片 -->
+                <section class="settings-section" id="email-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>邮箱配置</h2>
+                        <button class="btn btn-primary" id="add-email-config-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            添加邮箱
+                        </button>
+                    </div>
+
+                    <!-- 邮箱配置列表 -->
+                    <div class="email-configs-container">
+                        <div id="email-configs-list">
+                            <!-- 邮箱配置卡片将通过 JS 动态加载 -->
+                        </div>
+                        <div id="no-email-configs" class="empty-state" style="display: none;">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <h3>暂无邮箱配置</h3>
+                            <p>配置您的邮箱后，系统将自动导入账单附件</p>
+                            <button class="btn btn-primary" onclick="document.getElementById('add-email-config-btn').click()">
+                                添加第一个邮箱
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
+
+    <!-- 邮箱配置模态框 -->
+    <div class="modal-overlay" id="email-config-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">添加邮箱配置</h3>
+                <button class="modal-close" onclick="closeEmailConfigModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 服务商选择 -->
+                <div class="form-group">
+                    <label>选择邮箱服务商</label>
+                    <div class="provider-grid" id="provider-grid">
+                        <div class="provider-option" data-provider="qq" onclick="selectProvider('qq')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            </svg>
+                            <span>QQ邮箱</span>
+                        </div>
+                        <div class="provider-option" data-provider="163" onclick="selectProvider('163')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            </svg>
+                            <span>163邮箱</span>
+                        </div>
+                        <div class="provider-option" data-provider="gmail" onclick="selectProvider('gmail')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v8"/>
+                                <path d="M8 12h8"/>
+                            </svg>
+                            <span>Gmail</span>
+                        </div>
+                        <div class="provider-option" data-provider="outlook" onclick="selectProvider('outlook')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <span>Outlook</span>
+                        </div>
+                        <div class="provider-option" data-provider="custom" onclick="selectProvider('custom')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6"/>
+                                <path d="m4.93 4.93 4.24 4.24m4.24-4.24 4.24 4.24"/>
+                            </svg>
+                            <span>自定义</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 配置提示 -->
+                <div class="provider-hint" id="provider-hint" style="display: none;"></div>
+
+                <!-- 配置表单 -->
+                <form id="email-config-form">
+                    <input type="hidden" id="config-id">
+                    <input type="hidden" id="selected-provider">
+
+                    <div class="form-group">
+                        <label for="config-name">配置名称</label>
+                        <input type="text" id="config-name" class="form-input" placeholder="例如：我的QQ邮箱">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email-address">邮箱地址</label>
+                        <input type="email" id="email-address" class="form-input" placeholder="your@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email-password">邮箱密码 / 授权码</label>
+                        <input type="password" id="email-password" class="form-input" placeholder="请输入密码或授权码" required>
+                        <div class="form-hint">QQ、163、Gmail等邮箱需要使用授权码，不是登录密码</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="imap-server">IMAP服务器</label>
+                            <input type="text" id="imap-server" class="form-input" placeholder="imap.example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imap-port">端口</label>
+                            <input type="number" id="imap-port" class="form-input" value="993" min="1" max="65535">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="use-ssl" checked>
+                            <span>使用SSL加密连接</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="check-frequency">检查频率</label>
+                        <select id="check-frequency" class="form-input">
+                            <option value="hourly">每小时</option>
+                            <option value="daily">每天</option>
+                            <option value="weekly">每周</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEmailConfigModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveEmailConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal-overlay" id="delete-confirm-modal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除此邮箱配置吗？此操作不可撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button class="btn btn-danger" id="confirm-delete-btn">删除</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 消息提示容器 -->
     <div id="toast-container" style="position: fixed; top: 80px; right: 24px; z-index: 2000;"></div>
@@ -779,6 +945,279 @@
         margin-left: auto;
         color: #667eea;
         font-weight: 600;
+    }
+
+    /* 邮箱配置样式 */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .section-header h2 {
+        margin: 0;
+    }
+
+    .email-configs-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .email-config-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .email-config-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+
+    .email-config-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .email-config-info {
+        flex: 1;
+    }
+
+    .email-config-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0 0 4px 0;
+    }
+
+    .email-config-address {
+        font-size: 0.9rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .email-config-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .email-config-actions .btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+    .email-config-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .email-config-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .email-config-detail-label {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .email-config-detail-value {
+        font-size: 0.9rem;
+        color: #374151;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-badge.verified {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.unverified {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .status-badge.verified .status-dot {
+        background: #10b981;
+    }
+
+    .status-badge.unverified .status-dot {
+        background: #ef4444;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-state svg {
+        margin: 0 auto 16px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        color: #374151;
+    }
+
+    .empty-state p {
+        margin: 0 0 20px;
+        font-size: 0.9rem;
+    }
+
+    /* 模态框样式 */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal {
+        background: white;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #1a1a2e;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: #374151;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .provider-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .provider-option {
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .provider-option:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .provider-option.selected {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+    }
+
+    .provider-option svg {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 8px;
+    }
+
+    .provider-option span {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .provider-hint {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        color: #92400e;
     }
     </style>
 </body>

@@ -107,6 +107,88 @@
                 </div>
             </div>
 
+            <!-- 邮箱导入区域 -->
+            <div class="upload-section" id="email-import-section">
+                <div class="upload-card">
+                    <div class="upload-card-header">
+                        <h2>从邮箱导入账单</h2>
+                        <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <div class="email-import-content">
+                        <p class="email-import-description">
+                            如果您已配置邮箱，可以从邮箱中直接导入支付平台发送的账单邮件。
+                            支持支付宝、微信支付、银联的官方账单邮件。
+                        </p>
+
+                        <!-- 邮箱配置列表 -->
+                        <div id="email-configs-list" class="email-configs-list">
+                            <!-- 动态加载邮箱配置 -->
+                            <div class="loading-state">
+                                <svg class="spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                </svg>
+                                <span>加载邮箱配置...</span>
+                            </div>
+                        </div>
+
+                        <!-- 未配置邮箱时的提示 -->
+                        <div id="no-email-config" class="no-email-config" style="display: none;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <h3>尚未配置邮箱</h3>
+                            <p>配置邮箱后，可以直接从邮箱中导入账单</p>
+                            <a href="/settings#email" class="btn btn-primary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                前往配置
+                            </a>
+                        </div>
+
+                        <!-- 邮件导入说明 -->
+                        <div class="email-import-info">
+                            <h4>支持的邮件格式</h4>
+                            <ul class="email-import-requirements">
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                    发件人必须是支付平台官方邮箱（支付宝、微信、银联）
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                    附件格式为 CSV 或 ZIP（支持密码保护）
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                    系统会自动提取 ZIP 文件的解压密码
+                                </li>
+                            </ul>
+                            <a href="/docs/email-bill-format" target="_blank" class="link-secondary">
+                                查看详细说明
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 4px;">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 复盘提示Banner -->
             <div id="review-banner" class="review-banner" style="display: none;" role="alert" aria-live="polite">
                 <div class="review-banner-content">
@@ -1347,6 +1429,144 @@
             // DOM已经准备好，但等待脚本执行
             setTimeout(init, 50);
         }
+    })();
+
+    // 邮箱导入功能
+    (function() {
+        'use strict';
+
+        // 加载邮箱配置
+        async function loadEmailConfigs() {
+            try {
+                const response = await window.Auth.apiRequest('/api/email/configs');
+                const data = await response.json();
+
+                const configsList = document.getElementById('email-configs-list');
+                const noConfigMsg = document.getElementById('no-email-config');
+
+                if (!data.configs || data.configs.length === 0) {
+                    configsList.style.display = 'none';
+                    noConfigMsg.style.display = 'flex';
+                    return;
+                }
+
+                configsList.style.display = 'block';
+                noConfigMsg.style.display = 'none';
+
+                configsList.innerHTML = data.configs.map(config => {
+                    const statusClass = config.is_verified ? 'success' : 'warning';
+                    const statusText = config.is_verified ? '已验证' : '未验证';
+
+                    return `
+                        <div class="email-config-item">
+                            <div class="email-config-item-info">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <div>
+                                    <div class="email-config-item-name">${escapeHtml(config.config_name)}</div>
+                                    <div class="email-config-item-email">${escapeHtml(config.email_address)}</div>
+                                </div>
+                            </div>
+                            <div class="email-config-item-actions">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkEmailFromPage(${config.id})">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                        <polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                    检查邮箱
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load email configs:', error);
+                const configsList = document.getElementById('email-configs-list');
+                configsList.innerHTML = `
+                    <div class="error-state">
+                        <p>加载邮箱配置失败</p>
+                        <button class="btn btn-secondary btn-sm" onclick="loadEmailConfigs()">重试</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 从页面检查邮箱
+        window.checkEmailFromPage = async function(configId) {
+            try {
+                // 禁用按钮
+                const buttons = document.querySelectorAll('#email-import-section .btn-primary');
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<svg class="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 检查中...';
+                });
+
+                const response = await window.Auth.apiRequest('/api/email/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ config_id: configId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(result.message || '邮箱检查完成', 'success');
+                    } else {
+                        alert(result.message || '邮箱检查完成');
+                    }
+
+                    if (result.total_imported > 0) {
+                        setTimeout(() => {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(`成功导入 ${result.total_imported} 条账单记录`, 'success');
+                            }
+                            // 刷新文件列表
+                            if (typeof loadFiles === 'function') {
+                                loadFiles();
+                            }
+                        }, 500);
+                    }
+                } else {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(result.message || '检查失败', 'error');
+                    } else {
+                        alert(result.message || '检查失败');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check email:', error);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('检查邮箱失败：' + (error.message || '未知错误'), 'error');
+                } else {
+                    alert('检查邮箱失败：' + (error.message || '未知错误'));
+                }
+            } finally {
+                // 重新加载配置
+                await loadEmailConfigs();
+            }
+        };
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载时加载邮箱配置
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadEmailConfigs);
+        } else {
+            loadEmailConfigs();
+        }
+
     })();
     </script>
 
@@ -2859,6 +3079,205 @@
             position: static;
             margin-left: auto;
         }
+    }
+
+    /* ==================== 邮箱导入区域 ==================== */
+    .email-import-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-6);
+    }
+
+    .email-import-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0;
+        padding: var(--spacing-4) var(--spacing-5);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border-left: 4px solid var(--primary-500);
+    }
+
+    /* 邮箱配置列表 */
+    .email-configs-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-3);
+    }
+
+    .email-config-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-4) var(--spacing-5);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        transition: all var(--transition-normal);
+    }
+
+    .email-config-item:hover {
+        border-color: var(--primary-300);
+        box-shadow: var(--shadow-md);
+    }
+
+    .email-config-item-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-3);
+        flex: 1;
+    }
+
+    .email-config-item-info svg {
+        color: var(--primary-500);
+        flex-shrink: 0;
+    }
+
+    .email-config-item-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .email-config-item-email {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-top: 2px;
+    }
+
+    .email-config-item-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-3);
+    }
+
+    /* 未配置邮箱提示 */
+    .no-email-config {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-12) var(--spacing-6);
+        text-align: center;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-xl);
+        border: 2px dashed var(--border-light);
+    }
+
+    .no-email-config svg {
+        color: var(--text-tertiary);
+        margin-bottom: var(--spacing-4);
+    }
+
+    .no-email-config h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 var(--spacing-2) 0;
+    }
+
+    .no-email-config p {
+        color: var(--text-secondary);
+        margin: 0 0 var(--spacing-6) 0;
+    }
+
+    /* 邮件导入说明 */
+    .email-import-info {
+        padding: var(--spacing-5);
+        background: var(--accent-bg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--accent-border);
+    }
+
+    .email-import-info h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 var(--spacing-3) 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+    }
+
+    .email-import-requirements {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--spacing-4) 0;
+    }
+
+    .email-import-requirements li {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-2);
+        padding: var(--spacing-2) 0;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .email-import-requirements li svg {
+        color: var(--success-500);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .link-secondary {
+        display: inline-flex;
+        align-items: center;
+        color: var(--primary-600);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: color var(--transition-fast);
+    }
+
+    .link-secondary:hover {
+        color: var(--primary-700);
+        text-decoration: underline;
+    }
+
+    /* 加载和错误状态 */
+    .loading-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-3);
+        padding: var(--spacing-8);
+        color: var(--text-secondary);
+    }
+
+    .loading-state .spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .error-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-8);
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .error-state p {
+        margin: 0 0 var(--spacing-3) 0;
+    }
+
+    /* 旋转动画 */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+        animation: spin 1s linear infinite;
     }
     </style>
 </body>

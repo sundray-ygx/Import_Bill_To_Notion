@@ -101,9 +101,23 @@ async def create_email_config(
             detail="该邮箱地址已存在配置"
         )
 
-    # Encrypt password
-    crypto = PasswordEncryption()
-    password_encrypted = crypto.encrypt(config_data.password)
+    # Encrypt password with enhanced error handling
+    try:
+        crypto = PasswordEncryption()
+        password_encrypted = crypto.encrypt(config_data.password)
+        logger.info(f"Password encrypted successfully for user {current_user.id}")
+    except ValueError as e:
+        logger.error(f"Password encryption failed for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"密码加密失败：{str(e)}。请检查服务器配置。"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during password encryption for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="密码加密过程中发生未知错误"
+        )
 
     # Create config
     config = EmailConfig(
@@ -189,9 +203,23 @@ async def update_email_config(
 
     # Encrypt new password if provided
     if 'password' in update_data and update_data['password']:
-        crypto = PasswordEncryption()
-        update_data['password_encrypted'] = crypto.encrypt(update_data['password'])
-        del update_data['password']
+        try:
+            crypto = PasswordEncryption()
+            update_data['password_encrypted'] = crypto.encrypt(update_data['password'])
+            logger.info(f"Password re-encrypted successfully for config {config_id}")
+            del update_data['password']
+        except ValueError as e:
+            logger.error(f"Password encryption failed for config {config_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"密码加密失败：{str(e)}。请检查服务器配置。"
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error during password encryption for config {config_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="密码加密过程中发生未知错误"
+            )
 
     # If critical fields changed, mark as unverified
     critical_fields = ['email_address', 'password_encrypted', 'imap_server', 'imap_port', 'use_ssl']

@@ -39,7 +39,10 @@ class PasswordEncryption:
         self.master_key = master_key or os.getenv("PASSWORD_ENCRYPTION_KEY")
 
         if not self.master_key:
-            raise ValueError("PASSWORD_ENCRYPTION_KEY not set")
+            raise ValueError(
+                "PASSWORD_ENCRYPTION_KEY not set. Please add this environment variable "
+                "to your .env file. Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            )
 
         # Derive Fernet key from master key using PBKDF2
         # This provides key separation and adds computational cost to brute force

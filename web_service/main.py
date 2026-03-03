@@ -183,6 +183,41 @@ def docs_page(request: Request):
     return templates.TemplateResponse("docs.html", {"request": request})
 
 
+@app.get("/docs/email-bill-format")
+def email_bill_format_docs(request: Request):
+    """邮件账单格式说明文档"""
+    try:
+        # 获取项目根目录
+        project_root = os.path.dirname(web_service_dir)
+
+        # 读取 markdown 文档
+        doc_path = os.path.join(project_root, "docs", "email-bill-format-guide.md")
+
+        if not os.path.exists(doc_path):
+            raise HTTPException(status_code=404, detail="文档不存在")
+
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            md_content = f.read()
+
+        # 如果系统安装了 markdown 库，则渲染；否则显示原始文本
+        try:
+            import markdown
+            html_content = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
+        except ImportError:
+            # 如果没有 markdown 库，显示预格式化文本
+            html_content = f'<pre style="white-space: pre-wrap; word-wrap: break-word;">{md_content}</pre>'
+
+        return templates.TemplateResponse("docs_detail.html", {
+            "request": request,
+            "content": html_content,
+            "title": "邮件账单格式说明",
+            "description": "了解如何从邮箱导入账单，包括邮件格式要求、使用流程和常见问题"
+        })
+    except Exception as e:
+        logger.error(f"Error loading email bill format docs: {e}")
+        raise HTTPException(status_code=500, detail="加载文档失败")
+
+
 @app.get("/terms")
 def terms_page(request: Request):
     """服务条款页面"""

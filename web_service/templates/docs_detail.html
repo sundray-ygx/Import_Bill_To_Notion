@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Notion账单导入服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <style>
+        .docs-detail-container {
+            max-width: 900px;
+            margin: 80px auto 40px;
+            padding: 0 20px;
+        }
+
+        .docs-detail-header {
+            margin-bottom: 32px;
+        }
+
+        .docs-detail-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: var(--text-primary);
+        }
+
+        .docs-detail-header p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .docs-detail-content {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            line-height: 1.7;
+        }
+
+        .docs-detail-content h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 32px 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .docs-detail-content h1:first-child {
+            margin-top: 0;
+        }
+
+        .docs-detail-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 28px 0 14px 0;
+            color: var(--text-primary);
+        }
+
+        .docs-detail-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            color: var(--text-primary);
+        }
+
+        .docs-detail-content h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            color: var(--text-primary);
+        }
+
+        .docs-detail-content p {
+            margin: 0 0 16px 0;
+            color: var(--text-secondary);
+        }
+
+        .docs-detail-content ul,
+        .docs-detail-content ol {
+            margin: 0 0 20px 0;
+            padding-left: 28px;
+            color: var(--text-secondary);
+        }
+
+        .docs-detail-content li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .docs-detail-content code {
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: var(--primary-600);
+        }
+
+        .docs-detail-content pre {
+            background: #1a1a2e;
+            color: #e4e4e7;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .docs-detail-content pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .docs-detail-content blockquote {
+            border-left: 4px solid var(--primary-500);
+            padding-left: 20px;
+            margin: 20px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .docs-detail-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .docs-detail-content th,
+        .docs-detail-content td {
+            border: 1px solid var(--border-light);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .docs-detail-content th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        .docs-detail-content a {
+            color: var(--primary-600);
+            text-decoration: none;
+        }
+
+        .docs-detail-content a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary-600);
+        }
+
+        @media (max-width: 768px) {
+            .docs-detail-container {
+                margin: 60px auto 20px;
+                padding: 0 16px;
+            }
+
+            .docs-detail-content {
+                padding: 24px;
+            }
+
+            .docs-detail-content h1 {
+                font-size: 1.5rem;
+            }
+
+            .docs-detail-content h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏组件 -->
+    {% include "components/navbar.html" %}
+
+    <div class="docs-detail-container">
+        <a href="/docs" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            返回文档首页
+        </a>
+
+        <header class="docs-detail-header">
+            <h1>{{ title }}</h1>
+            <p>{{ description }}</p>
+        </header>
+
+        <main class="docs-detail-content">
+            {{ content|safe }}
+        </main>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

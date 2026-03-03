@@ -368,6 +368,15 @@ class EmailConfigResponse(EmailConfigBase):
     created_at: datetime
     updated_at: Optional[datetime]
 
+    # 显式声明所有字段以确保前端能获取到完整数据
+    email_address: EmailStr
+    imap_server: str
+    imap_port: int
+    use_ssl: bool
+    provider: Optional[str]
+    config_name: str
+    check_frequency: str
+
     class Config:
         from_attributes = True
 

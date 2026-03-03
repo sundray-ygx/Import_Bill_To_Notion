@@ -686,7 +686,496 @@
                 setTimeout(initReviewConfig, 100);
             });
         }
+
+        // 初始化邮箱配置（当切换到该部分时）
+        const emailSection = document.querySelector('.sidebar-item[data-section="email"]');
+        if (emailSection) {
+            emailSection.addEventListener('click', () => {
+                setTimeout(loadEmailConfigs, 100);
+            });
+        }
+
+        // 添加邮箱配置按钮事件
+        const addEmailBtn = document.getElementById('add-email-config-btn');
+        if (addEmailBtn) {
+            addEmailBtn.addEventListener('click', openEmailConfigModal);
+        }
     }
+
+    // ==================== 邮箱配置相关 ====================
+
+    // 邮箱服务商模板
+    const emailProviders = {
+        qq: {
+            name: 'QQ邮箱',
+            imap_server: 'imap.qq.com',
+            imap_port: 993,
+            use_ssl: true,
+            hint: 'QQ邮箱需要开启IMAP服务并使用授权码。请在QQ邮箱设置中生成授权码。'
+        },
+        '163': {
+            name: '163邮箱',
+            imap_server: 'imap.163.com',
+            imap_port: 993,
+            use_ssl: true,
+            hint: '163邮箱需要开启IMAP服务并使用授权码。请在邮箱设置中开启IMAP并设置授权码。'
+        },
+        gmail: {
+            name: 'Gmail',
+            imap_server: 'imap.gmail.com',
+            imap_port: 993,
+            use_ssl: true,
+            hint: 'Gmail需要使用应用专用密码。请前往Google账户设置生成应用专用密码。'
+        },
+        outlook: {
+            name: 'Outlook',
+            imap_server: 'outlook.office365.com',
+            imap_port: 993,
+            use_ssl: true,
+            hint: 'Outlook/Hotmail邮箱，直接使用登录密码即可。'
+        },
+        custom: {
+            name: '自定义',
+            imap_server: '',
+            imap_port: 993,
+            use_ssl: true,
+            hint: '请根据您的邮箱服务商填写IMAP服务器信息。'
+        }
+    };
+
+    // 加载邮箱配置列表
+    async function loadEmailConfigs() {
+        try {
+            const response = await window.Auth.apiRequest('/api/email/configs');
+            if (response && response.ok) {
+                const data = await response.json();
+                displayEmailConfigs(data.configs || []);
+            }
+        } catch (error) {
+            console.error('Failed to load email configs:', error);
+            showToast('加载邮箱配置失败', 'error');
+        }
+    }
+
+    // 显示邮箱配置列表
+    function displayEmailConfigs(configs) {
+        const listContainer = document.getElementById('email-configs-list');
+        const emptyState = document.getElementById('no-email-configs');
+
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+
+        if (configs.length === 0) {
+            listContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        listContainer.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
+
+        configs.forEach(config => {
+            const card = createEmailConfigCard(config);
+            listContainer.appendChild(card);
+        });
+    }
+
+    // 创建邮箱配置卡片
+    function createEmailConfigCard(config) {
+        const card = document.createElement('div');
+        card.className = 'email-config-card';
+        card.dataset.configId = config.id;
+
+        const statusClass = config.is_verified ? 'verified' : 'unverified';
+        const statusText = config.is_verified ? '已验证' : '未验证';
+
+        const lastCheckText = config.last_check_at ?
+            new Date(config.last_check_at).toLocaleString('zh-CN') : '未检查';
+
+        card.innerHTML = `
+            <div class="email-config-header">
+                <div class="email-config-info">
+                    <h3 class="email-config-name">${escapeHtml(config.config_name)}</h3>
+                    <div class="email-config-address">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        ${escapeHtml(config.email_address)}
+                    </div>
+                </div>
+                <div class="email-config-actions">
+                    <span class="status-badge ${statusClass}">
+                        <span class="status-dot"></span>
+                        ${statusText}
+                    </span>
+                    <button class="btn btn-secondary btn-sm" onclick="testEmailConnection(${config.id})">测试</button>
+                    <button class="btn btn-primary btn-sm" onclick="checkEmailBills(${config.id})">立即检查邮箱</button>
+                    <button class="btn btn-secondary btn-sm" onclick="editEmailConfig(${config.id})">编辑</button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteEmailConfig(${config.id})">删除</button>
+                </div>
+            </div>
+            <div class="email-config-details">
+                <div class="email-config-detail">
+                    <span class="email-config-detail-label">服务商</span>
+                    <span class="email-config-detail-value">${config.provider || '自定义'}</span>
+                </div>
+                <div class="email-config-detail">
+                    <span class="email-config-detail-label">IMAP服务器</span>
+                    <span class="email-config-detail-value">${escapeHtml(config.imap_server)}</span>
+                </div>
+                <div class="email-config-detail">
+                    <span class="email-config-detail-label">检查频率</span>
+                    <span class="email-config-detail-value">${getFrequencyText(config.check_frequency)}</span>
+                </div>
+                <div class="email-config-detail">
+                    <span class="email-config-detail-label">最后检查</span>
+                    <span class="email-config-detail-value">${lastCheckText}</span>
+                </div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    // 获取检查频率文本
+    function getFrequencyText(frequency) {
+        const map = {
+            'hourly': '每小时',
+            'daily': '每天',
+            'weekly': '每周'
+        };
+        return map[frequency] || frequency;
+    }
+
+    // 打开邮箱配置模态框
+    function openEmailConfigModal(configId = null, skipReset = false) {
+        const modal = document.getElementById('email-config-modal');
+        const title = document.getElementById('modal-title');
+        const form = document.getElementById('email-config-form');
+
+        if (!modal) return;
+
+        // 只在添加新配置时重置表单
+        if (!skipReset) {
+            form.reset();
+            document.getElementById('config-id').value = '';
+            document.getElementById('selected-provider').value = '';
+
+            // 清除服务商选择
+            document.querySelectorAll('.provider-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // 隐藏提示
+            const hint = document.getElementById('provider-hint');
+            if (hint) hint.style.display = 'none';
+        }
+
+        if (configId) {
+            title.textContent = '编辑邮箱配置';
+        } else {
+            title.textContent = '添加邮箱配置';
+        }
+
+        modal.classList.add('active');
+    }
+
+    // 关闭邮箱配置模态框
+    function closeEmailConfigModal() {
+        const modal = document.getElementById('email-config-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    // 选择服务商
+    function selectProvider(provider) {
+        document.querySelectorAll('.provider-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+
+        const selectedOption = document.querySelector(`.provider-option[data-provider="${provider}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+
+        document.getElementById('selected-provider').value = provider;
+
+        // 填充服务商信息
+        const providerData = emailProviders[provider];
+        if (providerData) {
+            document.getElementById('imap-server').value = providerData.imap_server;
+            document.getElementById('imap-port').value = providerData.imap_port;
+            document.getElementById('use-ssl').checked = providerData.use_ssl;
+
+            // 显示提示
+            const hint = document.getElementById('provider-hint');
+            if (hint && providerData.hint) {
+                hint.textContent = providerData.hint;
+                hint.style.display = 'block';
+            }
+        }
+    }
+
+    // 保存邮箱配置
+    async function saveEmailConfig() {
+        const form = document.getElementById('email-config-form');
+        if (!form.checkValidity()) {
+            showToast('请填写所有必填字段', 'error');
+            return;
+        }
+
+        const configId = document.getElementById('config-id').value;
+        const isEdit = !!configId;
+
+        const configData = {
+            email_address: document.getElementById('email-address').value,
+            password: document.getElementById('email-password').value,
+            imap_server: document.getElementById('imap-server').value,
+            imap_port: parseInt(document.getElementById('imap-port').value),
+            use_ssl: document.getElementById('use-ssl').checked,
+            provider: document.getElementById('selected-provider').value || null,
+            config_name: document.getElementById('config-name').value || '默认邮箱',
+            check_frequency: document.getElementById('check-frequency').value
+        };
+
+        try {
+            const url = isEdit ? `/api/email/config/${configId}` : '/api/email/config';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await window.Auth.apiRequest(url, {
+                method: method,
+                body: JSON.stringify(configData)
+            });
+
+            if (response && response.ok) {
+                showToast(isEdit ? '邮箱配置已更新' : '邮箱配置已添加', 'success');
+                closeEmailConfigModal();
+                loadEmailConfigs();
+            } else {
+                const error = await response.json();
+                const errorMsg = error.detail || '保存失败';
+
+                // 检查是否是密码加密相关的错误
+                if (errorMsg.includes('PASSWORD_ENCRYPTION_KEY') || errorMsg.includes('密码加密')) {
+                    showToast('服务器配置错误：缺少密码加密密钥', 'error');
+                    console.error('Server configuration error:', errorMsg);
+
+                    // 显示详细错误信息
+                    setTimeout(() => {
+                        alert('服务器配置错误\n\n请联系管理员配置以下环境变量：\n- PASSWORD_ENCRYPTION_KEY\n\n详细信息：\n' + errorMsg);
+                    }, 500);
+                } else {
+                    showToast(errorMsg, 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to save email config:', error);
+            showToast('保存邮箱配置失败', 'error');
+        }
+    }
+
+    // 测试邮箱连接
+    async function testEmailConnection(configId) {
+        try {
+            showToast('正在测试连接...', 'info');
+
+            const response = await window.Auth.apiRequest(`/api/email/config/${configId}/verify`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('邮箱连接验证成功', 'success');
+                loadEmailConfigs();
+            } else {
+                showToast(result.message || '验证失败', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to test connection:', error);
+            showToast('测试连接失败', 'error');
+        }
+    }
+
+    // 立即检查邮箱并导入账单
+    async function checkEmailBills(configId) {
+        try {
+            showToast('正在检查邮箱账单...', 'info');
+
+            const response = await window.Auth.apiRequest('/api/email/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ config_id: configId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message || '邮箱检查完成', 'success');
+
+                // 显示详细结果
+                if (result.total_imported > 0) {
+                    showToast(`成功导入 ${result.total_imported} 条账单记录`, 'success');
+                }
+
+                if (result.total_failed > 0) {
+                    showToast(`${result.total_failed} 条记录导入失败`, 'warning');
+                }
+
+                // 刷新配置列表以更新"最后检查"时间
+                loadEmailConfigs();
+            } else {
+                showToast(result.message || '检查失败', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to check email:', error);
+            showToast('检查邮箱失败：' + (error.message || '未知错误'), 'error');
+        }
+    }
+
+    // 编辑邮箱配置
+    async function editEmailConfig(configId) {
+        try {
+            // 先打开模态框（不重置表单）
+            openEmailConfigModal(configId, true);
+
+            // 然后加载配置数据
+            const response = await window.Auth.apiRequest(`/api/email/config/${configId}`);
+            if (response && response.ok) {
+                const config = await response.json();
+
+                // 调试日志：检查返回的数据
+                console.log('编辑邮箱配置 - API 返回数据:', config);
+                console.log('关键字段检查:', {
+                    email_address: config.email_address,
+                    imap_server: config.imap_server,
+                    imap_port: config.imap_port,
+                    use_ssl: config.use_ssl,
+                    provider: config.provider,
+                    config_name: config.config_name,
+                    check_frequency: config.check_frequency
+                });
+
+                // 验证必需字段
+                if (!config.email_address || !config.imap_server) {
+                    console.error('API 返回的数据缺少必需字段:', config);
+                    showToast('配置数据不完整，请刷新页面重试', 'error');
+                    closeEmailConfigModal();
+                    return;
+                }
+
+                // 填充表单
+                const configIdField = document.getElementById('config-id');
+                const emailField = document.getElementById('email-address');
+                const serverField = document.getElementById('imap-server');
+                const portField = document.getElementById('imap-port');
+                const sslField = document.getElementById('use-ssl');
+                const nameField = document.getElementById('config-name');
+                const freqField = document.getElementById('check-frequency');
+
+                if (!configIdField || !emailField || !serverField || !portField ||
+                    !sslField || !nameField || !freqField) {
+                    console.error('表单字段未找到，可能模态框未正确初始化');
+                    showToast('表单初始化失败，请刷新页面', 'error');
+                    closeEmailConfigModal();
+                    return;
+                }
+
+                configIdField.value = config.id;
+                emailField.value = config.email_address;
+                serverField.value = config.imap_server;
+                portField.value = config.imap_port;
+                sslField.checked = config.use_ssl;
+                nameField.value = config.config_name || '';
+                freqField.value = config.check_frequency || 'hourly';
+
+                console.log('表单填充完成:', {
+                    configId: configIdField.value,
+                    email: emailField.value,
+                    server: serverField.value,
+                    port: portField.value,
+                    ssl: sslField.checked,
+                    name: nameField.value,
+                    frequency: freqField.value
+                });
+
+                // 选择服务商
+                if (config.provider) {
+                    selectProvider(config.provider);
+                }
+            } else {
+                showToast('加载配置失败', 'error');
+                closeEmailConfigModal();
+            }
+        } catch (error) {
+            console.error('Failed to load email config:', error);
+            showToast('加载配置失败', 'error');
+            closeEmailConfigModal();
+        }
+    }
+
+    // 确认删除邮箱配置
+    function confirmDeleteEmailConfig(configId) {
+        const modal = document.getElementById('delete-confirm-modal');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+
+        if (modal && confirmBtn) {
+            confirmBtn.onclick = () => deleteEmailConfig(configId);
+            modal.classList.add('active');
+        }
+    }
+
+    // 关闭删除确认模态框
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-confirm-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    // 删除邮箱配置
+    async function deleteEmailConfig(configId) {
+        try {
+            const response = await window.Auth.apiRequest(`/api/email/config/${configId}`, {
+                method: 'DELETE'
+            });
+
+            if (response && response.ok) {
+                const result = await response.json();
+                showToast(result.message || '邮箱配置已删除', 'success');
+                closeDeleteModal();
+                loadEmailConfigs();
+            } else {
+                const error = await response.json();
+                showToast(error.detail || '删除失败', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to delete email config:', error);
+            showToast('删除邮箱配置失败', 'error');
+        }
+    }
+
+    // HTML 转义
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 将函数暴露到全局作用域
+    window.openEmailConfigModal = openEmailConfigModal;
+    window.closeEmailConfigModal = closeEmailConfigModal;
+    window.selectProvider = selectProvider;
+    window.saveEmailConfig = saveEmailConfig;
+    window.testEmailConnection = testEmailConnection;
+    window.editEmailConfig = editEmailConfig;
+    window.confirmDeleteEmailConfig = confirmDeleteEmailConfig;
+    window.closeDeleteModal = closeDeleteModal;
 
     // DOM 加载完成后初始化
     if (document.readyState === 'loading') {
