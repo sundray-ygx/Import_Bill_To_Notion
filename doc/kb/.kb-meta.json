@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-03-04T03:13:38Z",
+  "git_commit": "31bdfeb5925ad32018c28eb89718da9239f86366",
+  "git_branch": "develop",
+  "generator_version": "1.0.0",
+  "repository_info": {
+    "primary_language": "Python",
+    "frameworks": ["FastAPI", "Uvicorn", "Jinja2", "SQLAlchemy", "APScheduler", "Notion Client"],
+    "is_library": false,
+    "has_api": true
+  },
+  "repository_dependencies": ["Notion API", "SQLite", "APScheduler", "FastAPI", "Uvicorn", "SQLAlchemy", "python-jose", "bcrypt"]
+}
