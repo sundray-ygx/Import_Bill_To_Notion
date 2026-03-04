@@ -50,6 +50,10 @@ web_service/uploads/
 # AI工具配置
 .claude/
 .specify/
+agent-rules/
+
+# 临时运行文件
+service_run.txt
 
 # 测试覆盖率
 .coverage
