@@ -81,7 +81,7 @@ def import_bill(file_path: str, platform: Optional[str] = None, user_id: Optiona
         result = notion_client.batch_import(notion_records)
 
         # Print import result
-        logger.info(f"Import completed successfully!")
+        logger.info("Import completed successfully!")
         logger.info(f"Imported: {result['imported']} records")
         logger.info(f"Updated: {result['updated']} records")
         logger.info(f"Skipped: {result['skipped']} records")

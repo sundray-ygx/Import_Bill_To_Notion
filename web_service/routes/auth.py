@@ -73,7 +73,7 @@ async def register(
 
     # 检查是否需要设置超级管理员
     user_count = db.query(User).count()
-    superuser_count = db.query(User).filter(User.is_superuser == True).count()
+    superuser_count = db.query(User).filter(User.is_superuser).count()
 
     # 如果没有用户或没有超级管理员，新用户自动成为超级管理员
     should_be_superuser = (user_count == 0) or (superuser_count == 0)
@@ -305,7 +305,7 @@ async def refresh_token(
     session = db.query(UserSession).filter(
         UserSession.user_id == user_id,
         UserSession.refresh_token == token_data.refresh_token,
-        UserSession.is_revoked == False
+        not UserSession.is_revoked
     ).first()
 
     if not session:
@@ -431,11 +431,11 @@ async def check_setup_needed(
             if payload:
                 user_id = int(payload.get("sub"))
                 current_user = db.query(User).filter(User.id == user_id).first()
-    except:
+    except Exception:
         pass
 
     # 检查是否有超级管理员
-    superuser_count = db.query(User).filter(User.is_superuser == True).count()
+    superuser_count = db.query(User).filter(User.is_superuser).count()
     user_count = db.query(User).count()
 
     # 判断设置类型

@@ -250,7 +250,7 @@ def review_page(request: Request):
 def service_management(request: Request):
     """服务管理页面 - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:
@@ -263,7 +263,7 @@ def service_management(request: Request):
 def log_management(request: Request):
     """日志管理页面 - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:
@@ -276,7 +276,7 @@ def log_management(request: Request):
 def admin_users_page(request: Request):
     """后台用户管理页面 - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:
@@ -289,7 +289,7 @@ def admin_users_page(request: Request):
 def admin_user_form_page(request: Request, mode: str = "create", user_id: int = None):
     """后台用户表单页面（创建/编辑用户） - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:
@@ -306,7 +306,7 @@ def admin_user_form_page(request: Request, mode: str = "create", user_id: int = 
 def admin_settings_page(request: Request):
     """后台系统设置页面 - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:
@@ -319,7 +319,7 @@ def admin_settings_page(request: Request):
 def admin_audit_logs_page(request: Request):
     """后台审计日志页面 - 需要管理员认证"""
     try:
-        payload = require_page_auth(request)
+        require_page_auth(request)
         # TODO: 添加管理员权限检查
     except HTTPException as e:
         if e.status_code == 302:

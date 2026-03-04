@@ -148,10 +148,10 @@ async def update_user(
         )
 
     # 检查是否要移除超级管理员权限
-    if user_data.is_superuser is not None and user_data.is_superuser == False:
+    if user_data.is_superuser is not None and not user_data.is_superuser:
         if user.is_superuser:
             # 检查是否是最后一个超级管理员
-            superuser_count = db.query(User).filter(User.is_superuser == True).count()
+            superuser_count = db.query(User).filter(User.is_superuser).count()
             if superuser_count <= 1:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -334,7 +334,7 @@ async def get_system_stats(
     """获取系统统计信息（超级管理员）。"""
     # 用户统计
     total_users = db.query(User).count()
-    active_users = db.query(User).filter(User.is_active == True).count()
+    active_users = db.query(User).filter(User.is_active).count()
 
     # 上传统计
     total_uploads = db.query(UserUpload).count()

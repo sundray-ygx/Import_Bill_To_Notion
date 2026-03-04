@@ -362,7 +362,7 @@ async def verify_notion_config_step(
                 income_db_info = client.client.databases.retrieve(database_id=client.income_db)
                 db_title = income_db_info.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
                 steps[1].status = "success"
-                steps[1].message = f"收入数据库验证成功"
+                steps[1].message = "收入数据库验证成功"
                 steps[1].details = {"db_title": db_title, "db_id": client.income_db[:8] + "***"}
             except Exception as e:
                 steps[1].status = "error"
@@ -384,7 +384,7 @@ async def verify_notion_config_step(
                 expense_db_info = client.client.databases.retrieve(database_id=client.expense_db)
                 db_title = expense_db_info.get('title', [{}])[0].get('text', {}).get('content', 'unknown')
                 steps[2].status = "success"
-                steps[2].message = f"支出数据库验证成功"
+                steps[2].message = "支出数据库验证成功"
                 steps[2].details = {"db_title": db_title, "db_id": client.expense_db[:8] + "***"}
 
                 # 如果全部成功，更新配置状态
@@ -421,7 +421,7 @@ async def verify_notion_config_step(
         logger.error(f"Notion step verification error for user {current_user.id}, step {step}: {e}")
         # 标记当前步骤为错误
         steps[current_step_index].status = "error"
-        steps[current_step_index].message = f"验证出错"
+        steps[current_step_index].message = "验证出错"
         steps[current_step_index].error = str(e)
 
         return NotionVerifyProgressResponse(

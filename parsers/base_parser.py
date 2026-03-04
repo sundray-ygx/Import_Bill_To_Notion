@@ -200,7 +200,7 @@ class BaseBillParser(ABC):
             logger.warning(f"Amount column '{amount_col}' not found in data")
             return
 
-        logger.info(f"Cleaning amount column")
+        logger.info("Cleaning amount column")
         # Convert to string first to handle any non-string values
         self.data[amount_col] = self.data[amount_col].astype(str)
 

@@ -219,7 +219,6 @@ async def get_logs():
             return [{"level": "INFO", "time": "2025-01-01 00:00:00", "message": f"Log file not found: {log_file}"}]
 
         log_lines = []
-        best_encoding = None
         best_lines = []
 
         # Try to find the best encoding by checking for decode errors
@@ -238,7 +237,6 @@ async def get_logs():
                     # Store the encoding with least artifacts
                     if not best_lines or artifact_count < best_lines[1]:
                         best_lines = (lines, artifact_count)
-                        best_encoding = encoding
                         if artifact_count == 0:
                             break
             except (UnicodeDecodeError, UnicodeError):

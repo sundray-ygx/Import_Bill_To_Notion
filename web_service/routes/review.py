@@ -588,7 +588,6 @@ async def list_reviews(
 
     # 检查缓存
     current_time = time.time()
-    cache_key = f"{user_id}_{review_type}_{limit}"
 
     if (_review_list_cache["user_id"] == user_id and
         _review_list_cache["timestamp"] > current_time - CACHE_TTL and

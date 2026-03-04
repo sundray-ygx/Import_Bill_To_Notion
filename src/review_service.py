@@ -209,7 +209,7 @@ class ReviewService:
 
         try:
             # 尝试使用 databases.retrieve API 来验证数据库
-            logger.info(f"Trying databases.retrieve API first...")
+            logger.info("Trying databases.retrieve API first...")
             db_info = self.notion_client.client.databases.retrieve(database_id=database_id)
             logger.info(f"Database retrieve successful: {db_info.get('title', [{}])[0].get('text', {}).get('content', 'unknown')}")
 
@@ -280,7 +280,7 @@ class ReviewService:
                         body=body
                     )
 
-                    logger.debug(f"Response received, processing results...")
+                    logger.debug("Response received, processing results...")
 
                     results.extend(response.get("results", []))
                     has_more = response.get("has_more", False)
@@ -316,7 +316,7 @@ class ReviewService:
                                     error_body = json.loads(e.body) if isinstance(e.body, str) else e.body
                                     if isinstance(error_body, dict):
                                         error_detail = error_body.get('message', '')
-                                except:
+                                except (ValueError, TypeError, json.JSONDecodeError):
                                     pass
 
                             if "filter" in error_detail.lower() or "date" in error_detail.lower():
@@ -1058,13 +1058,11 @@ class ReviewService:
             end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
             start_date_str = start_dt.strftime("%Y年%m月%d日")
             end_date_str = end_dt.strftime("%Y年%m月%d日")
-        except:
+        except (ValueError, AttributeError):
             start_date_str = start_date
             end_date_str = end_date
 
         # 计算收支金额（以万为单位）
-        income_wan = summary.get("total_income", 0) / 10000
-        expense_wan = summary.get("total_expense", 0) / 10000
         balance_wan = summary.get("net_balance", 0) / 10000
 
         # 获取TOP分类
@@ -1115,7 +1113,7 @@ class ReviewService:
                         {
                             "type": "text",
                             "text": {
-                                "content": f"月度复盘"
+                                "content": "月度复盘"
                             }
                         }
                     ]
@@ -1264,7 +1262,7 @@ class ReviewService:
                         {
                             "type": "text",
                             "text": {
-                                "content": f"1、本月支出数据中，TOP N 支出分别为：" + "，".join(expense_top_parts) + "费用"
+                                "content": "1、本月支出数据中，TOP N 支出分别为：" + "，".join(expense_top_parts) + "费用"
                             }
                         }
                     ]
@@ -1328,7 +1326,7 @@ class ReviewService:
                         {
                             "type": "text",
                             "text": {
-                                "content": f"1、本月收入数据中，TOP N 收入分别为：" + "，".join(income_top_parts) + "收入"
+                                "content": "1、本月收入数据中，TOP N 收入分别为：" + "，".join(income_top_parts) + "收入"
                             }
                         }
                     ]
@@ -1408,12 +1406,12 @@ class ReviewService:
         Returns:
             复盘结果
         """
-        logger.info(f"=" * 50)
+        logger.info("=" * 50)
         logger.info(f"开始生成月度复盘: {year}-{month:02d}")
-        logger.info(f"=" * 50)
+        logger.info("=" * 50)
 
         # 阶段1: 获取账单数据
-        logger.info(f"[阶段 1/4] 获取账单数据...")
+        logger.info("[阶段 1/4] 获取账单数据...")
 
         # 检查复盘数据库是否配置
         database_id = self.get_review_database_id(self.TYPE_MONTHLY)
@@ -1457,11 +1455,11 @@ class ReviewService:
         }
 
         # 阶段2: 获取模板
-        logger.info(f"[阶段 2/4] 获取复盘模板...")
+        logger.info("[阶段 2/4] 获取复盘模板...")
 
         # 阶段3&4: 创建复盘页面（包含填充模板数据）
-        logger.info(f"[阶段 3/4] 填充模板数据...")
-        logger.info(f"[阶段 4/4] 创建复盘页面...")
+        logger.info("[阶段 3/4] 填充模板数据...")
+        logger.info("[阶段 4/4] 创建复盘页面...")
 
         page_id = self.create_review_page(
             self.TYPE_MONTHLY,
@@ -1474,7 +1472,7 @@ class ReviewService:
         else:
             logger.error("✗ 月度复盘生成失败")
 
-        logger.info(f"=" * 50)
+        logger.info("=" * 50)
 
         return {
             "success": page_id is not None,
@@ -1939,7 +1937,7 @@ class ReviewService:
             return "本期无支出数据"
 
         lines = [
-            f"1. 本期支出数据中，TOP N 支出分别为：" +
+            "1. 本期支出数据中，TOP N 支出分别为：" +
             "，".join([f"{amount:.0f}为{name}" for name, amount in expense_top5]),
             "2. 详细分析如下（异常数据分析）"
         ]
@@ -1956,7 +1954,7 @@ class ReviewService:
             return "本期无收入数据"
 
         lines = [
-            f"1. 本期收入数据中，TOP N 收入分别为：" +
+            "1. 本期收入数据中，TOP N 收入分别为：" +
             "，".join([f"{amount:.0f}为{name}" for name, amount in income_top5]),
             "2. 收入详细分析（异常数据分析）"
         ]

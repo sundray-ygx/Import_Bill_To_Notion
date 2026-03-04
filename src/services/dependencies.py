@@ -225,7 +225,7 @@ def get_valid_session(
     session = db.query(UserSession).filter(
         UserSession.user_id == current_user.id,
         UserSession.token == token,
-        UserSession.is_revoked == False
+        not UserSession.is_revoked
     ).first()
 
     if not session:

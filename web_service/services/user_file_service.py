@@ -357,7 +357,7 @@ class FileService:
         content = await upload_file.read()
         file_size = len(content)
         if file_size > self.max_file_size:
-            raise ValueError(f"文件大小超过限制")
+            raise ValueError("文件大小超过限制")
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         file_name = f"{timestamp}_{upload_file.filename}"

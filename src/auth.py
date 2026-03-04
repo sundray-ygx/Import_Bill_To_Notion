@@ -298,7 +298,7 @@ class SessionManager:
 
             count = db.query(UserSession).filter(
                 UserSession.user_id == user_id,
-                UserSession.is_revoked == False
+                not UserSession.is_revoked
             ).update({"is_revoked": True})
 
             db.commit()
@@ -328,7 +328,7 @@ class SessionManager:
 
             count = db.query(UserSession).filter(
                 and_(
-                    UserSession.is_revoked == True,
+                    UserSession.is_revoked,
                     UserSession.expires_at < cutoff_date
                 )
             ).delete()
