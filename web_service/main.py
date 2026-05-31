@@ -62,13 +62,14 @@ app.mount("/static", StaticFiles(directory=os.path.join(web_service_dir, "static
 templates = Jinja2Templates(directory=os.path.join(web_service_dir, "templates"))
 
 # Routes
-from .routes import upload, auth, users, bills, admin, review
+from .routes import upload, auth, users, bills, admin, review, finance
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/user", tags=["User"])
 app.include_router(bills.router, prefix="/api/bills", tags=["Bills"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(upload.router, prefix="/api", tags=["Upload"])
 app.include_router(review.router, prefix="/api/review", tags=["Review"])
+app.include_router(finance.router, prefix="/api/finance", tags=["Finance"])
 
 
 # ==================== 页面鉴权辅助函数 ====================
@@ -242,6 +243,18 @@ def review_page(request: Request):
             return RedirectResponse(url="/login")
         raise
     return templates.TemplateResponse("review.html", {"request": request})
+
+
+@app.get("/finance")
+def finance_page(request: Request):
+    """财务分析页面 - 需要认证"""
+    try:
+        require_page_auth(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url="/login")
+        raise
+    return templates.TemplateResponse("finance.html", {"request": request})
 
 
 # ==================== 管理员页面路由（需要管理员权限）====================

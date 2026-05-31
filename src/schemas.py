@@ -60,7 +60,7 @@ class UserResponse(UserBase):
     last_login: Optional[datetime]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class UserProfileResponse(UserResponse):
@@ -158,7 +158,7 @@ class NotionConfigResponse(NotionConfigBase):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 # ==================== 文件上传相关 ====================
@@ -175,7 +175,7 @@ class FileUploadResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class UploadRequest(BaseModel):
@@ -221,7 +221,7 @@ class ImportHistoryResponse(BaseModel):
     duration_seconds: Optional[int]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class ImportHistoryListResponse(BaseModel):
@@ -279,7 +279,7 @@ class AuditLogResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class AuditLogListResponse(BaseModel):

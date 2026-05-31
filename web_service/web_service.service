@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/mnt/hgfs/code/share/python/Import_Bill_To_Notion
-ExecStart=/usr/bin/python3 -m web_service.main
+WorkingDirectory=/home/ygx/python/Import_Bill_To_Notion
+ExecStart=/usr/bin/python3.8 -m web_service.main
 Restart=always
 RestartSec=5
 StandardOutput=journal

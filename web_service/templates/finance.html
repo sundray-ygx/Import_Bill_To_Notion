@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务分析 - 个人财务管理平台</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/echarts.min.js"></script>
+    <style>
+        .finance-container { max-width: 1300px; margin: 0 auto; padding: 24px; }
+        .finance-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .finance-header h1 { font-size: 24px; font-weight: 600; }
+        .year-selector { display: flex; gap: 8px; }
+        .year-btn { padding: 8px 20px; border-radius: 8px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .year-btn:hover { border-color: #1890ff; color: #1890ff; }
+        .year-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .kpi-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .kpi-card .label { font-size: 12px; color: #999; margin-bottom: 8px; }
+        .kpi-card .value { font-size: 26px; font-weight: 700; }
+        .kpi-card .sub { font-size: 11px; color: #999; margin-top: 4px; }
+        .kpi-card.inc .value { color: #1890ff; }
+        .kpi-card.exp .value { color: #ff4d4f; }
+        .kpi-card.bal .value { color: #52c41a; }
+        .kpi-card.sr .value { color: #722ed1; }
+        .chart-section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .chart-section h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .chart-box { height: 380px; }
+        .chart-full { height: 420px; }
+        .loading { text-align: center; padding: 60px; color: #999; }
+        .tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab { padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; background: #f5f5f5; color: #666; border: none; transition: all 0.2s; }
+        .tab.active { background: #1890ff; color: #fff; }
+        @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .chart-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    {% include "components/navbar.html" %}
+    <div class="finance-container">
+        <div class="finance-header">
+            <h1>📊 财务分析</h1>
+            <div class="year-selector">
+                <button class="year-btn" data-year="2022">2022</button>
+                <button class="year-btn" data-year="2023">2023</button>
+                <button class="year-btn" data-year="2024">2024</button>
+                <button class="year-btn active" data-year="2025">2025</button>
+                <button class="year-btn" data-year="2026">2026</button>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card inc"><div class="label">总收入</div><div class="value" id="kpi-inc">—</div><div class="sub" id="kpi-inc-sub"></div></div>
+            <div class="kpi-card exp"><div class="label">总支出</div><div class="value" id="kpi-exp">—</div><div class="sub" id="kpi-exp-sub"></div></div>
+            <div class="kpi-card bal"><div class="label">净结余</div><div class="value" id="kpi-bal">—</div><div class="sub" id="kpi-bal-sub"></div></div>
+            <div class="kpi-card sr"><div class="label">储蓄率</div><div class="value" id="kpi-sr">—</div><div class="sub" id="kpi-sr-sub"></div></div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-section">
+                <h2>月度收支趋势</h2>
+                <div id="chart-monthly" class="chart-box"></div>
+            </div>
+            <div class="chart-section">
+                <h2>支出分类占比</h2>
+                <div id="chart-category" class="chart-box"></div>
+            </div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-section">
+                <h2>固定 vs 可变支出</h2>
+                <div id="chart-fixed-var" class="chart-box"></div>
+            </div>
+            <div class="chart-section">
+                <h2>月度净现金流</h2>
+                <div id="chart-cashflow" class="chart-box"></div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h2>历年对比</h2>
+            <div class="tab-row">
+                <button class="tab active" data-chart="income">收入结构</button>
+                <button class="tab" data-chart="expense">支出结构</button>
+                <button class="tab" data-chart="mortgage">房贷分析</button>
+                <button class="tab" data-chart="stability">消费稳定性</button>
+            </div>
+            <div id="chart-compare" class="chart-full"></div>
+        </div>
+    </div>
+
+    <script>
+    let currentYear = '2025';
+    let charts = {};
+    const apiBase = '/api/finance';
+
+    // Format helpers
+    const fmt = v => v >= 10000 ? `¥${(v/10000).toFixed(1)}万` : `¥${v.toFixed(0)}`;
+    const fmtW = v => (v/10000).toFixed(1);
+
+    // Initialize charts
+    function initCharts() {
+        ['monthly','category','fixed-var','cashflow','compare'].forEach(id => {
+            charts[id] = echarts.init(document.getElementById(`chart-${id}`));
+        });
+    }
+
+    // Load overview data
+    async function loadOverview(year) {
+        const resp = await fetch(`${apiBase}/overview?year=${year}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        if (resp.status === 401) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
+        if (!resp.ok) throw new Error('Failed to load');
+        const d = await resp.json();
+
+        document.getElementById('kpi-inc').textContent = fmt(d.total_income);
+        document.getElementById('kpi-exp').textContent = fmt(d.total_expense);
+        document.getElementById('kpi-bal').textContent = fmt(d.balance);
+        document.getElementById('kpi-sr').textContent = d.savings_rate.toFixed(1) + '%';
+        document.getElementById('kpi-inc-sub').textContent = `月均 ${fmt(d.avg_monthly_income)}`;
+        document.getElementById('kpi-exp-sub').textContent = `月均 ${fmt(d.avg_monthly_expense)}`;
+        document.getElementById('kpi-bal-sub').textContent = `月均 ${fmt(d.balance / (Object.keys(d.monthly_income).length || 1))}`;
+        document.getElementById('kpi-sr-sub').textContent = `应急储备 ${d.reserve_months.toFixed(1)}月`;
+
+        // Monthly chart
+        const months = Object.keys(d.monthly_income).sort();
+        charts.monthly.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['收入','支出'] },
+            grid: { left: 70, right: 20, bottom: 40 },
+            xAxis: { type: 'category', data: months.map(m => m.replace(year+'-','')+'月') },
+            yAxis: { axisLabel: { formatter: v => (v/10000).toFixed(1)+'万' } },
+            series: [
+                { name: '收入', type: 'bar', data: months.map(m => d.monthly_income[m]||0), itemStyle: { color: '#1890ff' } },
+                { name: '支出', type: 'bar', data: months.map(m => d.monthly_expense[m]||0), itemStyle: { color: '#ff4d4f' } }
+            ]
+        });
+
+        // Category pie
+        const cats = Object.entries(d.category_expense).slice(0, 8);
+        const catTotal = cats.reduce((s,[,v]) => s+v, 0);
+        charts.category.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
+            series: [{ type: 'pie', radius: ['35%','70%'], data: cats.map(([k,v]) => ({ name: k, value: Math.round(v) })),
+                label: { formatter: '{b}\n{d}%', fontSize: 11 }
+            }]
+        });
+
+        // Fixed vs Variable
+        charts['fixed-var'].setOption({
+            tooltip: { trigger: 'item' },
+            series: [{ type: 'pie', radius: ['40%','70%'], data: [
+                { name: `固定支出 ¥${fmtW(d.fixed_expense)}万 (${(d.fixed_expense/d.total_expense*100).toFixed(0)}%)`, value: Math.round(d.fixed_expense), itemStyle: { color: '#722ed1' } },
+                { name: `可变支出 ¥${fmtW(d.variable_expense)}万 (${(d.variable_expense/d.total_expense*100).toFixed(0)}%)`, value: Math.round(d.variable_expense), itemStyle: { color: '#fa8c16' } }
+            ], label: { formatter: '{b}', fontSize: 12 } }]
+        });
+
+        // Cashflow
+        charts.cashflow.setOption({
+            tooltip: { trigger: 'axis' },
+            grid: { left: 70, right: 20, bottom: 40 },
+            xAxis: { type: 'category', data: months.map(m => m.replace(year+'-','')+'月') },
+            yAxis: { axisLabel: { formatter: v => (v/10000).toFixed(1)+'万' } },
+            series: [{ type: 'bar', data: months.map(m => (d.monthly_income[m]||0)-(d.monthly_expense[m]||0)),
+                itemStyle: { color: p => p.value >= 0 ? '#52c41a' : '#ff4d4f' },
+                label: { show: true, position: 'top', formatter: p => (p.value/10000).toFixed(1)+'万', fontSize: 9 }
+            }]
+        });
+    }
+
+    // All-years comparison data cache
+    let allYearsCache = null;
+
+    // Load comparison data
+    async function loadCompare(type) {
+        const token = getToken();
+
+        // Fetch all years data in one request
+        if (!allYearsCache) {
+            const resp = await fetch(`${apiBase}/all-years`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (resp.status === 401) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
+            allYearsCache = await resp.json();
+        }
+        const d = allYearsCache;
+        let processFn;
+
+        if (type === 'income') {
+            processFn = d => {
+                const src = d.income_structure;
+                const years = Object.keys(src).sort();
+                const allCats = new Set();
+                years.forEach(y => Object.keys(src[y]).forEach(c => allCats.add(c)));
+                const topCats = [...allCats].sort((a,b) => years.reduce((s,y)=>s+(src[y][b]||0),0) - years.reduce((s,y)=>s+(src[y][a]||0),0)).slice(0,5);
+                const colors = ['#1890ff','#fa8c16','#722ed1','#52c41a','#ff4d4f'];
+                return {
+                    legend: { data: topCats }, xAxis: { type: 'category', data: years },
+                    yAxis: { axisLabel: { formatter: v => (v/10000).toFixed(0)+'万' } },
+                    series: topCats.map((c,i) => ({ name: c, type: 'bar', stack: 'total', data: years.map(y => Math.round(src[y][c]||0)), itemStyle: { color: colors[i] } }))
+                };
+            };
+        } else if (type === 'expense') {
+            processFn = d => {
+                const src = d.expense_structure;
+                const years = Object.keys(src).sort();
+                const allCats = new Set();
+                years.forEach(y => Object.keys(src[y]).forEach(c => allCats.add(c)));
+                const topCats = [...allCats].sort((a,b) => years.reduce((s,y)=>s+(src[y][b]||0),0) - years.reduce((s,y)=>s+(src[y][a]||0),0)).slice(0,5);
+                const colors = ['#5470c6','#91cc75','#fac858','#ee6666','#73c0de'];
+                return {
+                    legend: { data: topCats }, xAxis: { type: 'category', data: years },
+                    yAxis: { axisLabel: { formatter: v => (v/10000).toFixed(0)+'万' } },
+                    series: topCats.map((c,i) => ({ name: c, type: 'bar', data: years.map(y => Math.round(src[y][c]||0)), itemStyle: { color: colors[i] } }))
+                };
+            };
+        } else if (type === 'mortgage') {
+            processFn = d => {
+                const src = d.mortgage;
+                const years = Object.keys(src).sort();
+                return {
+                    legend: { data: ['月均房贷','提前还贷'] },
+                    xAxis: { type: 'category', data: years },
+                    yAxis: { axisLabel: { formatter: v => (v/10000).toFixed(0)+'万' } },
+                    series: [
+                        { name: '月均房贷', type: 'bar', data: years.map(y => src[y].monthly_avg), itemStyle: { color: '#1890ff' } },
+                        { name: '提前还贷', type: 'bar', data: years.map(y => src[y].prepayment), itemStyle: { color: '#ff4d4f', opacity: 0.6 } }
+                    ]
+                };
+            };
+        } else {
+            processFn = d => {
+                const src = d.stability;
+                const years = Object.keys(src).sort();
+                return {
+                    legend: { data: ['月均支出','标准差'] },
+                    xAxis: { type: 'category', data: years },
+                    yAxis: { axisLabel: { formatter: v => '¥'+v } },
+                    series: [
+                        { name: '月均支出', type: 'bar', data: years.map(y => Math.round(src[y].avg)), itemStyle: { color: '#1890ff' } },
+                        { name: '标准差', type: 'line', data: years.map(y => Math.round(src[y].std_dev)), itemStyle: { color: '#ff4d4f' }, lineStyle: { type: 'dashed' } }
+                    ]
+                };
+            };
+        }
+
+        const opt = processFn(d);
+        charts.compare.setOption({ tooltip: { trigger: 'axis' }, grid: { left: 70, right: 20, bottom: 40 }, ...opt }, true);
+    }
+
+    function getToken() {
+        return localStorage.getItem('access_token') || (function() {
+            const c = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith('access_token='));
+            return c ? c.split('=')[1] : '';
+        })();
+    }
+
+    // Check auth on load
+    if (!getToken()) {
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    // Event listeners
+    document.querySelectorAll('.year-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentYear = btn.dataset.year;
+            loadOverview(currentYear);
+        });
+    });
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            loadCompare(tab.dataset.chart);
+        });
+    });
+
+    window.addEventListener('resize', () => Object.values(charts).forEach(c => c.resize()));
+
+    // Init
+    initCharts();
+    loadOverview(currentYear);
+    loadCompare('income');
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+AlipayParser	parsers/alipay_parser.py	/^class AlipayParser(BaseBillParser):$/;"	c
+BaseBillParser	parsers/base_parser.py	/^class BaseBillParser(ABC):$/;"	c
+BeijingFormatter	utils.py	/^class BeijingFormatter(logging.Formatter):$/;"	c
+BillScheduler	scheduler.py	/^class BillScheduler:$/;"	c
+COLUMN_MAP	parsers/alipay_parser.py	/^    COLUMN_MAP = {$/;"	v	class:AlipayParser
+COLUMN_MAP	parsers/unionpay_parser.py	/^    COLUMN_MAP = {$/;"	v	class:UnionPayParser
+COLUMN_MAP	parsers/wechat_parser.py	/^    COLUMN_MAP = {$/;"	v	class:WeChatParser
+Config	config.py	/^class Config:$/;"	c
+DEFAULT_BILL_DIR	config.py	/^    DEFAULT_BILL_DIR = os.getenv("DEFAULT_BILL_DIR", ".\/bills")$/;"	v	class:Config
+DEFAULT_BILL_PLATFORM	config.py	/^    DEFAULT_BILL_PLATFORM = os.getenv("DEFAULT_BILL_PLATFORM", "alipay")$/;"	v	class:Config
+FileService	web_service/services/file_service.py	/^class FileService:$/;"	c
+LOG_LEVEL	config.py	/^    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()$/;"	v	class:Config
+NOTION_API_KEY	config.py	/^    NOTION_API_KEY = os.getenv("NOTION_API_KEY", "")$/;"	v	class:Config
+NOTION_EXPENSE_DATABASE_ID	config.py	/^    NOTION_EXPENSE_DATABASE_ID = os.getenv("NOTION_EXPENSE_DATABASE_ID", "")$/;"	v	class:Config
+NOTION_INCOME_DATABASE_ID	config.py	/^    NOTION_INCOME_DATABASE_ID = os.getenv("NOTION_INCOME_DATABASE_ID", "")$/;"	v	class:Config
+NotionClient	notion_api.py	/^class NotionClient:$/;"	c
+PARSERS	parsers/__init__.py	/^PARSERS = [AlipayParser, WeChatParser, UnionPayParser]$/;"	v
+SCHEDULER_CRON	config.py	/^    SCHEDULER_CRON = os.getenv("SCHEDULER_CRON", "0 0 1 * *")$/;"	v	class:Config
+SCHEDULER_ENABLED	config.py	/^    SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "false").lower() == "true"$/;"	v	class:Config
+STANDARD_COLUMNS	parsers/base_parser.py	/^STANDARD_COLUMNS = [$/;"	v
+UnionPayParser	parsers/unionpay_parser.py	/^class UnionPayParser(BaseBillParser):$/;"	c
+WeChatParser	parsers/wechat_parser.py	/^class WeChatParser(BaseBillParser):$/;"	c
+__init__	notion_api.py	/^    def __init__(self):$/;"	m	class:NotionClient
+__init__	parsers/base_parser.py	/^    def __init__(self, file_path: str):$/;"	m	class:BaseBillParser
+__init__	scheduler.py	/^    def __init__(self):$/;"	m	class:BillScheduler
+__init__	web_service/services/file_service.py	/^    def __init__(self):$/;"	m	class:FileService
+_clean_properties	notion_api.py	/^    def _clean_properties(self, properties: dict) -> tuple:$/;"	m	class:NotionClient
+_clean_property	notion_api.py	/^    def _clean_property(self, value: dict) -> dict:$/;"	m	class:NotionClient
+_convert_to_notion	parsers/alipay_parser.py	/^    def _convert_to_notion(self, record) -> dict:$/;"	m	class:AlipayParser
+_convert_to_notion	parsers/base_parser.py	/^    def _convert_to_notion(self, record) -> dict:$/;"	m	class:BaseBillParser
+_convert_to_notion	parsers/unionpay_parser.py	/^    def _convert_to_notion(self, record) -> dict:$/;"	m	class:UnionPayParser
+_convert_to_notion	parsers/wechat_parser.py	/^    def _convert_to_notion(self, record) -> dict:$/;"	m	class:WeChatParser
+all_tests_passed	test_code_integrity.py	/^    all_tests_passed = True$/;"	v
+allow_credentials	web_service/main.py	/^    allow_credentials=True,$/;"	v
+allow_headers	web_service/main.py	/^    allow_headers=["*"],$/;"	v
+allow_methods	web_service/main.py	/^    allow_methods=["*"],$/;"	v
+allow_origins	web_service/main.py	/^    allow_origins=["*"],$/;"	v
+app	web_service/main.py	/^app = FastAPI(title="Bill Import Service", description="Upload and sync bills to Notion", version="1.0.0")$/;"	v
+apply_column_mapping	parsers/base_parser.py	/^    def apply_column_mapping($/;"	m	class:BaseBillParser
+auto_import_bills	scheduler.py	/^    def auto_import_bills(self):$/;"	m	class:BillScheduler
+batch_import	notion_api.py	/^    def batch_import(self, records: list, batch_size: int = 10) -> dict:$/;"	m	class:NotionClient
+bill_management	web_service/main.py	/^def bill_management(request: Request):$/;"	f
+clean_amount_column	parsers/base_parser.py	/^    def clean_amount_column(self, amount_col: str = 'amount'):$/;"	m	class:BaseBillParser
+clearLogs	web_service/static/js/main.js	/^function clearLogs() {$/;"	f
+create_page	notion_api.py	/^    def create_page(self, properties: dict):$/;"	m	class:NotionClient
+delete_file	web_service/routes/upload.py	/^async def delete_file(file_name: str):$/;"	f
+delete_file	web_service/services/file_service.py	/^    def delete_file(self, file_path: str) -> bool:$/;"	m	class:FileService
+file_path	test_import.py	/^    file_path = sys.argv[1]$/;"	v
+file_path	test_wechat_parser.py	/^    file_path = sys.argv[1]$/;"	v
+file_path	test_wechat_parser_simple.py	/^    file_path = sys.argv[1]$/;"	v
+file_service	web_service/routes/upload.py	/^file_service = FileService()$/;"	v
+find_header_and_encoding	parsers/base_parser.py	/^    def find_header_and_encoding($/;"	m	class:BaseBillParser
+find_header_and_encoding	utils.py	/^def find_header_and_encoding(file_path: str, keywords: List[str], encodings: Optional[List[str]] = None) -> Tuple[int, str]:$/;"	f
+format	test_code_integrity.py	/^    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',$/;"	v
+format	test_import.py	/^    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',$/;"	v
+format	test_notion_connection.py	/^    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',$/;"	v
+format	test_wechat_parser_simple.py	/^    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',$/;"	v
+formatDate	web_service/static/js/main.js	/^function formatDate(dateString) {$/;"	f
+formatFileSize	web_service/static/js/main.js	/^function formatFileSize(bytes) {$/;"	f
+formatTime	utils.py	/^    def formatTime(self, record, datefmt=None):$/;"	m	class:BeijingFormatter
+getMockLogs	web_service/static/js/main.js	/^function getMockLogs() {$/;"	f
+get_file_content	web_service/routes/upload.py	/^async def get_file_content(file_name: str):$/;"	f
+get_file_info	web_service/services/file_service.py	/^    def get_file_info(self, file_path: str) -> Optional[dict]:$/;"	m	class:FileService
+get_files	web_service/routes/upload.py	/^async def get_files():$/;"	f
+get_job_status	scheduler.py	/^    def get_job_status(self):$/;"	m	class:BillScheduler
+get_logs	web_service/routes/upload.py	/^async def get_logs():$/;"	f
+get_next_run_time	scheduler.py	/^    def get_next_run_time(self):$/;"	m	class:BillScheduler
+get_parsed_data	parsers/base_parser.py	/^    def get_parsed_data(self) -> pd.DataFrame:$/;"	m	class:BaseBillParser
+get_parser	parsers/__init__.py	/^def get_parser(file_path):$/;"	f
+get_parser_by_platform	parsers/__init__.py	/^def get_parser_by_platform(file_path, platform):$/;"	f
+get_platform	parsers/alipay_parser.py	/^    def get_platform(self) -> str:$/;"	m	class:AlipayParser
+get_platform	parsers/base_parser.py	/^    def get_platform(self) -> str:$/;"	m	class:BaseBillParser
+get_platform	parsers/unionpay_parser.py	/^    def get_platform(self) -> str:$/;"	m	class:UnionPayParser
+get_platform	parsers/wechat_parser.py	/^    def get_platform(self) -> str:$/;"	m	class:WeChatParser
+handlers	test_code_integrity.py	/^    handlers=[$/;"	v
+handlers	test_import.py	/^    handlers=[$/;"	v
+handlers	test_notion_connection.py	/^    handlers=[$/;"	v
+handlers	test_wechat_parser_simple.py	/^    handlers=[$/;"	v
+home	web_service/main.py	/^def home(request: Request):$/;"	f
+import_bill	importer.py	/^def import_bill(file_path, platform=None):$/;"	f
+level	test_code_integrity.py	/^    level=logging.INFO,$/;"	v
+level	test_import.py	/^    level=logging.DEBUG,$/;"	v
+level	test_notion_connection.py	/^    level=logging.INFO,$/;"	v
+level	test_wechat_parser_simple.py	/^    level=logging.INFO,$/;"	v
+list_files	web_service/services/file_service.py	/^    def list_files(self) -> list:$/;"	m	class:FileService
+log_dir	web_service/main.py	/^log_dir = os.path.join(web_service_dir, "logs")$/;"	v
+log_management	web_service/main.py	/^def log_management(request: Request):$/;"	f
+logger	importer.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	main.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	notion_api.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	parsers/alipay_parser.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	parsers/base_parser.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	parsers/wechat_parser.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	scheduler.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	test_code_integrity.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	test_import.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	test_notion_connection.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	test_wechat_parser_simple.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	web_service/main.py	/^logger = logging.getLogger(__name__)$/;"	v
+logger	web_service/services/file_service.py	/^logger = logging.getLogger(__name__)$/;"	v
+main	main.py	/^def main():$/;"	f
+normalize_date	parsers/base_parser.py	/^    def normalize_date(self, date_str: str, format_str: str) -> str:$/;"	m	class:BaseBillParser
+parse	parsers/alipay_parser.py	/^    def parse(self) -> pd.DataFrame:$/;"	m	class:AlipayParser
+parse	parsers/base_parser.py	/^    def parse(self) -> pd.DataFrame:$/;"	m	class:BaseBillParser
+parse	parsers/unionpay_parser.py	/^    def parse(self) -> pd.DataFrame:$/;"	m	class:UnionPayParser
+parse	parsers/wechat_parser.py	/^    def parse(self) -> pd.DataFrame:$/;"	m	class:WeChatParser
+platform	test_import.py	/^    platform = sys.argv[2] if len(sys.argv) > 2 else None$/;"	v
+read_csv	parsers/base_parser.py	/^    def read_csv(self, **kwargs) -> pd.DataFrame:$/;"	m	class:BaseBillParser
+read_file_lines	utils.py	/^def read_file_lines(file_path: str, max_lines: int = 20) -> List[str]:$/;"	f
+restart	scheduler.py	/^    def restart(self):$/;"	m	class:BillScheduler
+router	web_service/routes/upload.py	/^router = APIRouter()$/;"	v
+save_file	web_service/services/file_service.py	/^    async def save_file(self, upload_file) -> str:$/;"	m	class:FileService
+service_management	web_service/main.py	/^def service_management(request: Request):$/;"	f
+setupLogManagement	web_service/static/js/main.js	/^function setupLogManagement() {$/;"	f
+setupUploadForm	web_service/static/js/main.js	/^function setupUploadForm(uploadForm) {$/;"	f
+setup_logging	utils.py	/^def setup_logging(level: str = "INFO", log_file: Optional[str] = None):$/;"	f
+start	scheduler.py	/^    def start(self):$/;"	m	class:BillScheduler
+stop	scheduler.py	/^    def stop(self):$/;"	m	class:BillScheduler
+success	test_import.py	/^    success = test_import(file_path, platform)$/;"	v
+success	test_notion_connection.py	/^    success = test_notion_connection()$/;"	v
+success	test_wechat_parser_simple.py	/^    success = test_wechat_parser(file_path)$/;"	v
+templates	web_service/main.py	/^templates = Jinja2Templates(directory=os.path.join(web_service_dir, "templates"))$/;"	v
+test_import	test_import.py	/^def test_import(file_path, platform=None):$/;"	f
+test_module_imports	test_code_integrity.py	/^def test_module_imports():$/;"	f
+test_notion_client_initialization	test_code_integrity.py	/^def test_notion_client_initialization():$/;"	f
+test_notion_connection	test_notion_connection.py	/^def test_notion_connection():$/;"	f
+test_parser_initialization	test_code_integrity.py	/^def test_parser_initialization():$/;"	f
+test_wechat_parser	test_wechat_parser.py	/^def test_wechat_parser(file_path):$/;"	f
+test_wechat_parser	test_wechat_parser_simple.py	/^def test_wechat_parser(file_path):$/;"	f
+to_notion_format	parsers/base_parser.py	/^    def to_notion_format(self) -> list:$/;"	m	class:BaseBillParser
+update	config.py	/^    def update(cls, key: str, value):$/;"	m	class:Config
+upload_file	web_service/routes/upload.py	/^async def upload_file($/;"	f
+validate	config.py	/^    def validate(cls):$/;"	m	class:Config
+verify_connection	notion_api.py	/^    def verify_connection(self) -> bool:$/;"	m	class:NotionClient
+web_service_dir	web_service/main.py	/^web_service_dir = os.path.dirname(os.path.abspath(__file__))$/;"	v

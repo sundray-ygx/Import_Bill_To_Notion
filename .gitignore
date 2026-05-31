@@ -1,67 +1,21 @@
-# Python缓存
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-
-# 虚拟环境
-venv/
-.venv/
-env/
-ENV/
-
-# 环境变量
 .env
+.bak_env
 .env.local
 .env.*.local
-.bak_env
-
-# 日志文件
+venv/
+.venv/
 logs/
 *.log
 error.txt
-
-# 数据文件
-data/
-*.sqlite
-*.sqlite3
-*.db
-*.db-journal
-
-# 上传文件
+# Data directory - exclude database but keep migrations
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+# data/migrations/  - Keep migration scripts in git
 web_service/uploads/
-
-# 临时文件
-*.zip
-*.tmp
-*.bak
-*.backup
-*.swp
-*.swo
-*~
-
-# IDE配置
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-
-# AI工具配置
 .claude/
-.specify/
+.trae/
 
-# 测试覆盖率
-.coverage
-htmlcov/
-.pytest_cache/
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
